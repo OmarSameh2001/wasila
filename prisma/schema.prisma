@@ -1,0 +1,209 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User{
+  id       Int   @id @default(autoincrement())
+  name     String
+  username String   @unique
+  email    String   @unique
+  password String
+  type     Role
+
+  // Link to the Client profile
+  clientId String?      @unique
+  client   Client?   @relation(fields: [clientId], references: [id])
+
+  // Records this user MANAGED as an employee/agent
+  managedRecords Record[] @relation("AgentRelation")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USER
+  BROKER
+}
+
+model Client{
+  id  String  @id @default(cuid()) 
+  name String
+  email String?
+
+  user       User?
+
+  // All records belong to a Client identity
+  records    Record[] @relation("ClientRelation")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("clients")
+}
+
+
+model Record {
+  id           Int      @id @default(autoincrement())
+  totalAmount  Decimal  @db.Decimal(20, 2)  
+  state        CrmState
+  
+  // The person who OWNS the policy (The Client)
+  clientId     String
+  client       Client @relation("ClientRelation", fields: [clientId], references: [id])
+  
+  // The agent who created the record
+  userId       Int
+  agent        User   @relation("AgentRelation", fields: [userId], references: [id])
+  
+  policyId     Int
+  policy       Policy   @relation(fields: [policyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("records")
+  @@index([clientId])
+  @@index([userId])
+  @@index([policyId])
+}
+
+enum CrmState {
+  DRAFT
+  CONTACTED
+  WON
+  LOST
+}
+
+model Company {
+  id       Int      @id @default(autoincrement())
+  name     String
+  address  String
+  logo     String?
+  policies Policy[]
+
+  @@map("companies")
+}
+
+model Policy {
+  id        Int      @id @default(autoincrement())
+  type      PolicyType
+  totalNetPremium Decimal  @db.Decimal(20, 2)
+  companyId Int
+  company   Company  @relation(fields: [companyId], references: [id])
+  tax       Decimal?  @db.Decimal(10, 4)
+  
+  // Relations to Subtypes
+  carPolicy    CarPolicy?
+  healthPolicy HealthPolicy?
+  records      Record[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("policies")
+}
+
+enum PolicyType {
+  CAR
+  HEALTH
+  SME
+}
+
+model CarPolicy {
+  id         Int    @id @default(autoincrement())
+  ownDamage  String
+  thirdParty String
+  fire       String
+  theft      String
+  make       String
+  model      String
+  year       Int
+  mileage    Int
+  
+  policyId   Int    @unique
+  policy     Policy @relation(fields: [policyId], references: [id])
+  
+  @@map("car_policies")
+}
+
+model HealthPolicy {
+  id              Int             @id @default(autoincrement())
+  
+  // Life Benefits
+  lifeInsurance               String
+  totalPermanentDisability    String
+  accidentalDeath             String
+  partialPermanentDisability  String
+
+  // Medical Benefits
+  medicalTpa     String
+  network          String
+  areaOfCoverage   String
+  annualCeilingPerPerson Float
+
+  // In-Patient Benefits
+  inPatientAccommodation String
+  icu                    String
+  parentAccommodation    String
+
+  // Out-Patient Benefits
+  doctorConsultation   String
+  labScan                    String
+  physiotherapy             String
+  medication                 String
+  
+  // Additional Benefits
+  dental           String
+  optical           String
+  maternityLimit   String
+  newbornCeiling  String
+  
+  // Other Benefits
+  preExistingCases String
+  newChronic       String
+  organTransplant     String
+  groundAmbulance     String
+  
+  // Reimbursement Rules
+  reimbursementCoverage     String
+
+  // Enrollment & Pricing
+  numberOfInsuredMembers    Int
+  averagePremiumPerHead     Decimal @db.Decimal(10, 2)
+  
+  
+  policyId        Int             @unique
+  policy          Policy          @relation(fields: [policyId], references: [id])
+  healthPricings  HealthPricing[]
+  
+  @@map("health_policies")
+}
+
+model HealthPricing {
+  id           Int    @id @default(autoincrement())
+  minAge       Int
+  maxAge       Int
+  mainPrice     Decimal @db.Decimal(10, 2)
+  dependentPrice     Decimal @db.Decimal(10, 2)
+  
+  healthId     Int
+  healthPolicy HealthPolicy @relation(fields: [healthId], references: [id])
+  
+  @@map("health_pricings")
+  @@index([healthId])
+}
