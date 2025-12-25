@@ -60,7 +60,7 @@ export async function getPolicies(req: NextRequest) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
 
-    const policies = await filterPrisma(prisma.policy, page, limit);
+    const policies = await filterPrisma(prisma.policy, page, limit, {}, url, 'policy');
 
     return NextResponse.json(policies, { status: 200 });
   } catch (error) {

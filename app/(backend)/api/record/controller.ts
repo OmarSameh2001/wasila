@@ -7,13 +7,9 @@ export async function getRecords(req: NextRequest) {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-    const params = Object.fromEntries(
-      Object.entries(url.searchParams).filter(
-        ([key]) => key !== "page" && key !== "limit"
-      )
-    );
+    
 
-    const records = await filterPrisma(prisma.record, page, limit, params);
+    const records = await filterPrisma(prisma.record, page, limit, {}, url, 'record');
 
     return NextResponse.json(records, { status: 200 });
   } catch (error) {
@@ -27,28 +23,22 @@ export async function getRecords(req: NextRequest) {
 
 export async function getRecordsByBroker(
   req: NextRequest,
-  brokerId: number,
-  type: string
+  userId: number,
+  type: string,
+  brokerId: number
 ) {
   try {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
 
-    // either from jwt or body
-    const { brokerId: _brokerId } = await req.json();
-    brokerId = type === "BROKER" ? brokerId : _brokerId || "";
-    if(!brokerId) return NextResponse.json({ error: "Missing brokerId" }, { status: 400 });
+    brokerId = type === "BROKER" ? userId : brokerId;
+    if (!brokerId)
+      return NextResponse.json({ error: "Missing brokerId" }, { status: 400 });
 
-    let params = Object.fromEntries(
-      Object.entries(url.searchParams).filter(
-        ([key]) => key !== "page" && key !== "limit"
-      )
-    );
-
-    params = { ...params, brokerId };
-
-    const records = await filterPrisma(prisma.record, page, limit, params);
+    
+    console.log( prisma.record.fields);
+    const records = await filterPrisma(prisma.record, page, limit, {brokerId}, url, 'record');
 
     return NextResponse.json(records, { status: 200 });
   } catch (error) {
@@ -60,23 +50,22 @@ export async function getRecordsByBroker(
   }
 }
 
-export async function getRecordByClient(req: NextRequest, clientId: number, type: string) {
+export async function getRecordByClient(
+  req: NextRequest,
+  userId: number,
+  type: string,
+  clientId: number
+) {
   try {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-    
-    const { clientId: _clientId } = await req.json();
-    clientId = type === "CLIENT" ? clientId : _clientId || "";
-    if(!clientId) return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
 
-    let params = Object.fromEntries(
-      Object.entries(url.searchParams).filter(
-        ([key]) => key !== "page" && key !== "limit"
-      )
-    );
-    params = { ...params, clientId };
-    const records = await filterPrisma(prisma.record, page, limit, params);
+    clientId = type === "USER" ? userId : clientId;
+    if (!clientId)
+      return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
+
+    const records = await filterPrisma(prisma.record, page, limit, {clientId}, url, 'record');
     return NextResponse.json(records, { status: 200 });
   } catch (error) {
     console.error("Error fetching records:", error);

@@ -1,12 +1,12 @@
 import bcryptjs from 'bcryptjs';
 
-const hashPassword = async (password: string): Promise<{ success: boolean, hashedPassword?: string }> => {
+const hashPassword = async (password: string): Promise<{ success: boolean, hashedPassword: string }> => {
   try {
     const hashedPassword = await bcryptjs.hash(password, 10);
     return { success: true, hashedPassword };
   } catch (error) {
     console.error("Hash password error:", error);
-    return { success: false };
+    return { success: false, hashedPassword: "" };
   }
 };
 

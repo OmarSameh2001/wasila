@@ -15,11 +15,11 @@ interface User {
   id: number;
   name: string;
   username: string;
-  email: string;
+  email: string | null;
   password: string;
   type: string;
-  clientId?: string | null;
-  refreshToken?: string | null;
+  brokerId: number | null;
+  refreshToken: string | null;
 }
 
 export const generateRefreshToken = (user: User) => {
@@ -94,6 +94,20 @@ export const registerUser = async (req: NextRequest) => {
         { status: 409 }
       );
     }
+    if(type !== "USER" || type !== "BROKER") {
+      return NextResponse.json(
+        { error: "Invalid user type you can only be user or broker" },
+        { status: 400 }
+      );
+    }
+
+    const validatePassword = UserHelper.validatePassword(password);
+    if (!validatePassword.success) {
+      return NextResponse.json(
+        { error: validatePassword.message },
+        { status: 400 }
+      );
+    }
 
     const createdUser = await prisma.user.create({
       data: {
@@ -101,7 +115,7 @@ export const registerUser = async (req: NextRequest) => {
         password,
         name,
         username,
-        type: "USER",
+        type,
       },
     });
 
@@ -223,12 +237,8 @@ export const getAllUsers = async (req: NextRequest) => {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-    const params = Object.fromEntries(
-      Object.entries(url.searchParams).filter(
-        ([key]) => key !== "page" && key !== "limit"
-      )
-    );
-    const users = await filterPrisma(prisma.user, page, limit, params);
+    
+    const users = await filterPrisma(prisma.user, page, limit, {}, url, 'user');
 
     return NextResponse.json(
       {
@@ -308,43 +318,6 @@ export const updateUser = async (req: NextRequest, userId: number) => {
   }
 };
 
-// Change User Type (Admin only)
-export const changeUserType = async (req: NextRequest, userId: number) => {
-  try {
-    const { type } = await req.json();
-
-    if (!["user", "admin"].includes(type)) {
-      return NextResponse.json({ error: "Invalid user type" }, { status: 400 });
-    }
-
-    const user = await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        type,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(
-      {
-        message: "User type updated successfully",
-        user,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Change user type error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-};
 
 // Delete User (Admin only)
 export const deleteUser = async (req: NextRequest, userId: number) => {
@@ -407,3 +380,77 @@ export const getCurrentUser = async (id: number) => {
     );
   }
 };
+
+// only admin can add email to client
+export const addNewClient = async (req: NextRequest, userId: number,userType: string) => {
+  try{
+    const { name, email, username } = await req.json();
+
+    // placeholder because client cannot login without forgeting password to updated to user
+    const hashedPassword = (await UserHelper.hashPassword("12345678@Wa")).hashedPassword;
+    const client = await prisma.user.create({
+      data: {
+        name,
+        ...(userType === "ADMIN" && { email }),
+        type: "CLIENT",
+        ...(userType === "BROKER" && { userId }),
+        username: username || email.split("@")[0] + Math.floor(Math.random() * 1000),
+        password: hashedPassword,
+      
+      },
+    });
+
+    return NextResponse.json(
+      {
+        message: "New client added successfully",
+        client,
+      },
+      { status: 200 }
+    );
+  }
+  catch(error){
+    console.error("Add new client error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// Change User Type (Admin and creator broker only)
+export const changeClient = async (req: NextRequest, userId: number, type: string, clientId: number) => {
+  try {
+    const { data } = await req.json();
+
+    if(!data) return NextResponse.json({ error: "Please provide a type and user id" }, { status: 400 });
+
+    const user = await prisma.user.update({
+      where: {
+        id: clientId,
+        ...(type === "BROKER" && { brokerId: userId }),
+      },
+      data: {
+        ...data,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      {
+        message: "Client type client successfully",
+        user,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Change client error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+};
+

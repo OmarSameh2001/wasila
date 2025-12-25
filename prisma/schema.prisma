@@ -17,20 +17,29 @@ model User{
   id       Int   @id @default(autoincrement())
   name     String
   username String   @unique
-  email    String   @unique
+  email    String?   @unique
   password String
   type     Role
   refreshToken String?
+  contactInfo Json?
+  dob      DateTime
+
+  // Link to the Broker profile
+  brokerId Int?
+  broker   User?   @relation("BrokerRelation", fields: [brokerId], references: [id])
+  clients  User[]  @relation("BrokerRelation")
+
 
   managedPolicies Policy[]
 
   // Link to the Client profile
-  clientId String?      @unique
-  client   Client?   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  //clientId String?      @unique
+  //client   Client?   @relation(fields: [clientId], references: [id], onDelete: Restrict)
 
   // Records this user MANAGED as an employee/agent
   managedRecords Record[] @relation("AgentRelation")
-  managedClients Client[] @relation("ClientManagerRelation")
+  records    Record[] @relation("ClientRelation")
+  //managedClients Client[] @relation("ClientManagerRelation")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,28 +51,10 @@ enum Role {
   ADMIN
   USER
   BROKER
+  CLIENT
 }
 
-model Client{
-  id  String  @id @default(cuid()) 
-  name String
-  email String?
 
-  contactInfo Json
-
-  user       User?
-
-  brokerId   Int?
-  broker     User? @relation("ClientManagerRelation", fields: [brokerId], references: [id])
-
-  // All records belong to a Client identity
-  records    Record[] @relation("ClientRelation")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("clients")
-}
 
 
 model Record {
@@ -72,8 +63,8 @@ model Record {
   state        CrmState
   
   // The person who OWNS the policy (The Client)
-  clientId     String
-  client       Client @relation("ClientRelation", fields: [clientId], references: [id])
+  clientId     Int
+  client       User @relation("ClientRelation", fields: [clientId], references: [id])
   
   // The agent who created the record
   userId       Int

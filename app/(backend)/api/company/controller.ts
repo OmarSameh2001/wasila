@@ -7,11 +7,9 @@ export async function getAllCompanies(req: NextRequest) {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-    const params = Object.fromEntries(
-      Object.entries(url.searchParams).filter(([key]) => key !== "page" && key !== "limit")
-    );
+    
 
-    const companies = await filterPrisma(prisma.company, page, limit, params);
+    const companies = await filterPrisma(prisma.company, page, limit, {}, url, 'company');
 
     return NextResponse.json(companies, { status: 200 });
   } catch (error) {
