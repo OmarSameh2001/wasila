@@ -39,6 +39,8 @@ model User{
   // Records this user MANAGED as an employee/agent
   managedRecords Record[] @relation("AgentRelation")
   records    Record[] @relation("ClientRelation")
+  managedCount     Int      @default(0)
+  clientCount      Int      @default(0)
   //managedClients Client[] @relation("ClientManagerRelation")
   
   createdAt DateTime @default(now())
@@ -60,6 +62,7 @@ enum Role {
 model Record {
   id           Int      @id @default(autoincrement())
   totalAmount  Decimal  @db.Decimal(20, 2)  
+  totalTaxed   Decimal  @db.Decimal(20, 2)
   state        CrmState
   
   // The person who OWNS the policy (The Client)
@@ -72,6 +75,7 @@ model Record {
   
   policyId     Int
   policy       Policy   @relation(fields: [policyId], references: [id])
+  policyDescription String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -102,7 +106,8 @@ model Company {
 model Policy {
   id        Int      @id @default(autoincrement())
   type      PolicyType
-  totalNetPremium Decimal  @db.Decimal(20, 2)
+  name      String
+  //totalNetPremium Decimal  @db.Decimal(20, 2)
   companyId Int
   company   Company  @relation(fields: [companyId], references: [id])
   tax       Decimal?  @db.Decimal(10, 4)
