@@ -20,7 +20,9 @@ export async function authMiddleware(
   type: "USER" | "ADMIN" | "BROKER";
 }> {
   try {
-    const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+    // const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+
+    const token = req.cookies.get("accessToken")?.value;
 
     if (!token) {
       throw new Error("Token not found");

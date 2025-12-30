@@ -6,6 +6,7 @@ import {
   updateCompany,
 } from "./controller";
 import { authMiddleware } from "../../_middelware/auth";
+import { authError } from "../../_lib/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,22 +15,17 @@ export async function POST(req: NextRequest) {
     return company;
   } catch (error) {
     console.error("Error creating company:", error);
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 401 }
-    );
+    return authError((error as Error).message);
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
+    authMiddleware(req, "ALL");
     const companies = await getAllCompanies(req);
     return companies;
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 401 }
-    );
+    return authError((error as Error).message);
   }
 }
 
@@ -40,10 +36,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json(company, { status: 200 });
   } catch (error) {
     console.error("Error updating company:", error);
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 401 }
-    );
+    return authError((error as Error).message);
   }
 }
 
@@ -54,9 +47,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(company, { status: 200 });
   } catch (error) {
     console.error("Error deleting company:", error);
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 401 }
-    );
+    return authError((error as Error).message);
   }
 }

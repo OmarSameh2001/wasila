@@ -6,6 +6,7 @@ import {
   updateRecord,
 } from "./controller";
 import { authMiddleware } from "../../_middelware/auth";
+import { authError } from "../../_lib/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,51 +15,42 @@ export async function POST(req: NextRequest) {
     return records;
   } catch (error) {
     console.error("Error fetching records:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return authError((error as Error).message);
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
-    await authMiddleware(req, "ADMIN");
-    const records = await getRecords(req);
+    const { id, type } = await authMiddleware(req, "ADMIN");
+    const records = await getRecords(req, Number(id), type);
     return records;
   } catch (error) {
     console.error("Error fetching records:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    
+    return authError((error as Error).message);
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const { id, type } = await authMiddleware(req, "BROKER");
-    const records = await deleteRecord(req, Number(id), type);
-    return records;
-  } catch (error) {
-    console.error("Error fetching records:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+// export async function DELETE(req: NextRequest) {
+//   try {
+//     const { id, type } = await authMiddleware(req, "BROKER");
+//     const records = await deleteRecord(req, Number(id), type);
+//     return records;
+//   } catch (error) {
+//     console.error("Error fetching records:", error);
+    
+//     return authError((error as Error).message);
+//   }
+// }
 
-export async function PATCH(req: NextRequest) {
-  try {
-    const { id, type } = await authMiddleware(req, "BROKER");
-    const records = await updateRecord(req, Number(id), type);
-    return records;
-  } catch (error) {
-    console.error("Error fetching records:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+// export async function PATCH(req: NextRequest) {
+//   try {
+//     const { id, type } = await authMiddleware(req, "BROKER");
+//     const records = await updateRecord(req, Number(id), type);
+//     return records;
+//   } catch (error) {
+//     console.error("Error fetching records:", error);
+    
+//     return authError((error as Error).message);
+//   }
+// }

@@ -2,45 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../_lib/prisma";
 import { filterPrisma } from "../../_lib/filtering";
 
-export async function getRecords(req: NextRequest) {
-  try {
-    const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-    
-
-    const records = await filterPrisma(prisma.record, page, limit, {}, url, 'record');
-
-    return NextResponse.json(records, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching records:", error);
-    return NextResponse.json(
-      { error: "Error fetching records" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function getRecordsByBroker(
+export async function getRecords(
   req: NextRequest,
   userId: number,
-  type: string,
-  brokerId: number
+  type: string
 ) {
   try {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
 
-    brokerId = type === "BROKER" ? userId : brokerId;
-    if (!brokerId)
-      return NextResponse.json({ error: "Missing brokerId" }, { status: 400 });
+    const params: any = {};
+    if (type === "BROKER") params.brokerId = userId;
+    if (type === "USER") params.clientId = userId;
 
-    
-    console.log( prisma.record.fields);
-    const records = await filterPrisma(prisma.record, page, limit, {brokerId}, url, 'record');
+    return await filterPrisma(
+      prisma.record,
+      page,
+      limit,
+      params,
+      url,
+      "record"
+    );
 
-    return NextResponse.json(records, { status: 200 });
+    // return NextResponse.json(records, { status: 200 });
   } catch (error) {
     console.error("Error fetching records:", error);
     return NextResponse.json(
@@ -50,31 +35,120 @@ export async function getRecordsByBroker(
   }
 }
 
-export async function getRecordByClient(
+export async function getRecord(
   req: NextRequest,
   userId: number,
   type: string,
-  clientId: number
+  recordId: number
 ) {
   try {
-    const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-
-    clientId = type === "USER" ? userId : clientId;
-    if (!clientId)
-      return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
-
-    const records = await filterPrisma(prisma.record, page, limit, {clientId}, url, 'record');
-    return NextResponse.json(records, { status: 200 });
+    const record = await prisma.record.findUnique({
+      where: {
+        id: recordId,
+        ...(type === "BROKER"
+          ? { brokerId: userId }
+          : type === "USER" && { clientId: userId }),
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        agent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        policy: {
+          select:{
+            id: true,
+            name: true
+          }
+        },
+      },
+    });
+    return NextResponse.json(record, { status: 200 });
   } catch (error) {
-    console.error("Error fetching records:", error);
+    console.error("Error fetching record:", error);
     return NextResponse.json(
-      { error: "Error fetching records" },
+      { error: "Error fetching record" },
       { status: 500 }
     );
   }
 }
+
+// export async function getRecordsByBroker(
+//   req: NextRequest,
+//   userId: number,
+//   type: string,
+//   brokerId: number
+// ) {
+//   try {
+//     const url = new URL(req.url);
+//     const page = parseInt(url.searchParams.get("page") || "1", 10);
+//     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+
+//     brokerId = type === "BROKER" ? userId : brokerId;
+//     if (!brokerId)
+//       return NextResponse.json({ error: "Missing brokerId" }, { status: 400 });
+
+//     console.log(prisma.record.fields);
+//     const records = await filterPrisma(
+//       prisma.record,
+//       page,
+//       limit,
+//       { brokerId },
+//       url,
+//       "record"
+//     );
+
+//     return NextResponse.json(records, { status: 200 });
+//   } catch (error) {
+//     console.error("Error fetching records:", error);
+//     return NextResponse.json(
+//       { error: "Error fetching records" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// export async function getRecordByClient(
+//   req: NextRequest,
+//   userId: number,
+//   type: string,
+//   clientId: number
+// ) {
+//   try {
+//     const url = new URL(req.url);
+//     const page = parseInt(url.searchParams.get("page") || "1", 10);
+//     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+
+//     clientId = type === "USER" ? userId : clientId;
+//     if (!clientId)
+//       return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
+
+//     const records = await filterPrisma(
+//       prisma.record,
+//       page,
+//       limit,
+//       { clientId },
+//       url,
+//       "record"
+//     );
+//     return NextResponse.json(records, { status: 200 });
+//   } catch (error) {
+//     console.error("Error fetching records:", error);
+//     return NextResponse.json(
+//       { error: "Error fetching records" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 export async function createRecord(req: NextRequest) {
   try {
@@ -111,17 +185,17 @@ export async function createRecord(req: NextRequest) {
 
 export async function updateRecord(
   req: NextRequest,
-  brokerId: number,
-  type: string
+  userId: number,
+  type: string,
+  id: number
 ) {
   try {
-    const { id, ...data } = await req.json();
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    const { data } = await req.json();
 
     const { clientId, brokerId: _brokerId, ...newData } = data;
 
     const record = await prisma.record.update({
-      where: { id, ...(type === "BROKER" && { brokerId }) },
+      where: { id, ...(type === "BROKER" && { brokerId: userId }) },
       data: type === "BROKER" ? newData : data,
     });
 
@@ -138,10 +212,11 @@ export async function updateRecord(
 export async function deleteRecord(
   req: NextRequest,
   brokerId: number,
-  type: string
+  type: string,
+  id: number
 ) {
   try {
-    const { id } = await req.json();
+    
     const record = await prisma.record.delete({
       where: { id, ...(type === "BROKER" && { brokerId }) },
     });

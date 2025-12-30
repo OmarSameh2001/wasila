@@ -60,12 +60,18 @@ export const refreshAccessToken = async (req: NextRequest) => {
     }
 
     const newAccessToken = generateAccessToken(user);
-    return NextResponse.json(
-      {
-        accessToken: newAccessToken,
-      },
+
+    const res = NextResponse.json(
+      { message: "Access token refreshed successfully" },
       { status: 200 }
     );
+
+    res.cookies.set("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1 * 60 * 60 * 24, // 1 day
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "Refresh token expired" },
@@ -94,7 +100,7 @@ export const registerUser = async (req: NextRequest) => {
         { status: 409 }
       );
     }
-    if(type !== "USER" || type !== "BROKER") {
+    if (type !== "USER" || type !== "BROKER") {
       return NextResponse.json(
         { error: "Invalid user type you can only be user or broker" },
         { status: 400 }
@@ -115,7 +121,7 @@ export const registerUser = async (req: NextRequest) => {
         password,
         name,
         username,
-        type,
+        type: "BROKER",
       },
     });
 
@@ -221,6 +227,14 @@ export const loginUser = async (req: NextRequest) => {
       });
     }
 
+    res.cookies.set("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/api",
+      maxAge: 1 * 24 * 60 * 60, // 1 day
+    });
+
     return res;
   } catch (error) {
     console.error("Login error:", error);
@@ -237,8 +251,8 @@ export const getAllUsers = async (req: NextRequest) => {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
-    
-    const users = await filterPrisma(prisma.user, page, limit, {}, url, 'user');
+
+    const users = await filterPrisma(prisma.user, page, limit, {}, url, "user");
 
     return NextResponse.json(
       {
@@ -257,31 +271,31 @@ export const getAllUsers = async (req: NextRequest) => {
 };
 
 // Get User by ID
-export const getUserById = async (req: NextRequest, userId: number) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+// export const getUserById = async (req: NextRequest, userId: number) => {
+//   try {
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//     });
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+//     if (!user) {
+//       return NextResponse.json({ error: "User not found" }, { status: 404 });
+//     }
 
-    return NextResponse.json(
-      {
-        message: "User fetched successfully",
-        user,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Get user error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-};
+//     return NextResponse.json(
+//       {
+//         message: "User fetched successfully",
+//         user,
+//       },
+//       { status: 200 }
+//     );
+//   } catch (error) {
+//     console.error("Get user error:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// };
 
 // Update User
 export const updateUser = async (req: NextRequest, userId: number) => {
@@ -318,7 +332,6 @@ export const updateUser = async (req: NextRequest, userId: number) => {
   }
 };
 
-
 // Delete User (Admin only)
 export const deleteUser = async (req: NextRequest, userId: number) => {
   try {
@@ -350,8 +363,6 @@ export const deleteUser = async (req: NextRequest, userId: number) => {
 // Get Current User
 export const getCurrentUser = async (id: number) => {
   try {
-    
-
     if (!id) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -374,79 +385,6 @@ export const getCurrentUser = async (id: number) => {
     );
   } catch (error) {
     console.error("Get current user error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-};
-
-// only admin can add email to client
-export const addNewClient = async (req: NextRequest, userId: number,userType: string) => {
-  try{
-    const { name, email, username } = await req.json();
-
-    // placeholder because client cannot login without forgeting password to updated to user
-    const hashedPassword = (await UserHelper.hashPassword("12345678@Wa")).hashedPassword;
-    const client = await prisma.user.create({
-      data: {
-        name,
-        ...(userType === "ADMIN" && { email }),
-        type: "CLIENT",
-        ...(userType === "BROKER" && { userId }),
-        username: username || email.split("@")[0] + Math.floor(Math.random() * 1000),
-        password: hashedPassword,
-      
-      },
-    });
-
-    return NextResponse.json(
-      {
-        message: "New client added successfully",
-        client,
-      },
-      { status: 200 }
-    );
-  }
-  catch(error){
-    console.error("Add new client error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// Change User Type (Admin and creator broker only)
-export const changeClient = async (req: NextRequest, userId: number, type: string, clientId: number) => {
-  try {
-    const { data } = await req.json();
-
-    if(!data) return NextResponse.json({ error: "Please provide a type and user id" }, { status: 400 });
-
-    const user = await prisma.user.update({
-      where: {
-        id: clientId,
-        ...(type === "BROKER" && { brokerId: userId }),
-      },
-      data: {
-        ...data,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "Client not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(
-      {
-        message: "Client type client successfully",
-        user,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Change client error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -39,3 +39,31 @@ export const recordsColumns = [
 //   { name: "Created At", key: "createdAt", type: "text" },
   { name: "Updated At", key: "updatedAt", type: "text" },
 ]
+
+
+export interface intialRecord {
+  state: string;
+  clientId: number;
+  agentId: number;
+  policyDescription?: string;
+  policyId: number;
+}
+
+export interface Record extends intialRecord {
+  id: number;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  client: {
+    id: number;
+    name: string;
+  };
+  agent: {
+    id: number;
+    name: string;
+  };
+  policy: {
+    id: number;
+    name: string;
+  };
+}

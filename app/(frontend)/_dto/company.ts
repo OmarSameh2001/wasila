@@ -28,3 +28,18 @@ export const companiesColumns = [
   { name: "Address", key: "address", type: "text" },
   { name: "Logo", key: "logo", type: "logo" },
 ];
+
+
+export interface Company {
+  id: number;
+  name: string;
+  address?: string;
+  logo?: string;
+  policies?: any[];
+}
+
+export interface IntialCompany {
+  name: string;
+  address?: string;
+  logo?: File | string;
+}

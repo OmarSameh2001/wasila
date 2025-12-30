@@ -6,9 +6,15 @@ import {
   updatePolicy,
 } from "./controller";
 import { authMiddleware } from "../../_middelware/auth";
+import { authError } from "../../_lib/errors";
 
 export async function GET(req: NextRequest) {
-  return getPolicies(req);
+  try {
+    await authMiddleware(req, "ALL");
+    return getPolicies(req);
+  } catch (error) {
+    return authError((error as Error).message);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -16,7 +22,7 @@ export async function POST(req: NextRequest) {
     authMiddleware(req, "BROKER");
     return createPolicy(req);
   } catch (error) {
-    return NextResponse.json({ error:(error as Error).message }, { status: 401 });
+    return authError((error as Error).message);
   }
 }
 
@@ -25,7 +31,7 @@ export async function DELETE(req: NextRequest) {
     const { id, type } = await authMiddleware(req, "BROKER");
     return deletePolicy(req, Number(id), type);
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message  }, { status: 401 });
+    return authError((error as Error).message);
   }
 }
 
@@ -34,6 +40,6 @@ export async function PUT(req: NextRequest) {
     const { id, type } = await authMiddleware(req, "BROKER");
     return updatePolicy(req, Number(id), type);
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message  }, { status: 401 });
+    return authError((error as Error).message);
   }
 }

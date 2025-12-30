@@ -56,3 +56,33 @@ export const brokersColumns = [
   { name: "Managed Records", key: "managedCount", type: "text" },
 ]
 
+export interface registerUser {
+    email?: string;
+    password: string;
+    name: string;
+    username: string;
+    type: string;
+}
+
+export interface User {
+    id: number;
+    name: string;
+    username: string;
+    email?: string | null;
+    password?: string | null;
+    type: string;
+    brokerId?: number | null;
+    refreshToken?: string | null;
+}
+
+export interface intialCLient {
+    name: string;
+    email?: string;
+    brokerId?: number;
+}
+
+export interface loginUser {
+    email: string;
+    password: string;
+    remember?: boolean;
+}

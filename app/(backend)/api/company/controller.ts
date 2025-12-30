@@ -9,9 +9,9 @@ export async function getAllCompanies(req: NextRequest) {
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
     
 
-    const companies = await filterPrisma(prisma.company, page, limit, {}, url, 'company');
+    return await filterPrisma(prisma.company, page, limit, {}, url, 'company');
 
-    return NextResponse.json(companies, { status: 200 });
+
   } catch (error) {
     console.error("Error fetching companies:", error);
     return NextResponse.json(
@@ -21,11 +21,13 @@ export async function getAllCompanies(req: NextRequest) {
   }
 }
 
-export async function getCompanyById(req: NextRequest) {
+export async function getCompanyById(req: NextRequest, id: number) {
   try {
-    const { id } = await req.json();
+    const { id: _id } = await req.json();
+    id = id || _id;
     const company = await prisma.company.findUnique({
       where: { id },
+      include: { policies: true },
     });
     if (!company) {
       return NextResponse.json(

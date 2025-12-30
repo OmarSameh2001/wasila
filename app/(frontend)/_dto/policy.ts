@@ -4,7 +4,7 @@ export const policiesList = [
   {
     id: 1,
     type: "CAR",
-    name: 'Full',
+    name: "Full",
     company: companiesList[0].name,
     tax: 0.2,
     brokerId: 1,
@@ -15,7 +15,7 @@ export const policiesList = [
   {
     id: 2,
     type: "HEALTH",
-    name: 'General',
+    name: "General",
     company: companiesList[1].name,
     tax: 0.1,
     brokerId: 2,
@@ -26,7 +26,7 @@ export const policiesList = [
   {
     id: 3,
     type: "SME",
-    name: 'Full',
+    name: "Full",
     company: companiesList[2].name,
     tax: 0.1,
     brokerId: 3,
@@ -82,3 +82,55 @@ export const policyColumns: any[] = [
   //   ],
   // },
 ];
+
+export interface IntialPolicy {
+  type: string;
+  name: string;
+  companyId: number;
+  tax?: number;
+  brokerId?: number;
+}
+
+export interface Policy extends IntialPolicy {
+  id: number;
+  company: {
+    id: number;
+    name: string;
+  };
+  broker?: {
+    id: number;
+    name: string;
+  };
+  // records?: any[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface HealthPolicy extends Policy {
+  lifeInsurance: string;
+  totalPermanentDisability: string;
+  accidentalDeath: string;
+  partialPermanentDisability: string;
+  medicalTpa: string;
+  network: string;
+  areaOfCoverage: string;
+  annualCeilingPerPerson: number;
+  inPatientAccommodation: string;
+  icu: string;
+  parentAccommodation: string;
+  doctorConsultation: string;
+  labScan: string;
+  physiotherapy: string;
+  medication: string;
+  dental: string;
+  optical: string;
+  maternityLimit: string;
+  newbornCeiling: string;
+  preExistingCases: string;
+  newChronic: string;
+  organTransplant: string;
+  groundAmbulance: string;
+  reimbursementCoverage: string;
+  numberOfInsuredMembers: number;
+  averagePremiumPerHead: number;
+}

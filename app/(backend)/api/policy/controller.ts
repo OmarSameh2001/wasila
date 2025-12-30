@@ -60,9 +60,10 @@ export async function getPolicies(req: NextRequest) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
 
-    const policies = await filterPrisma(prisma.policy, page, limit, {}, url, 'policy');
 
-    return NextResponse.json(policies, { status: 200 });
+    return await filterPrisma(prisma.policy, page, limit, {}, url, 'policy');
+
+    // return NextResponse.json(policies, { status: 200 });
   } catch (error) {
     console.error("Error fetching policies:", error);
     return NextResponse.json(
@@ -71,32 +72,33 @@ export async function getPolicies(req: NextRequest) {
     );
   }
 }
-export async function getPoliciesByCompany(req: NextRequest) {
-  try {
-    const { companyId } = await req.json();
-    const policies = await prisma.policy.findMany({
-      where: {
-        companyId,
-      },
-      include: {
-        carPolicy: true,
-        healthPolicy: true,
-      },
-    });
+// export async function getPoliciesByCompany(req: NextRequest) {
+//   try {
+//     const { companyId } = await req.json();
+//     const policies = await prisma.policy.findMany({
+//       where: {
+//         companyId,
+//       },
+//       include: {
+//         carPolicy: true,
+//         healthPolicy: true,
+//       },
+//     });
 
-    return NextResponse.json(policies, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching policies:", error);
-    return NextResponse.json(
-      { error: "Error fetching policies" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(policies, { status: 200 });
+//   } catch (error) {
+//     console.error("Error fetching policies:", error);
+//     return NextResponse.json(
+//       { error: "Error fetching policies" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
-export async function getPolicyById(req: NextRequest) {
+export async function getPolicyById(req: NextRequest, id: number) {
   try {
-    const { id } = await req.json();
+    const { id: _id } = await req.json();
+    id = id || _id;
     const ids = Array.isArray(id) ? id : [id];
     const policies = await prisma.policy.findMany({
       where: {
