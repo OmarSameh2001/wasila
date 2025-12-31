@@ -19,7 +19,7 @@ export async function GET(
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: any) {
   try {
     authMiddleware(req, "ADMIN");
     const id = dynamicId(req.url);

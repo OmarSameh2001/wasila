@@ -2,24 +2,37 @@ import Image from "next/image";
 
 export function TableColumn({ type, data }: any) {
   switch (type) {
-    case "logo":
-      return (
-        <div className="flex items-center">
-          <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3">
-            {data && (
-              <Image
-                className="rounded-full"
-                src={data}
-                width="40"
-                height="40"
-                alt={"logo"}
-              />
-            )}
-          </div>
+    case "logo": {
+  const logo =
+    typeof data === "string"
+      ? data
+      : data?.logo;
+
+  const name =
+    typeof data === "object"
+      ? data?.name
+      : null;
+
+  return (
+    <div className="flex items-center">
+      {logo && (
+        <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3">
+          <Image
+            className="rounded-full"
+            src={logo}
+            width={40}
+            height={40}
+            alt={name || "logo"}
+          />
         </div>
-      );
+      )}
+
+      {name && <span className="pb-4">{name}</span>}
+    </div>
+  );
+}
     case "text":
-      return <div className="text-left">{data}</div>;
+      return <div className="text-left">{data?.name || data}</div>;
     case "action":
       return (
         <div className="flex flex-col gap-2">

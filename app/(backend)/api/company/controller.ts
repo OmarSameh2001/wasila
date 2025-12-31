@@ -63,9 +63,10 @@ export async function createCompany(req: NextRequest) {
 export async function updateCompany(req: NextRequest, id: number) {
   try {
     const { id: _id, ...data } = await req.json();
+    console.log(data);
     const company = await prisma.company.update({
       where: { id },
-      ...data,
+      data: {...data},
     });
     return NextResponse.json(company, { status: 200 });
   } catch (error) {

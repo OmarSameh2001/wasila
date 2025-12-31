@@ -11,8 +11,8 @@ interface TableProps {
   columns: any[];
   data: any[];
   actions?: ActionButton[];
-  loading?: boolean;
-  query?: string
+  loading: boolean;
+  query: string
   addNew?: () => void;
 }
 

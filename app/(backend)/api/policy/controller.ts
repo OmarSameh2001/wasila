@@ -4,36 +4,34 @@ import { filterPrisma } from "../../_lib/filtering";
 
 export async function createPolicy(req: NextRequest) {
   try {
-    const { type, companyId, totalNetPremium, tax, carDetails, healthDetails } =
+    const { type, name, companyId, tax } =
       await req.json();
 
-    return await prisma.$transaction(async (cls) => {
-      // 1. Create the Base Policy
-      const policy = await cls.policy.create({
+    const policy = await prisma.policy.create({
         data: {
           type,
-          companyId,
-          totalNetPremium,
+          companyId: Number(companyId),
           tax,
+          name,
           // 2. Conditionally create subtypes
-          ...(type === "CAR" &&
-            carDetails && {
-              carPolicy: {
-                create: carDetails,
-              },
-            }),
-          ...((type === "HEALTH" || type === "SME") &&
-            healthDetails && {
-              healthPolicy: {
-                create: {
-                  ...healthDetails,
-                  // Handle nested pricing for health policies
-                  healthPricings: {
-                    create: healthDetails.healthPricings,
-                  },
-                },
-              },
-            }),
+          // ...(type === "CAR" &&
+          //   carDetails && {
+          //     carPolicy: {
+          //       create: carDetails,
+          //     },
+          //   }),
+          // ...((type === "HEALTH" || type === "SME") &&
+          //   healthDetails && {
+          //     healthPolicy: {
+          //       create: {
+          //         ...healthDetails,
+          //         // Handle nested pricing for health policies
+          //         healthPricings: {
+          //           create: healthDetails.healthPricings,
+          //         },
+          //       },
+          //     },
+          //   }),
         },
         include: {
           carPolicy: true,
@@ -42,9 +40,7 @@ export async function createPolicy(req: NextRequest) {
           },
         },
       });
-
-      return NextResponse.json(policy, { status: 201 });
-    });
+    return NextResponse.json(policy, { status: 201 });
   } catch (error) {
     console.error("Error creating policy:", error);
     return NextResponse.json(
@@ -60,7 +56,10 @@ export async function getPolicies(req: NextRequest) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
 
-    return await filterPrisma(prisma.policy, page, limit, {}, url, "policy");
+    const include = {
+      company: true,
+    }
+    return await filterPrisma(prisma.policy, page, limit, {}, url, "policy", include);
 
     // return NextResponse.json(policies, { status: 200 });
   } catch (error) {
@@ -131,7 +130,7 @@ export async function updatePolicy(
     const { id, ...data } = await req.json();
     const policy = await prisma.policy.update({
       where: { id, ...(type === "BROKER" && { brokerId }) },
-      ...data,
+      data: {...data},
     });
     if (!policy) {
       return NextResponse.json(

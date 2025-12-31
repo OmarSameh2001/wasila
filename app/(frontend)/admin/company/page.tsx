@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect, useState } from "react";
 import Table from "../../_components/table/table";
-import { companiesColumns, companiesList } from "../../_dto/company";
+import { companiesColumns, companiesList, editableCompanyColumns } from "../../_dto/company";
 import { PopupContext } from "../../_components/utils/context/popup_provider";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -15,38 +15,18 @@ import DynamicForm from "../../_components/form/dynamic_form";
 export default function AdminCompany() {
   const { setComponent } = useContext(PopupContext);
 
-  const { isLoading, isError, data, error } = useQuery({
-    queryKey: ["adminRecord"],
+  const { isLoading, data } = useQuery({
+    queryKey: ["adminCompanies"],
     queryFn: () => getCompanies(1, 10, ""),
   });
   
   function handleAddNew() {
     setComponent(
       <DynamicForm
-        fields={[
-          {
-            key: "name",
-            label: "Name",
-            type: "text",
-            // value: newCompany.name,
-            required: true,
-          },
-          {
-            key: "address",
-            label: "Address",
-            type: "text",
-            // value: newCompany.address,
-          },
-          {
-            key: "logo",
-            label: "Logo",
-            type: "text",
-            // value: newCompany.logo,
-          },
-        ]}
+        fields={editableCompanyColumns}
         title="Add New Company"
         type="create"
-        query="adminRecord"
+        query="adminCompanies"
         onSubmit={createCompany}
       />
     );
@@ -55,30 +35,13 @@ export default function AdminCompany() {
     console.log(data);
     setComponent(
       <DynamicForm
-        fields={[
-          {
-            key: "name",
-            label: "Name",
-            type: "text",
-            value: data.name,
-            required: true,
-          },
-          {
-            key: "address",
-            label: "Address",
-            type: "text",
-            value: data.address,
-          },
-          {
-            key: "logo",
-            label: "Logo",
-            type: "text",
-            value: data.logo,
-          },
-        ]}
+        fields={editableCompanyColumns.map((column) => ({
+          ...column,
+          value: data[column.key],
+        }))}
         title="Update Company"
         type="update"
-        query="adminRecord"
+        query="adminCompanies"
         id={id}
         onSubmit={updateCompany}
       />
@@ -97,6 +60,7 @@ export default function AdminCompany() {
           ]}
           loading={isLoading}
           addNew={handleAddNew}
+          query="adminCompanies"
         />
       </div>
     </div>

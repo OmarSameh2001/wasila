@@ -1,3 +1,5 @@
+import { DynamicFormField } from "../_components/form/dynamic_form";
+
 export const companiesList = [
   {
     id: 1,
@@ -29,7 +31,6 @@ export const companiesColumns = [
   { name: "Logo", key: "logo", type: "logo" },
 ];
 
-
 export interface Company {
   id: number;
   name: string;
@@ -43,3 +44,22 @@ export interface IntialCompany {
   address?: string;
   logo?: File | string;
 }
+
+export const editableCompanyColumns: DynamicFormField[] = [
+  {
+    key: "name",
+    label: "Name",
+    type: "text",
+    required: true,
+  },
+  {
+    key: "address",
+    label: "Address",
+    type: "text",
+  },
+  {
+    key: "logo",
+    label: "Logo",
+    type: "text",
+  },
+];

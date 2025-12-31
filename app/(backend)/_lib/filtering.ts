@@ -31,7 +31,8 @@ export const filterPrisma = async <T>(
   limit: number,
   params?: { [key: string]: string | number },
   url?: URL,
-  modelName?: string
+  modelName?: string,
+  include: any = {}
 ) => {
   //: Promise<PaginatedResult<T>>
   try {
@@ -58,6 +59,7 @@ export const filterPrisma = async <T>(
         ...(params && { where: params }),
         skip,
         take: safeLimit,
+        include,
       }),
       model.count({
         ...(params && { where: params }),

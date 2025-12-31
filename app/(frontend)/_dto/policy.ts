@@ -1,3 +1,4 @@
+import { DynamicFormField } from "../_components/form/dynamic_form";
 import { companiesList } from "./company";
 
 export const policiesList = [
@@ -54,7 +55,7 @@ export const policyColumns: any[] = [
   {
     name: "Company",
     key: "company",
-    type: "text",
+    type: "logo",
   },
   {
     name: "Tax",
@@ -134,3 +135,32 @@ export interface HealthPolicy extends Policy {
   numberOfInsuredMembers: number;
   averagePremiumPerHead: number;
 }
+
+
+export const editablePolicyColumns: DynamicFormField[] = [
+  {
+    key: "type",
+    label: "Type",
+    type: "select",
+    choices: ["CAR", "HEALTH", "SME"],
+    required: true,
+  },
+  {
+    key: "name",
+    label: "Name",
+    type: "text",
+    required: true,
+  },
+  {
+    key: "companyId",
+    label: "Company",
+    type: "text",
+    required: true,
+  },
+  {
+    key: "tax",
+    label: "Tax",
+    type: "text",
+    required: true,
+  },
+]
