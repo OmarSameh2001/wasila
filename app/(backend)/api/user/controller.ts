@@ -62,7 +62,16 @@ export const refreshAccessToken = async (req: NextRequest) => {
     const newAccessToken = generateAccessToken(user);
 
     const res = NextResponse.json(
-      { message: "Access token refreshed successfully" },
+      {
+        message: "Access token refreshed successfully",
+        user: {
+          name: user.name,
+          email: user.email,
+          id: user.id,
+          type: user.type,
+          username: user.username,
+        },
+      },
       { status: 200 }
     );
 
@@ -72,6 +81,8 @@ export const refreshAccessToken = async (req: NextRequest) => {
       sameSite: "strict",
       maxAge: 1 * 60 * 60 * 24, // 1 day
     });
+
+    return res;
   } catch (err) {
     return NextResponse.json(
       { error: "Refresh token expired" },
@@ -391,4 +402,3 @@ export const getCurrentUser = async (id: number) => {
     );
   }
 };
-

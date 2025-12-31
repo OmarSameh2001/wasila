@@ -1,20 +1,20 @@
 import Image from "next/image";
 
-export default function TablePart({ type, data }: any) {
+export function TableColumn({ type, data }: any) {
   switch (type) {
     case "logo":
       return (
         <div className="flex items-center">
           <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3">
-            <Image
-              className="rounded-full"
-              src={
-                data
-              }
-              width="40"
-              height="40"
-              alt={'logo'}
-            />
+            {data && (
+              <Image
+                className="rounded-full"
+                src={data}
+                width="40"
+                height="40"
+                alt={"logo"}
+              />
+            )}
           </div>
         </div>
       );
@@ -28,10 +28,77 @@ export default function TablePart({ type, data }: any) {
         </div>
       );
     case "price":
+      return <div className="text-left font-medium text-green-500">{data}</div>;
+    default:
+      return null;
+  }
+}
+
+import {
+  TrashIcon,
+  PencilSquareIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/20/solid";
+import { ActionButton } from "./table";
+import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
+import { PopupContext } from "../utils/context/popup_provider";
+
+export function TableIcon({
+  action,
+  row,
+  query,
+}: {
+  action: ActionButton;
+  row: any;
+  query?: string;
+}) {
+  const {setComponent} = useContext(PopupContext)
+  const queryClient = useQueryClient();
+  const name = row.name;
+  async function handleDelete() {
+    const del = window.confirm(
+      `Are you sure you want to delete ${name || "this"}?`
+    );
+    if (del) {
+      await action.onClick(row.id);
+    }
+    if (query)
+      queryClient.invalidateQueries([query] as InvalidateQueryFilters<
+        readonly unknown[]
+      >);
+  }
+
+  // async function handleEdit() {
+  //   setComponent(
+
+  //   )
+  // }
+  switch (action.name.toLowerCase()) {
+    case "delete":
       return (
-        <div className="text-left font-medium text-green-500">{data}</div>
+        <TrashIcon
+          className="text-red-500 size-7 cursor-pointer p-1"
+          onClick={handleDelete}
+          title={name ? action.name + " " + name : action.name}
+        />
+      );
+    case "edit":
+      return (
+        <PencilSquareIcon
+          className="text-yellow-500 size-7 cursor-pointer p-1"
+          onClick={() => action.onClick(row.id, row)}
+          title={name ? action.name + " " + name : action.name}
+        />
       );
     default:
       return null;
+      return (
+        <InformationCircleIcon
+          className="text-blue-500 size-7 cursor-pointer p-1"
+          // onClick={action.onClick}
+          title={name ? action.name + " " + name : action.name}
+        />
+      );
   }
 }

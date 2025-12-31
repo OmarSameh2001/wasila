@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { changeClient, deleteClient, getClientById } from "../controller";
 import { authMiddleware } from "../../../../_middelware/auth";
 import { authError } from "@/app/(backend)/_lib/errors";
+import dynamicId from "@/app/(backend)/_lib/dynamic_id";
 
 export async function GET(
   req: NextRequest,
@@ -9,7 +10,8 @@ export async function GET(
 ) {
   try {
     const { id, type } = await authMiddleware(req, "BROKER");
-    const { id: clientId } = context.params;
+    // const { id: clientId } = context.params;
+    const clientId = dynamicId(req.url);
 
     return await getClientById(req, Number(id), type, Number(clientId));
   } catch (error) {
@@ -23,7 +25,8 @@ export async function PUT(
 ) {
   try {
     const { id, type } = await authMiddleware(req, "BROKER");
-    const { id: clientId } = context.params;
+    // const { id: clientId } = context.params;
+    const clientId = dynamicId(req.url);
 
     return await changeClient(req, Number(id), type, Number(clientId));
   } catch (error) {
@@ -38,7 +41,8 @@ export async function DELETE(
 ) {
   try {
     const { id, type } = await authMiddleware(req, "BROKER");
-    const { id: clientId } = context.params;
+    // const { id: clientId } = context.params;
+    const clientId = dynamicId(req.url);
 
     return await deleteClient(req, Number(id), type, Number(clientId));
   } catch (error) {

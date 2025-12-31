@@ -18,5 +18,5 @@ export const createRecord = async (data: intialRecord) => {
 }
 
 export const updateRecord = async (id: number, data: intialRecord) => {
-    return await axiosInstance.put(`/record`, {id, ...data});
+    return await axiosInstance.put(`/record/${id}`, data);
 }

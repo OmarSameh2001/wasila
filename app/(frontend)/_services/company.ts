@@ -10,12 +10,12 @@ export const getCompany = async (id: number) => {
     return await axiosInstance.get(`/company/${id}`);
 }
 
-export const createCompany = async (data: IntialCompany) => {
+export const createCompany = async (data: any) => {
     return await axiosInstance.post('/company', data);
 }
 
 export const updateCompany = async (id: number, data: IntialCompany) => {
-    return await axiosInstance.put(`/company`, {id, ...data});
+    return await axiosInstance.put(`/company/${id}`, data);
 }
 
 export const deleteCompany = async (id: number) => {

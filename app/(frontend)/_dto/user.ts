@@ -86,3 +86,11 @@ export interface loginUser {
     password: string;
     remember?: boolean;
 }
+
+export interface UserContext {
+    id: number;
+    name: string;
+    username: string;
+    email?: string | null;
+    type: string;
+}

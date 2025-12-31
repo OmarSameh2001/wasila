@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteRecord, getRecord, updateRecord } from "../controller";
 import { authMiddleware } from "@/app/(backend)/_middelware/auth";
+import dynamicId from "@/app/(backend)/_lib/dynamic_id";
 
 export async function GET(req: NextRequest, context: any) {
   try {
     const { id, type } = await authMiddleware(req, "ALL");
-    const { id: recordId } = context.params;
+    // const { id: recordId } = context.params;
+    const recordId = dynamicId(req.url);
     const numRecordId = Number(recordId);
     if (!numRecordId)
       return NextResponse.json(
@@ -26,7 +28,8 @@ export async function GET(req: NextRequest, context: any) {
 export async function PUT(req: NextRequest, context: any) {
   try {
     const { id, type } = await authMiddleware(req, "BROKER");
-    const { id: recordId } = context.params;
+    // const { id: recordId } = context.params;
+    const recordId = dynamicId(req.url);
     const numRecordId = Number(recordId);
     if (!numRecordId)
       return NextResponse.json(
@@ -47,7 +50,8 @@ export async function PUT(req: NextRequest, context: any) {
 export async function DELETE(req: NextRequest, context: any) {
   try {
     const { id, type } = await authMiddleware(req, "BROKER");
-    const { id: recordId } = context.params;
+    // const { id: recordId } = context.params;
+    const recordId = dynamicId(req.url);
     const numRecordId = Number(recordId);
     if (!numRecordId)
       return NextResponse.json(

@@ -29,24 +29,5 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
-  try {
-    authMiddleware(req, "ADMIN");
-    const company = await updateCompany(req);
-    return NextResponse.json(company, { status: 200 });
-  } catch (error) {
-    console.error("Error updating company:", error);
-    return authError((error as Error).message);
-  }
-}
 
-export async function DELETE(req: NextRequest) {
-  try {
-    authMiddleware(req, "ADMIN");
-    const company = await deleteCompany(req);
-    return NextResponse.json(company, { status: 200 });
-  } catch (error) {
-    console.error("Error deleting company:", error);
-    return authError((error as Error).message);
-  }
-}
+

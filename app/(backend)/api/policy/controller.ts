@@ -60,8 +60,7 @@ export async function getPolicies(req: NextRequest) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
 
-
-    return await filterPrisma(prisma.policy, page, limit, {}, url, 'policy');
+    return await filterPrisma(prisma.policy, page, limit, {}, url, "policy");
 
     // return NextResponse.json(policies, { status: 200 });
   } catch (error) {
@@ -123,35 +122,22 @@ export async function getPolicyById(req: NextRequest, id: number) {
 }
 
 export async function updatePolicy(
+  id: number,
   req: NextRequest,
   brokerId: number,
   type: string
 ) {
   try {
     const { id, ...data } = await req.json();
-    let policy = null;
-    if (type === "ADMIN") {
-      policy = await prisma.policy.update({
-        where: { id },
-        data,
-      });
-      if (!policy) {
-        return NextResponse.json(
-          { error: "Policy not found" },
-          { status: 404 }
-        );
-      }
-    } else if (type === "BROKER") {
-      policy = await prisma.policy.update({
-        where: { id, brokerId: id },
-        data,
-      });
-      if (!policy) {
-        return NextResponse.json(
-          { error: "Policy not managed by broker" },
-          { status: 403 }
-        );
-      }
+    const policy = await prisma.policy.update({
+      where: { id, ...(type === "BROKER" && { brokerId }) },
+      ...data,
+    });
+    if (!policy) {
+      return NextResponse.json(
+        { error: "Policy not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(policy, { status: 200 });
@@ -165,33 +151,19 @@ export async function updatePolicy(
 }
 
 export async function deletePolicy(
-  req: NextRequest,
+  id: number,
   brokerId: number,
   type: string
 ) {
   try {
-    const { id } = await req.json();
-    let policy = null;
-    if (type === "ADMIN") {
-      policy = await prisma.policy.delete({
-        where: { id },
+    const policy = await prisma.policy.delete({
+        where: { id, ...(type === "BROKER" && { brokerId }) },
       });
-      if (!policy) {
-        return NextResponse.json(
-          { error: "Policy not found" },
-          { status: 404 }
-        );
-      }
-    } else if (type === "BROKER") {
-      policy = await prisma.policy.delete({
-        where: { id, brokerId: id },
-      });
-      if (!policy) {
-        return NextResponse.json(
-          { error: "Policy not managed by broker" },
-          { status: 403 }
-        );
-      }
+    if (!policy) {
+      return NextResponse.json(
+        { error: "Policy not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(policy, { status: 200 });

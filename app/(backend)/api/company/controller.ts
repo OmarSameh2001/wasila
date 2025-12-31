@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../_lib/prisma";
 import { filterPrisma } from "../../_lib/filtering";
+import { handlePrismaError } from "../../_lib/errors";
 
 export async function getAllCompanies(req: NextRequest) {
   try {
@@ -21,10 +22,8 @@ export async function getAllCompanies(req: NextRequest) {
   }
 }
 
-export async function getCompanyById(req: NextRequest, id: number) {
+export async function getCompanyById(id: number) {
   try {
-    const { id: _id } = await req.json();
-    id = id || _id;
     const company = await prisma.company.findUnique({
       where: { id },
       include: { policies: true },
@@ -57,20 +56,16 @@ export async function createCompany(req: NextRequest) {
     });
     return NextResponse.json(company, { status: 201 });
   } catch (error) {
-    console.error("Error creating company:", error);
-    return NextResponse.json(
-      { error: "Error creating company" },
-      { status: 500 }
-    );
+    handlePrismaError(error)
   }
 }
 
-export async function updateCompany(req: NextRequest) {
+export async function updateCompany(req: NextRequest, id: number) {
   try {
-    const { id, ...data } = await req.json();
+    const { id: _id, ...data } = await req.json();
     const company = await prisma.company.update({
       where: { id },
-      data,
+      ...data,
     });
     return NextResponse.json(company, { status: 200 });
   } catch (error) {
@@ -82,9 +77,8 @@ export async function updateCompany(req: NextRequest) {
   }
 }
 
-export async function deleteCompany(req: NextRequest) {
+export async function deleteCompany(id: number) {
   try {
-    const { id } = await req.json();
     const company = await prisma.company.delete({
       where: { id },
     });
@@ -92,7 +86,7 @@ export async function deleteCompany(req: NextRequest) {
   } catch (error) {
     console.error("Error deleting company:", error);
     return NextResponse.json(
-      { error: "Error deleting company" },
+      { error: `Error deleting company ${id}` },
       { status: 500 }
     );
   }

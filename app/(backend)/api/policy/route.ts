@@ -26,20 +26,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const { id, type } = await authMiddleware(req, "BROKER");
-    return deletePolicy(req, Number(id), type);
-  } catch (error) {
-    return authError((error as Error).message);
-  }
-}
-
-export async function PUT(req: NextRequest) {
-  try {
-    const { id, type } = await authMiddleware(req, "BROKER");
-    return updatePolicy(req, Number(id), type);
-  } catch (error) {
-    return authError((error as Error).message);
-  }
-}
