@@ -1,3 +1,5 @@
+import { DynamicFormField } from "../_components/form/dynamic_form";
+
 export const recordsList = [{
   id: 1,
   totalAmount: 5000,
@@ -67,3 +69,23 @@ export interface Record extends intialRecord {
     name: string;
   };
 }
+
+
+export const editableRecordColumns: DynamicFormField[] = [
+  {
+    key: "name",
+    label: "Name",
+    type: "text",
+    required: true,
+  },
+  {
+    key: "address",
+    label: "Address",
+    type: "text",
+  },
+  {
+    key: "logo",
+    label: "Logo",
+    type: "text",
+  },
+];

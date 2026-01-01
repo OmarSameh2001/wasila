@@ -21,3 +21,7 @@ export const updateCompany = async (id: number, data: IntialCompany) => {
 export const deleteCompany = async (id: number) => {
     return await axiosInstance.delete(`/company/${id}`);
 }
+
+export const searchCompany = async (search: string) => {
+    return await axiosInstance.get(`/company/search?${search}`);
+}

@@ -1,4 +1,4 @@
-import { handleUrl } from "@/app/(backend)/_lib/filtering";
+import { filterPrisma, handleUrl } from "@/app/(backend)/_lib/filtering";
 import { prisma } from "@/app/(backend)/_lib/prisma";
 import UserHelper from "@/app/(backend)/_lib/user";
 import { NextRequest, NextResponse } from "next/server";
@@ -221,3 +221,24 @@ export const getAllClients = async (req: NextRequest, userId: number, type: stri
     );
   }
 };
+
+
+export async function searchClient(
+  req: NextRequest,
+  userId: number,
+  type: string
+) {
+  try {
+    const url = new URL(req.url);
+    return await filterPrisma(
+      prisma.user,
+      1,
+      10,
+      {...(type === "BROKER" && { brokerId: userId }), type: "CLIENT"},
+      url,
+      "user",
+      {},
+      { name: true, id: true }
+    );
+  } catch (error) {}
+}

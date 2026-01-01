@@ -54,3 +54,15 @@ export const updateClient = async (id: number, data: any) => {
 export const deleteClient = async (id: number) => {
   return await axiosInstance.delete(`/user/client/${id}`);
 };
+
+export const searchClient = async (search: string) => {
+    return await axiosInstance.get(`/user/client/search?${search}`);
+}
+
+export const searchUser = async (search: string) => {
+    return await axiosInstance.get(`/user/admin/user/search?${search}`);
+}
+
+export const searchBroker = async (search: string) => {
+    return await axiosInstance.get(`/user/admin/broker/search?${search}`);
+}

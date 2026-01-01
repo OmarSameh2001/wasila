@@ -15,11 +15,11 @@ const modelFields: Record<string, Record<string, string>> = {
     userId: 'number',
     policyId: 'number',
   },
-  Company: {
+  company: {
     id: 'number',
     name: 'string',
   },
-  Policy: {
+  policy: {
     'id': 'number',
     'type': 'string',
     'companyId': 'number',
@@ -45,6 +45,7 @@ const operatorMap: Record<string, string> = {
 function parseKey(key: string): [string, string?] {
   // Split key like "totalAmount_gt" -> ["totalAmount", "gt"]
   const parts = key.split('_');
+  
   if (parts.length > 1) {
     const op = operatorMap[parts[1]];
     return [parts[0], op];
@@ -53,6 +54,7 @@ function parseKey(key: string): [string, string?] {
 }
 
 export function castParam(modelName: string, key: string, value: string) {
+  // console.log(modelName, key, value);
   const [field, operator] = parseKey(key);
   if (!modelFields[modelName]?.[field]) return null;
 
@@ -66,7 +68,8 @@ export function castParam(modelName: string, key: string, value: string) {
     case 'date': casted = new Date(value); break;
     default: return null;
   }
-  
+  // console.log(casted, operator, field, type);
+  if (operator === 'contains') return { [field]: { contains: casted, mode: 'insensitive' } };
   if (operator) return { [field]: { [operator]: casted } };
   return { [field]: casted };
 }

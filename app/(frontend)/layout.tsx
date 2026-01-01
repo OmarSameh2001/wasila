@@ -6,6 +6,7 @@ import { AuthProvider } from "./_components/utils/context/auth";
 import { PopupProvider } from "./_components/utils/context/popup_provider";
 import QueryProvider from "./_components/utils/query/query";
 import PopupComponent from "./_components/popup/popup";
+import { ThemeProvider } from "./_components/utils/theme/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,10 +29,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+  storageKey="theme"
+          >
         <AuthProvider>
           <PopupProvider>
             <QueryProvider>
@@ -41,6 +49,7 @@ export default function RootLayout({
             </QueryProvider>
           </PopupProvider>
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

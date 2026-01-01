@@ -8,6 +8,7 @@ import {
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { DarkToggle } from "./dark_mode";
 // import { useActiveNav } from "@/hooks/useActiveNav";
 export function useActiveNav(href: string) {
   const pathname = usePathname();
@@ -53,7 +54,7 @@ export default function Navbar() {
   return (
     <Disclosure
       as="nav"
-      className="relative w-full bg-gray-800/50 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10"
+      className="relative w-full bg-white dark:bg-gray-800/50 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10"
     >
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
@@ -75,6 +76,7 @@ export default function Navbar() {
               />
               <span className="text-xl font-bold">Wasila</span>
             </Link>
+            {/* <DarkToggle /> */}
 
             <div className="hidden sm:ml-6 sm:block">
               <div className="flex space-x-4">

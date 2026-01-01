@@ -21,3 +21,7 @@ export const createPolicy = async (data: IntialPolicy) => {
 export const updatePolicy = async (id: number, data: IntialPolicy) => {
     return await axiosInstance.put(`/policy/${id}`, data);
 }
+
+export const searchPolicy = async (search: string) => {
+    return await axiosInstance.get(`/policy/search?${search}`);
+}

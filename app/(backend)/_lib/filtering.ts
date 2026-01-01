@@ -13,6 +13,7 @@ export function handleUrl(url: URL, modelName: string) {
       if (["page", "limit", "sort", "order"].includes(key)) return acc;
 
       const parsed = castParam(modelName, key, value);
+      // console.log(parsed);
       if (!parsed) return acc;
 
       // Merge into the final object
@@ -32,13 +33,14 @@ export const filterPrisma = async <T>(
   params?: { [key: string]: string | number },
   url?: URL,
   modelName?: string,
-  include: any = {}
+  include: any = {},
+  select: any = {}
 ) => {
   //: Promise<PaginatedResult<T>>
   try {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.max(limit, 1);
-
+    // console.log("url", url)
     if (url && modelName) params = { ...params, ...handleUrl(url, modelName) };
 
     const skip = (safePage - 1) * safeLimit;
@@ -59,7 +61,8 @@ export const filterPrisma = async <T>(
         ...(params && { where: params }),
         skip,
         take: safeLimit,
-        include,
+        ...(Object.keys(include || {}).length ? { include } : {}),
+        ...(!Object.keys(include || {}).length && Object.keys(select || {}).length ? { select } : {}),
       }),
       model.count({
         ...(params && { where: params }),

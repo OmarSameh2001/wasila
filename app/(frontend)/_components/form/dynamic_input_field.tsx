@@ -1,4 +1,11 @@
-export default function DynamicInputField({ field, formState, handleChange }: any) {
+import DynamicSearchField from "./search_field";
+
+export default function DynamicInputField({
+  field,
+  formState,
+  handleChange,
+  setFormState,
+}: any) {
   switch (field.type) {
     case "checkbox":
       return (
@@ -8,23 +15,33 @@ export default function DynamicInputField({ field, formState, handleChange }: an
           required={field.required ?? false}
         />
       );
-    
-    case 'select':
-      handleChange(field.key, field.type)
+
+    case "select":
       return (
         <select
-          value={formState[field.key] || field?.choices?.[0]}
+          value={formState[field.key] || ""}
           onChange={handleChange(field.key, field.type)}
           required={field.required ?? false}
           className="border border-gray-300 rounded px-2 py-1 mx-5"
         >
+          <option value="" className="dark:bg-black">
+            -- Select an option --
+          </option>
           {field.choices?.map((choice: any) => (
             <option key={choice} value={choice} className="dark:bg-black">
               {choice}
             </option>
           ))}
         </select>
-    )
+      );
+    case "search":
+      return (
+        <DynamicSearchField
+          field={field}
+          formState={formState}
+          handleChange={handleChange}
+        />
+      );
     default:
       return (
         <input

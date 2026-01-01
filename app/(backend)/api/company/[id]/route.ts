@@ -12,8 +12,8 @@ export async function GET(
     await authMiddleware(req, "ALL");
     // const { id } = context.params;
     const id = dynamicId(req.url);
-    const policy = await getCompanyById(Number(id));
-    return policy;
+    const company = await getCompanyById(Number(id));
+    return company;
   } catch (error) {
     return authError((error as Error).message);
   }

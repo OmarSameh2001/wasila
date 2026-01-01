@@ -154,7 +154,7 @@ export const editablePolicyColumns: DynamicFormField[] = [
   {
     key: "companyId",
     label: "Company",
-    type: "text",
+    type: "search",
     required: true,
   },
   {

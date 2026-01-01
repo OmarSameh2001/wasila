@@ -19,7 +19,8 @@ export type DynamicFormField<T = any> = {
     | "checkbox"
     | "textarea"
     | "file"
-    | "select";
+    | "select"
+    | "search";
 };
 
 type DynamicFormProps = {
@@ -104,6 +105,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               field={field}
               formState={formState}
               handleChange={handleChange}
+              setFormState={setFormState}
             />
           </label>
           {errors[field.key] && (

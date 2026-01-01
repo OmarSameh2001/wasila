@@ -14,7 +14,7 @@ export function TableColumn({ type, data }: any) {
       : null;
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center justify-center">
       {logo && (
         <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3">
           <Image
@@ -32,7 +32,7 @@ export function TableColumn({ type, data }: any) {
   );
 }
     case "text":
-      return <div className="text-left">{data?.name || data}</div>;
+      return <div className="text-center">{data?.name || data}</div>;
     case "action":
       return (
         <div className="flex flex-col gap-2">

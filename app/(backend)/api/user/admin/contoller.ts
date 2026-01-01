@@ -1,4 +1,4 @@
-import { handleUrl } from "@/app/(backend)/_lib/filtering";
+import { filterPrisma, handleUrl } from "@/app/(backend)/_lib/filtering";
 import { prisma } from "@/app/(backend)/_lib/prisma";
 import { NextResponse, NextRequest } from "next/server";
 
@@ -183,3 +183,20 @@ export const getAllBrokers = async (req: NextRequest) => {
   }
 };
 
+
+export async function searchUser(req: NextRequest, type: "BROKER" | "USER") {
+  try {
+    
+    const url = new URL(req.url);
+    return await filterPrisma(
+      prisma.user,
+      1,
+      10,
+      {type},
+      url,
+      "user",
+      {},
+      { name: true, id: true, username:true }
+    );
+  } catch (error) {}
+}

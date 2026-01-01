@@ -23,7 +23,7 @@ function Table({ name, columns, data, actions, loading, query, addNew }: TablePr
         <h2 className="font-semibold text-gray-800 dark:text-gray-100">
           {name || "Table"}
         </h2>
-        <button onClick={addNew}>Add New {name || ""}</button>
+        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer" onClick={addNew}>Add New {name || ""}</button>
       </header>
       <div className="p-3">
         {/* Table */}
@@ -33,24 +33,24 @@ function Table({ name, columns, data, actions, loading, query, addNew }: TablePr
               {/* Table header */}
               <thead className="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {columns?.map((column: any) => (
+                  {(columns ?? []).map((column: any) => (
                     <th className="p-2 whitespace-nowrap" key={column.key}>
-                      <div className="font-semibold text-left">
+                      <span className="font-semibold text-left">
                         {column.name}
-                      </div>
+                      </span>
                     </th>
                   ))}
-                  {actions?.length && actions?.length > 0 && (
+                  {actions?.length && actions?.length > 0 ? (
                     <th className="p-2 whitespace-nowrap">
-                      <div className="font-semibold text-left">Actions</div>
+                      <span className="font-semibold text-left">Actions</span>
                     </th>
-                  )}
+                  ): null}
                 </tr>
               </thead>
               {/* Table body */}
               <tbody>
                 {data.map((row, rowIndex) => (
-                  <tr key={row.id ?? rowIndex}>
+                  <tr key={row.id ?? rowIndex} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                     {columns.map((column) => (
                       <td key={column.key} className="p-2 whitespace-nowrap">
                         <TableColumn
@@ -59,8 +59,8 @@ function Table({ name, columns, data, actions, loading, query, addNew }: TablePr
                         />
                       </td>
                     ))}
-                    {actions?.length && actions?.length > 0 && (
-                      <td className="p-2 whitespace-nowrap flex gap-2 items-center">
+                    {actions && actions.length > 0  && (
+                      <td className="p-2 whitespace-nowrap flex gap-2 items-center justify-center">
                         {actions?.map((action, index) => (
                             <TableIcon action={action} key={action.name + index} row={row} query={query}/>
                         ))}

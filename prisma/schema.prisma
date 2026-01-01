@@ -26,8 +26,8 @@ model User{
 
   // Link to the Broker profile
   brokerId Int?
-  broker   User?   @relation("BrokerRelation", fields: [brokerId], references: [id])
-  clients  User[]  @relation("BrokerRelation")
+  broker   User?   @relation("CreatorBrokerRelation", fields: [brokerId], references: [id])
+  clients  User[]  @relation("CreatorBrokerRelation")
 
 
   managedPolicies Policy[]
@@ -37,7 +37,7 @@ model User{
   //client   Client?   @relation(fields: [clientId], references: [id], onDelete: Restrict)
 
   // Records this user MANAGED as an employee/agent
-  managedRecords Record[] @relation("AgentRelation")
+  managedRecords Record[] @relation("BrokerRelation")
   records    Record[] @relation("ClientRelation")
   managedCount     Int      @default(0)
   clientCount      Int      @default(0)
@@ -69,9 +69,9 @@ model Record {
   clientId     Int
   client       User @relation("ClientRelation", fields: [clientId], references: [id])
   
-  // The agent who created the record
-  userId       Int
-  agent        User   @relation("AgentRelation", fields: [userId], references: [id])
+  // The broker who created the record
+  brokerId       Int
+  broker        User   @relation("BrokerRelation", fields: [brokerId], references: [id])
   
   policyId     Int
   policy       Policy   @relation(fields: [policyId], references: [id])
@@ -82,7 +82,7 @@ model Record {
 
   @@map("records")
   @@index([clientId])
-  @@index([userId])
+  @@index([brokerId])
   @@index([policyId])
 }
 
