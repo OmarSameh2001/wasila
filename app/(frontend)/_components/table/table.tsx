@@ -1,6 +1,7 @@
-import { Button } from "@headlessui/react";
+"use client"
 import { TableColumn, TableIcon } from "./parts";
-import { Axios, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
+import { usePathname, useRouter } from 'next/navigation'
 
 export interface ActionButton {
   name: string;
@@ -17,6 +18,8 @@ interface TableProps {
 }
 
 function Table({ name, columns, data, actions, loading, query, addNew }: TableProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   return (
     <div className="col-span-full xl:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl">
       <header className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
@@ -52,7 +55,7 @@ function Table({ name, columns, data, actions, loading, query, addNew }: TablePr
                 {data.map((row, rowIndex) => (
                   <tr key={row.id ?? rowIndex} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                     {columns.map((column) => (
-                      <td key={column.key} className="p-2 whitespace-nowrap">
+                      <td key={column.key} className="p-2 whitespace-nowrap cursor-pointer" onClick={() => router.push(`${pathname}/${row.id}`)}>
                         <TableColumn
                           type={column.type}
                           data={row[column.key]}

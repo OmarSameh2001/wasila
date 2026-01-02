@@ -27,7 +27,7 @@ export function TableColumn({ type, data }: any) {
         </div>
       )}
 
-      {name && <span className="pb-4">{name}</span>}
+      {name && <span className="">{name}</span>}
     </div>
   );
 }

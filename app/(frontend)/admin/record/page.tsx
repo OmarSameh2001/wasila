@@ -1,12 +1,11 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import Table from "../../_components/table/table";
-import { recordsColumns, recordsList } from "../../_dto/record";
+import { recordsColumns } from "../../_dto/record";
 import { getRecords } from "../../_services/record";
 import { PopupContext } from "../../_components/utils/context/popup_provider";
 import { useContext, useState } from "react";
-import DynamicForm from "../../_components/form/dynamic_form";
-
+import { useRouter } from 'next/navigation'
 export default function AdminRecord() {
   const { setComponent, setIsOpen } = useContext(PopupContext);
   const [newCompany, setNewCompany] = useState({
@@ -15,43 +14,16 @@ export default function AdminRecord() {
     logo: "",
   });
 
+  const router = useRouter()
+
   const { isLoading, isError, data, error } = useQuery({
     queryKey: ["adminRecord"],
     queryFn: () => getRecords(1, 10, ""),
   });
-  console.log(data);
+  
 
   function handleAddNew() {
-    setComponent(
-      <>
-        <DynamicForm
-          fields={[
-            {
-              key: "name",
-              label: "Name",
-              type: "text",
-              setter: (val) => setNewCompany({ ...newCompany, name: val }),
-              value: newCompany.name,
-            },
-            {
-              key: "address",
-              label: "Address",
-              type: "text",
-              setter: (val) => setNewCompany({ ...newCompany, address: val }),
-              value: newCompany.address,
-            },
-            {
-              key: "logo",
-              label: "Logo",
-              type: "file",
-              setter: (val) => setNewCompany({ ...newCompany, logo: val }),
-              value: newCompany.logo,
-            },
-          ]}
-          onSubmit={() => {}}
-        />
-      </>
-    );
+    router.push('/admin/record/create')
   }
   return (
     <div className="">
@@ -63,6 +35,7 @@ export default function AdminRecord() {
           actions={[]}
           loading={isLoading}
           addNew={handleAddNew}
+          query="adminRecord"
         />
       </div>
     </div>

@@ -15,9 +15,11 @@ import {
 import { PopupContext } from "../../_components/utils/context/popup_provider";
 import DynamicForm from "../../_components/form/dynamic_form";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 export default function AdminPolicy() {
   const { setComponent } = useContext(PopupContext);
+  const router = useRouter()
 
   const { isLoading, data } = useQuery({
     queryKey: ["adminPolicies"],
@@ -25,24 +27,33 @@ export default function AdminPolicy() {
   });
 
   function handleAddNew() {
-    setComponent(
-      <DynamicForm
-        fields={editablePolicyColumns}
-        title="Add New Policy"
-        type="create"
-        query="adminPolicies"
-        onSubmit={createPolicy}
-      />
-    );
+    // setComponent(
+    //   <DynamicForm
+    //     fields={editablePolicyColumns}
+    //     title="Add New Policy"
+    //     type="create"
+    //     query="adminPolicies"
+    //     onSubmit={createPolicy}
+    //   />
+    // );
+    router.push('/admin/policy/create')
   }
+  
   function handleUpdate(id: number, data: any) {
-    console.log(data);
+    
     setComponent(
       <DynamicForm
-        fields={editablePolicyColumns.map((column) => ({
-          ...column,
-          value: data[column.key],
-        }))}
+        fields={editablePolicyColumns.map((column) => {
+          const getNestedValue = (obj: any, path: string) => {
+            return path.split('.').reduce((current, key) => current?.[key], obj);
+          };
+
+          return {
+            ...column,
+            value: data[column.key],
+            ...(column.prev ? { prev: getNestedValue(data, column.prev) } : {}),
+          };
+        })}
         title="Update Policy"
         type="update"
         query="adminPolicies"

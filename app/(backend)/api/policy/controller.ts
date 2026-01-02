@@ -114,6 +114,19 @@ export async function getPolicyById(req: NextRequest, id: number) {
         healthPolicy: {
           include: { healthPricings: true },
         },
+        company: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          }
+        },
+        broker: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
       },
     });
 

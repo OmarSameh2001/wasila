@@ -97,6 +97,7 @@ export interface Policy extends IntialPolicy {
   company: {
     id: number;
     name: string;
+    logo?: string;
   };
   broker?: {
     id: number;
@@ -108,34 +109,47 @@ export interface Policy extends IntialPolicy {
 }
 
 export interface HealthPolicy extends Policy {
-  lifeInsurance: string;
-  totalPermanentDisability: string;
-  accidentalDeath: string;
-  partialPermanentDisability: string;
-  medicalTpa: string;
-  network: string;
-  areaOfCoverage: string;
-  annualCeilingPerPerson: number;
-  inPatientAccommodation: string;
-  icu: string;
-  parentAccommodation: string;
-  doctorConsultation: string;
-  labScan: string;
-  physiotherapy: string;
-  medication: string;
-  dental: string;
-  optical: string;
-  maternityLimit: string;
-  newbornCeiling: string;
-  preExistingCases: string;
-  newChronic: string;
-  organTransplant: string;
-  groundAmbulance: string;
-  reimbursementCoverage: string;
-  numberOfInsuredMembers: number;
-  averagePremiumPerHead: number;
+  healthPolicy: {
+    lifeInsurance: string;
+    totalPermanentDisability: string;
+    accidentalDeath: string;
+    partialPermanentDisability: string;
+    medicalTpa: string;
+    network: string;
+    areaOfCoverage: string;
+    annualCeilingPerPerson: number;
+    inPatientAccommodation: string;
+    icu: string;
+    parentAccommodation: string;
+    doctorConsultation: string;
+    labScan: string;
+    physiotherapy: string;
+    medication: string;
+    dental: string;
+    optical: string;
+    maternityLimit: string;
+    newbornCeiling: string;
+    preExistingCases: string;
+    newChronic: string;
+    organTransplant: string;
+    groundAmbulance: string;
+    reimbursementCoverage: string;
+    numberOfInsuredMembers: number;
+    averagePremiumPerHead: number;
+    healthPricings?: healthPricing[];
+  };
 }
-
+export interface healthPricing {
+  id: number;
+  minAge: number;
+  maxAge: number;
+  mainPrice: number;
+  dependentPrice: number;
+  healthId: number;
+}
+// export interface HealthPolicyWithPricing extends HealthPolicy {
+//   healthPricings?: healthPricing[];
+// }
 
 export const editablePolicyColumns: DynamicFormField[] = [
   {
@@ -156,6 +170,7 @@ export const editablePolicyColumns: DynamicFormField[] = [
     label: "Company",
     type: "search",
     required: true,
+    prev: "company.name",
   },
   {
     key: "tax",
@@ -163,4 +178,4 @@ export const editablePolicyColumns: DynamicFormField[] = [
     type: "text",
     required: true,
   },
-]
+];

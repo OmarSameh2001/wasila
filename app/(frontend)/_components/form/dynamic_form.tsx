@@ -11,6 +11,7 @@ export type DynamicFormField<T = any> = {
   validation?: RegExp;
   required?: boolean;
   choices?: string[];
+  prev?: string;
   type?:
     | "text"
     | "email"
@@ -90,7 +91,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     console.log(e)
   }
   };
-
+  console.log(fields);
   return (
     <form
       onSubmit={handleSubmit}
@@ -100,7 +101,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       {fields.map((field) => (
         <div key={field.key} style={{ marginBottom: "1rem", alignSelf: "start" }}>
           <label>
-            {field.label}
+            {field.required && <span style={{ color: "red" }}>*</span>}
+            {`${field.label}: ${field.prev ?? ""}`}
             <DynamicInputField
               field={field}
               formState={formState}
