@@ -24,24 +24,32 @@ model User{
   contactInfo Json?
   dob      DateTime?
 
+  // Email verification and password reset
+  emailVerified        Boolean   @default(false)
+  emailVerificationToken String?  @unique
+  emailVerificationExpiry DateTime?
+  passwordResetToken   String?   @unique
+  passwordResetExpiry  DateTime?
+
+
   // Link to the Broker profile
   brokerId Int?
   broker   User?   @relation("CreatorBrokerRelation", fields: [brokerId], references: [id])
   clients  User[]  @relation("CreatorBrokerRelation")
 
-
+  // policies created by this broker
   managedPolicies Policy[]
 
-  // Link to the Client profile
-  //clientId String?      @unique
-  //client   Client?   @relation(fields: [clientId], references: [id], onDelete: Restrict)
 
   // Records this user MANAGED as an employee/agent
   managedRecords Record[] @relation("BrokerRelation")
-  records    Record[] @relation("ClientRelation")
+  // count of managed records as broker
   managedCount     Int      @default(0)
+
+  // Records this user MANAGED as a client
+  records    Record[] @relation("ClientRelation")
+  // count of managed records as client
   clientCount      Int      @default(0)
-  //managedClients Client[] @relation("ClientManagerRelation")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

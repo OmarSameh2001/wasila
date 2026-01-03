@@ -13,6 +13,22 @@ export const login = async (data: loginUser) => {
   return await axiosAuth.post("/user/login", data);
 };
 
+export const forgetPassword = async (email: string) => {
+  return await axiosInstance.post("/user/forget_password", { email });
+}
+
+export const resetPassword = async (data: any) => {
+  return await axiosInstance.post("/user/verify/password", data);
+}
+
+export const verifyEmail = async (data: any) => {
+  return await axiosInstance.post("/user/verify/email", data);
+}
+
+export const resendVerification = async (data: any) => {
+  return await axiosInstance.post("/user/verify/resend_email", data);
+}
+
 export const getBrokers = async (search = "") => {
   return await axiosInstance.get(
     "/user/admin/broker" + (search ? `?${search}` : "")

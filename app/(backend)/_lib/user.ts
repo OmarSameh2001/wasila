@@ -1,3 +1,5 @@
+import "server-only"
+
 import bcryptjs from 'bcryptjs';
 
 const hashPassword = async (password: string): Promise<{ success: boolean, hashedPassword: string }> => {
@@ -36,11 +38,19 @@ const validatePassword = (password: string): { success: boolean, value?: string,
   return { success: false, message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character." };
 };
 
+const isTimePassed = (date: Date, addedTime: number, minTime: number): boolean => {
+  const addedTimeMs = addedTime * 60 * 1000;
+  const minTimeMs = minTime * 60 * 1000;
+  const now = Date.now();
+  const createdAt = date.getTime() - addedTimeMs;
+  return now - createdAt >= minTimeMs;
+};
 const UserHelper = {
   hashPassword,
   comparePassword,
   validateEmail,
-  validatePassword
+  validatePassword,
+  isTimePassed
 };
 
 export default UserHelper;
