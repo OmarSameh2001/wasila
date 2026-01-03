@@ -11,11 +11,35 @@ export const getCompany = async (id: number) => {
 }
 
 export const createCompany = async (data: any) => {
-    return await axiosInstance.post('/company', data);
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+        // Only append if it's actually a File, not a string URL
+        if (key === 'logo' && typeof data[key] === 'string') {
+            return; // Skip existing URL
+        }
+        formData.append(key, data[key]);
+    });
+    return await axiosInstance.post('/company', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
 }
 
-export const updateCompany = async (id: number, data: IntialCompany) => {
-    return await axiosInstance.put(`/company/${id}`, data);
+export const updateCompany = async (id: number, data: any) => {
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+        // Only append if it's actually a File, not a string URL
+        if (key === 'logo' && typeof data[key] === 'string') {
+            return; // Skip existing URL
+        }
+        formData.append(key, data[key]);
+    });
+    return await axiosInstance.put(`/company/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
 }
 
 export const deleteCompany = async (id: number) => {

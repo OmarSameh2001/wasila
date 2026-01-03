@@ -12,6 +12,7 @@ export type DynamicFormField<T = any> = {
   required?: boolean;
   choices?: string[];
   prev?: string;
+  limit?: number;
   type?:
     | "text"
     | "email"
@@ -21,7 +22,8 @@ export type DynamicFormField<T = any> = {
     | "textarea"
     | "file"
     | "select"
-    | "search";
+    | "search"|
+    "image";
 };
 
 type DynamicFormProps = {

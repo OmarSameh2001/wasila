@@ -60,6 +60,8 @@ export const editableCompanyColumns: DynamicFormField[] = [
   {
     key: "logo",
     label: "Logo",
-    type: "text",
+    type: "image",
+    required: true,
+    limit: 1000000,
   },
 ];

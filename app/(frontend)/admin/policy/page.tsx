@@ -39,29 +39,29 @@ export default function AdminPolicy() {
     router.push('/admin/policy/create')
   }
   
-  function handleUpdate(id: number, data: any) {
+  // function handleUpdate(id: number, data: any) {
     
-    setComponent(
-      <DynamicForm
-        fields={editablePolicyColumns.map((column) => {
-          const getNestedValue = (obj: any, path: string) => {
-            return path.split('.').reduce((current, key) => current?.[key], obj);
-          };
+  //   setComponent(
+  //     <DynamicForm
+  //       fields={editablePolicyColumns.map((column) => {
+  //         const getNestedValue = (obj: any, path: string) => {
+  //           return path.split('.').reduce((current, key) => current?.[key], obj);
+  //         };
 
-          return {
-            ...column,
-            value: data[column.key],
-            ...(column.prev ? { prev: getNestedValue(data, column.prev) } : {}),
-          };
-        })}
-        title="Update Policy"
-        type="update"
-        query="adminPolicies"
-        id={id}
-        onSubmit={updatePolicy}
-      />
-    );
-  }
+  //         return {
+  //           ...column,
+  //           value: data[column.key],
+  //           ...(column.prev ? { prev: getNestedValue(data, column.prev) } : {}),
+  //         };
+  //       })}
+  //       title="Update Policy"
+  //       type="update"
+  //       query="adminPolicies"
+  //       id={id}
+  //       onSubmit={updatePolicy}
+  //     />
+  //   );
+  // }
   return (
     <div className="">
       <div className="p-5">
@@ -70,8 +70,8 @@ export default function AdminPolicy() {
           columns={policyColumns}
           data={data?.data?.data}
           actions={[
-            { name: "edit", onClick: handleUpdate },
-            { name: "delete", onClick: deletePolicy },
+            // { name: "edit", onClick: handleUpdate },
+            // { name: "delete", onClick: deletePolicy },
           ]}
           loading={isLoading}
           addNew={handleAddNew}

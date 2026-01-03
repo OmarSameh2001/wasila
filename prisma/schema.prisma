@@ -162,7 +162,7 @@ model HealthPolicy {
   medicalTpa     String
   network          String
   areaOfCoverage   String
-  annualCeilingPerPerson Float
+  annualCeilingPerPerson String
 
   // In-Patient Benefits
   inPatientAccommodation String
@@ -191,27 +191,27 @@ model HealthPolicy {
   reimbursementCoverage     String
 
   // Enrollment & Pricing
-  numberOfInsuredMembers    Int
-  averagePremiumPerHead     Decimal @db.Decimal(10, 2)
+  //numberOfInsuredMembers    Int
+  //averagePremiumPerHead     Decimal @db.Decimal(10, 2)
   
   
   policyId        Int             @unique
   policy          Policy          @relation(fields: [policyId], references: [id])
-  healthPricings  HealthPricing[]
+  healthPricings  Json[]
   
   @@map("health_policies")
 }
 
-model HealthPricing {
-  id           Int    @id @default(autoincrement())
+/*type HealthPricing {
+  //id           Int    @id @default(autoincrement())
   minAge       Int
   maxAge       Int
   mainPrice     Decimal @db.Decimal(10, 2)
   dependentPrice     Decimal @db.Decimal(10, 2)
   
-  healthId     Int
-  healthPolicy HealthPolicy @relation(fields: [healthId], references: [id])
+  //healthId     Int
+  //healthPolicy HealthPolicy @relation(fields: [healthId], references: [id])
   
-  @@map("health_pricings")
-  @@index([healthId])
-}
+  //@@map("health_pricings")
+  //@@index([healthId])
+}*/

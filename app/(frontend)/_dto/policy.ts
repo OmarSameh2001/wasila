@@ -117,7 +117,7 @@ export interface HealthPolicy extends Policy {
     medicalTpa: string;
     network: string;
     areaOfCoverage: string;
-    annualCeilingPerPerson: number;
+    annualCeilingPerPerson: string;
     inPatientAccommodation: string;
     icu: string;
     parentAccommodation: string;
@@ -134,18 +134,15 @@ export interface HealthPolicy extends Policy {
     organTransplant: string;
     groundAmbulance: string;
     reimbursementCoverage: string;
-    numberOfInsuredMembers: number;
-    averagePremiumPerHead: number;
+    // numberOfInsuredMembers: number;
+    // averagePremiumPerHead: number;
     healthPricings?: healthPricing[];
   };
 }
 export interface healthPricing {
-  id: number;
-  minAge: number;
-  maxAge: number;
-  mainPrice: number;
-  dependentPrice: number;
-  healthId: number;
+  age: number;
+  mainPrice?: number;
+  dependentPrice?: number;
 }
 // export interface HealthPolicyWithPricing extends HealthPolicy {
 //   healthPricings?: healthPricing[];
