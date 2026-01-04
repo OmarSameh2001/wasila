@@ -8,12 +8,17 @@ export default function LoadingPage({
   return (
     <div
       className={
-        `flex items-center justify-center` +
-        (height ? " h-" + height : "h-screen") +
-        (width ? " w-" + width : "")
+        `flex flex-col items-center justify-center ${
+          height ? "h-" + height : "min-h-[70vh]"
+        } ${width ? "w-" + width : ""}`
+        // (height ? " h-" + height : "h-screen") +
+        // (width ? " w-" + width : "")
       }
     >
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+        <span className="text-2xl font-bold text-gray-900 dark:text-white mt-4">
+          Wasila
+        </span>
     </div>
   );
 }

@@ -21,13 +21,14 @@ const navigation = {
   main: [
     { name: "Broker", href: "/broker" },
     { name: "Admin", href: "/admin" },
+    { name: "Auth", href: "/login" },
   ],
   broker: [
-    { name: "My Policies", href: "/broker" },
-    { name: "Health Policies", href: "/broker/health" },
-    { name: "My Clients", href: "/broker/clients" },
-    { name: "My Records", href: "/broker/records" },
-    { name: "Settings", href: "/broker/settings" },
+    // { name: "My Policies", href: "/broker" },
+    // { name: "Health Policies", href: "/broker/health" },
+    // { name: "My Clients", href: "/broker/clients" },
+    // { name: "My Records", href: "/broker/records" },
+    // { name: "Settings", href: "/broker/settings" },
   ],
   admin: [
     { name: "Records", href: "/admin/record" },
@@ -36,6 +37,10 @@ const navigation = {
     { name: "Brokers", href: "/admin/broker" },
     { name: "Companies", href: "/admin/company" },
   ],
+  auth: [
+    { name: "Login", href: "/login" },
+    { name: "Register", href: "/register" },
+  ]
 };
 
 function classNames(...classes: string[]) {
@@ -49,7 +54,7 @@ export default function Navbar() {
     ? navigation.admin
     : pathname.startsWith("/broker")
     ? navigation.broker
-    : navigation.main;
+    : pathname.startsWith("/login") || pathname.startsWith("/register") ? navigation.auth : navigation.main;
 
   return (
     <Disclosure
@@ -68,12 +73,10 @@ export default function Navbar() {
 
           {/* Logo + Desktop Nav */}
           <div className="flex flex-1 items-center justify-center sm:justify-start">
-            <Link href="/" className="flex items-center gap-x-4">
-              <img
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-                className="h-8 w-auto"
-                alt="Wasila"
-              />
+            <Link href="/" className="flex items-center gap-x-2">
+              <div className="w-11 h-11 bg-blue-500 rounded flex items-center justify-center">
+                <div className="rounded-full text-2xl font-bold">W</div>
+              </div>
               <span className="text-xl font-bold">Wasila</span>
             </Link>
             {/* <DarkToggle /> */}
@@ -90,8 +93,8 @@ export default function Navbar() {
                       aria-current={isActive ? "page" : undefined}
                       className={classNames(
                         isActive
-                          ? "bg-gray-950/50 text-white"
-                          : "text-gray-300 hover:bg-white/5 hover:text-white",
+                          ? "bg-gray-400 dark:bg-gray-950/50 text-white"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:text-dark dark:hover:bg-white/5 dark:hover:text-white",
                         "rounded-md px-3 py-2 text-sm font-medium"
                       )}
                     >

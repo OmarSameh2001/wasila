@@ -61,7 +61,6 @@ export interface registerUser {
     password: string;
     name: string;
     username: string;
-    type: string;
 }
 
 export interface User {

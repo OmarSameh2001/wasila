@@ -23,7 +23,7 @@ const comparePassword = async (password: string, hashedPassword: string): Promis
 };
 
 const validateEmail = (email: string): { success: boolean, value?: string, message?: string } => {
-  const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
   if (emailRegex.test(email)) {
     return { success: true, value: email };
   }
@@ -31,7 +31,7 @@ const validateEmail = (email: string): { success: boolean, value?: string, messa
 };
 
 const validatePassword = (password: string): { success: boolean, value?: string, message?: string } => {
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%\^&*])[A-Za-z\d!@#$%\^&*]{8,20}$/;
   if (passwordRegex.test(password)) {
     return { success: true, value: password };
   }

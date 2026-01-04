@@ -57,7 +57,7 @@ export async function getRecord(
             email: true,
           },
         },
-        agent: {
+        broker: {
           select: {
             id: true,
             name: true,

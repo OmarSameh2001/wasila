@@ -6,7 +6,7 @@ export default function AdminPolicy() {
   return (
     <div className="">
       <div className="p-5">
-        <Table name="Clients" columns={clientsColumns} data={clientsList} actions={[]} />
+        <Table name="Clients" columns={clientsColumns} data={clientsList} actions={[]} loading={false} query="adminClients" />
       </div>
     </div>
   );

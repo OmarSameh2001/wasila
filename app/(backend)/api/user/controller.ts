@@ -113,6 +113,22 @@ export const registerUser = async (req: NextRequest) => {
       );
     }
 
+    const validateEmail = UserHelper.validateEmail(email);
+    if (!validateEmail.success) {
+      return NextResponse.json(
+        { error: validateEmail.message },
+        { status: 400 }
+      );
+    }
+    
+    const validatePassword = UserHelper.validatePassword(password);
+    if (!validatePassword.success) {
+      return NextResponse.json(
+        { error: validatePassword.message },
+        { status: 400 }
+      );
+    }
+
     // Check if user exists
     const existingUsers = await prisma.user.findMany({
       where: {
@@ -125,20 +141,13 @@ export const registerUser = async (req: NextRequest) => {
         { status: 409 }
       );
     }
-    if (type !== "USER" && type !== "BROKER") {
-      return NextResponse.json(
-        { error: "Invalid user type you can only be user or broker" },
-        { status: 400 }
-      );
-    }
+    // if (type !== "USER" && type !== "BROKER") {
+    //   return NextResponse.json(
+    //     { error: "Invalid user type you can only be user or broker" },
+    //     { status: 400 }
+    //   );
+    // }
 
-    const validatePassword = UserHelper.validatePassword(password);
-    if (!validatePassword.success) {
-      return NextResponse.json(
-        { error: validatePassword.message },
-        { status: 400 }
-      );
-    }
 
     // Hash password
     const hashedPassword = (await UserHelper.hashPassword(password))
@@ -157,7 +166,7 @@ export const registerUser = async (req: NextRequest) => {
         <h1>Welcome to wasila</h1>
         <p>Hello ${name},</p>
         <p>Please use this link to verify your email:</p>
-        <a href="${frontendUrl}/verify-email?token=${verificationToken}">Verify Email</a>
+        <a href="${frontendUrl}/verify-email?token=${verificationToken}&email=${email}">Verify Email</a>
         <p>This link will expire in 24 hours.</p>
         <p>Dont share this link with anyone.</p>
       `
@@ -613,7 +622,7 @@ export const forgotPassword = async (req: NextRequest) => {
         <h1>Dear ${user.name},</h1>
         <p>Please use this key to reset your password:</p>
         <p>Please use this link to verify your email:</p>
-        <a href="${frontendUrl}/reset_password?token=${resetToken}">Reset Password</a>
+        <a href="${frontendUrl}/reset_password?token=${resetToken}&email=${email}">Reset Password</a>
         <p>This link will expire in 1 hour.</p>
         <p>Dont share this link with anyone.</p>
       `

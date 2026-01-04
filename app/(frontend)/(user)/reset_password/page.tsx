@@ -1,22 +1,32 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { resetPassword } from "../../_services/user";
+import Validator from "../../_helpers/validator";
+import { Eye, EyeOff } from "lucide-react";
 
-const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+const ResetPasswordPage = () => {
   const searchParams = useSearchParams();
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
-    const urlToken = searchParams.get('token');
-    const urlEmail = searchParams.get('email');
-    
+    const urlToken = searchParams.get("token");
+    const urlEmail = searchParams.get("email");
+
     if (!urlToken || !urlEmail) {
       setError("Invalid reset link");
     } else {
@@ -25,26 +35,26 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e?: any) => {
-    e?.preventDefault?.();
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!token || !email) {
       setError("Invalid reset link");
       return;
     }
-    
+
     if (!newPassword) {
       setError("Password is required");
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    
-    if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters");
+
+    if (Validator.validatePassword(newPassword).message) {
+      setError(Validator.validatePassword(newPassword).message);
       return;
     }
 
@@ -54,7 +64,9 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
       await resetPassword({ token, email, newPassword });
       setSubmitted(true);
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || "Failed to reset password");
+      setError(
+        err?.response?.data?.error || err?.message || "Failed to reset password"
+      );
     } finally {
       setLoading(false);
     }
@@ -62,14 +74,19 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
           <div className="text-green-600 text-5xl mb-4">✓</div>
-          <h1 className="text-3xl font-semibold text-gray-800 mb-6">Password Reset Complete</h1>
-          <p className="text-gray-600 mb-8">Your password has been reset successfully. You can now sign in with your new password.</p>
-          <button 
-            onClick={() => onNavigate("login")} 
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded"
+          <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-6">
+            Password Reset Complete
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            Your password has been reset successfully. You can now sign in with
+            your new password.
+          </p>
+          <button
+            onClick={() => router.push("/login")}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded cursor-pointer"
           >
             Go to Sign In
           </button>
@@ -80,11 +97,18 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
 
   if (!token || !email) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
-          <h1 className="text-3xl font-semibold text-gray-800 mb-4">Invalid Link</h1>
-          <p className="text-red-600 mb-8">{error || "This password reset link is invalid or expired."}</p>
-          <button onClick={() => onNavigate("forgot-password")} className="text-blue-600 hover:underline">
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
+          <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-4">
+            Invalid Link
+          </h1>
+          <p className="text-red-600 mb-8">
+            {error || "This password reset link is invalid or expired."}
+          </p>
+          <button
+            onClick={() => router.push("/forget_password")}
+            className="text-blue-600 hover:underline cursor-pointer"
+          >
             Request New Reset Link
           </button>
         </div>
@@ -93,16 +117,29 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-4">Reset Password</h1>
-        <p className="text-gray-600 mb-8">Enter your new password for <strong>{email}</strong></p>
+    <div className="min-h-[80vh] flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
+        <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-4">
+          Reset Password
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          Enter your new password for <strong>{email}</strong>
+        </p>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => handleSubmit(e)}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-2">New Password</label>
+            <label className="block text-gray-700 dark:text-white text-sm font-medium mb-2 flex gap-2">
+              New Password{" "}
+              <span onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff className="cursor-pointer h-5 w-5" />
+                ) : (
+                  <Eye className="cursor-pointer h-5 w-5" />
+                )}
+              </span>
+            </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="New password"
@@ -111,9 +148,11 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-medium mb-2">Confirm Password</label>
+            <label className="block text-gray-700 dark:text-white text-sm font-medium mb-2">
+              Confirm Password
+            </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm password"
@@ -126,14 +165,19 @@ const ResetPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void 
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded transition disabled:opacity-50"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
 
         <div className="mt-8">
-          <button onClick={() => onNavigate("login")} className="text-blue-600 hover:underline">← Back to Sign In</button>
+          <button
+            onClick={() => router.push("/login")}
+            className="text-blue-600 hover:underline cursor-pointer"
+          >
+            ← Back to Sign In
+          </button>
         </div>
       </div>
     </div>
