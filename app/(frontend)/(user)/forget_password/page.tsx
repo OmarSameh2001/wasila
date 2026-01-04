@@ -2,13 +2,16 @@
 import { useState } from "react";
 import { forgetPassword } from "../../_services/user";
 import Validator from "../../_helpers/validator";
+import { useRouter } from "next/navigation";
 
 // Forgot Password Page Component
-const ForgotPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const router = useRouter();
 
   const handleSubmit = async () => {
     try{
@@ -36,7 +39,7 @@ const ForgotPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void
             We've sent password reset instructions to <strong>{email}</strong>. Please check your inbox and follow the link to reset your password.
           </p>
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => router.push('/login')}
             className="text-blue-600 hover:underline cursor-pointer"
           >
             ← Back to Sign In
@@ -80,7 +83,7 @@ const ForgotPasswordPage = ({ onNavigate }: { onNavigate: (page: string) => void
 
         <div className="mt-8">
           <button
-            onClick={() => onNavigate('login')}
+            onClick={() => router.push('/login')}
             className="text-blue-600 hover:underline"
           >
             ← Back to Sign In
