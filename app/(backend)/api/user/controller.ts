@@ -7,7 +7,7 @@ import crypto from "crypto";
 import sendEmail from "../../_lib/mailer";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+const frontendUrl = process.env.BASE_URL || "http://localhost:3000";
 
 export interface JWTPayload {
   id: string;
