@@ -3,36 +3,32 @@ import Image from "next/image";
 export function TableColumn({ type, data }: any) {
   switch (type) {
     case "logo": {
-  const logo =
-    typeof data === "string"
-      ? data
-      : data?.logo;
+      const logo = typeof data === "string" ? data : data?.logo;
 
-  const name =
-    typeof data === "object"
-      ? data?.name
-      : null;
+      const name = typeof data === "object" ? data?.name : null;
 
-  return (
-    <div className="flex items-center justify-center">
-      {logo && (
-        <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3">
-          <Image
-            className="rounded-full"
-            src={logo}
-            width={40}
-            height={40}
-            alt={name || "logo"}
-          />
+      return (
+        <div className="flex items-center justify-center">
+          {logo && (
+            <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3 flex items-center">
+              <Image
+                className="rounded-full"
+                src={logo}
+                width={40}
+                height={40}
+                alt={name || "logo"}
+              />
+            </div>
+          )}
+
+          {name && <span className="">{name}</span>}
         </div>
-      )}
-
-      {name && <span className="">{name}</span>}
-    </div>
-  );
-}
+      );
+    }
     case "text":
       return <div className="text-center">{data?.name || data}</div>;
+    case "date":
+      return <div className="text-center">{data.split("T")[0]}</div>;
     case "action":
       return (
         <div className="flex flex-col gap-2">
@@ -66,7 +62,7 @@ export function TableIcon({
   row: any;
   query?: string;
 }) {
-  const {setComponent} = useContext(PopupContext)
+  const { setComponent } = useContext(PopupContext);
   const queryClient = useQueryClient();
   const name = row.name;
   async function handleDelete() {

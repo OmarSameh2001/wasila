@@ -22,10 +22,24 @@ export async function getRecords(
       limit,
       params,
       url,
-      "record"
+      "record",
+      {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        broker: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        policies: true,
+      }
     );
 
-    // return NextResponse.json(records, { status: 200 });
   } catch (error) {
     console.error("Error fetching records:", error);
     return NextResponse.json(
@@ -64,12 +78,7 @@ export async function getRecord(
             email: true,
           },
         },
-        policy: {
-          select:{
-            id: true,
-            name: true
-          }
-        },
+        policies: true,
       },
     });
     return NextResponse.json(record, { status: 200 });
@@ -193,10 +202,10 @@ export async function updateRecord(
     const { data } = await req.json();
 
     const { clientId, brokerId: _brokerId, ...newData } = data;
-    const recordData = type === "BROKER" ? newData : data
+    const recordData = type === "BROKER" ? newData : data;
     const record = await prisma.record.update({
       where: { id, ...(type === "BROKER" && { brokerId: userId }) },
-      data: {...recordData},
+      data: { ...recordData },
     });
 
     return NextResponse.json(record, { status: 200 });
@@ -216,7 +225,6 @@ export async function deleteRecord(
   id: number
 ) {
   try {
-    
     const record = await prisma.record.delete({
       where: { id, ...(type === "BROKER" && { brokerId }) },
     });
@@ -226,6 +234,337 @@ export async function deleteRecord(
     console.error("Error deleting record:", error);
     return NextResponse.json(
       { error: "Error deleting record" },
+      { status: 500 }
+    );
+  }
+}
+interface PersonData {
+  birthDate: string; // "1/1/1990"
+  type: "Employee" | "Dependent";
+}
+
+interface CalculatedPolicyRecord {
+  policyId: number;
+  policyName: string;
+  companyName: string;
+  companyLogo: string;
+  numberOfInsureds: number;
+  numberOfPersons: number;
+  averageAge: number;
+  totalAmount: number;
+  totalTaxed: number;
+  avgPricePerPerson: number;
+  policyDescription: string;
+  insuredPeople: {
+    age: number;
+    type: "Employee" | "Dependent";
+    price: number;
+    isInsured: boolean;
+    reason?: string;
+  }[];
+}
+
+function calculateAge(birthDate: string, issueDate: string): number {
+  const [month, day, year] = birthDate.split("/").map(Number);
+  const birth = new Date(year, month - 1, day);
+  const today = new Date(issueDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
+
+function findPriceForAge(
+  healthPricings: any[],
+  age: number,
+  isDependent: boolean
+): { price: number | null; reason?: string } {
+  // Find exact age match
+  const pricing = healthPricings.find((p: any) => p.age === age);
+
+  if (!pricing) {
+    return {
+      price: null,
+      reason: `No pricing defined for age ${age}`,
+    };
+  }
+
+  const priceField = isDependent ? pricing.dependentPrice : pricing.mainPrice;
+
+  if (priceField === undefined || priceField === null || priceField === 0) {
+    return {
+      price: null,
+      reason: `No ${isDependent ? "dependent" : "main"} price for age ${age}`,
+    };
+  }
+
+  return { price: Number(priceField) };
+}
+
+export async function calculatePolicyRecords(req: NextRequest) {
+  try {
+    const { people, policyIds, issueDate } = (await req.json()) as {
+      people: PersonData[];
+      policyIds?: number[]; // Optional: filter specific policies
+      issueDate: string;
+    };
+
+    if (!people || !Array.isArray(people) || people.length === 0) {
+      return NextResponse.json(
+        { error: "People array is required" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch all health policies (or filtered by policyIds)
+    const policies = await prisma.policy.findMany({
+      where: {
+        type: "SME",
+        ...(policyIds && policyIds.length > 0 && { id: { in: policyIds } }),
+      },
+      include: {
+        company: {
+          select: {
+            name: true,
+            logo: true,
+          },
+        },
+        healthPolicy: {
+          select: {
+            healthPricings: true,
+          },
+        },
+      },
+    });
+
+    if (policies.length === 0) {
+      return NextResponse.json(
+        { error: "No health policies found" },
+        { status: 404 }
+      );
+    }
+
+    const calculatedRecords: CalculatedPolicyRecord[] = [];
+
+    // Calculate for each policy
+    for (const policy of policies) {
+      if (!policy.healthPolicy) continue;
+
+      const healthPricings = policy.healthPolicy.healthPricings as any[];
+      const insuredPeople: CalculatedPolicyRecord["insuredPeople"] = [];
+
+      let totalAmount = 0;
+      let numberOfInsureds = 0;
+      // let numberOfEmployees = 0;
+      // let numberOfDependents = 0;
+
+      // let numberOfPersons = 0;
+      let totalAge = 0;
+
+      // Process each person
+      for (const person of people) {
+        const age = calculateAge(person.birthDate, issueDate);
+        const isDependent = person.type === "Dependent";
+
+        const { price, reason } = findPriceForAge(
+          healthPricings,
+          age,
+          isDependent
+        );
+
+        if (price !== null) {
+          totalAmount += price;
+          numberOfInsureds++;
+          totalAge += age;
+
+          // if (isDependent) {
+          //   numberOfDependents++;
+          // } else {
+          //   numberOfEmployees++;
+          // }
+
+          // numberOfPersons++;
+        }
+
+        insuredPeople.push({
+          age,
+          type: person.type,
+          price: price || 0,
+          isInsured: price !== null,
+          reason,
+        });
+      }
+
+      // Calculate totals
+      const averageAge =
+        numberOfInsureds > 0 ? Math.round(totalAge / numberOfInsureds) : 0;
+
+      const avgPricePerPerson =
+        numberOfInsureds > 0 ? totalAmount / numberOfInsureds : 0;
+
+      const taxRate = policy.tax ? Number(policy.tax) / 100 : 0;
+      const totalTaxed = totalAmount * (1 + taxRate);
+
+      const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${people.length} - Avg age: ${averageAge}`;
+
+      calculatedRecords.push({
+        policyId: policy.id,
+        policyName: policy.name,
+        companyName: policy.company.name,
+        companyLogo: policy.company.logo || "",
+        numberOfInsureds,
+        numberOfPersons: people.length,
+        averageAge,
+        totalAmount,
+        totalTaxed,
+        avgPricePerPerson,
+        policyDescription,
+        insuredPeople: insuredPeople.sort((a, b) => a.age - b.age),
+      });
+    }
+
+    // Sort by total amount (best value first)
+    calculatedRecords.sort((a, b) => a.totalAmount - b.totalAmount);
+
+    return NextResponse.json(
+      {
+        calculatedRecords,
+        summary: {
+          totalPeople: people.length,
+          totalEmployees: people.filter((p) => p.type === "Employee").length,
+          totalDependents: people.filter((p) => p.type === "Dependent").length,
+          policiesCalculated: calculatedRecords.length,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error calculating policy records:", error);
+    return NextResponse.json(
+      { error: "Error calculating policy records" },
+      { status: 500 }
+    );
+  }
+}
+
+// API Route: /api/records/create-bulk
+export async function createBulkRecord(
+  req: NextRequest,
+  userId: number,
+  type: string
+) {
+  try {
+    const {
+      clientId,
+      brokerId,
+      state,
+      selectedPolicies, // Array of CalculatedPolicyRecord
+      issueDate,
+    } = await req.json();
+
+    if (
+      !selectedPolicies ||
+      selectedPolicies.length === 0 ||
+      selectedPolicies.length > 6
+    ) {
+      return NextResponse.json(
+        { error: "Select between 1 and 6 policies" },
+        { status: 400 }
+      );
+    }
+
+    if (!issueDate || !clientId) {
+      return NextResponse.json(
+        { error: "Issue date and client is required" },
+        { status: 400 }
+      );
+    }
+
+    const issueDateParsed = new Date(issueDate);
+
+    if (isNaN(issueDateParsed.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid issue date" },
+        { status: 400 }
+      );
+    }
+
+    const client = await prisma.user.findUnique({
+      where: { id: clientId, type: { in: ["CLIENT", "USER"] } },
+    });
+
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    const broker = await prisma.user.findUnique({
+      where: {
+        ...(type === "BROKER" ? { id: userId } : { id: brokerId }),
+        type: "BROKER",
+      },
+    });
+
+    if (!broker) {
+      return NextResponse.json({ error: "Broker not found" }, { status: 404 });
+    }
+    // Create record with record policies
+    const record = await prisma.record.create({
+      data: {
+        clientId,
+        ...(type === "BROKER" ? { brokerId: userId } : { brokerId }),
+        issueDate: issueDateParsed,
+        state: state || "DRAFT",
+        policies: {
+          create: selectedPolicies.map((p: CalculatedPolicyRecord) => ({
+            policyId: p.policyId,
+            totalAmount: p.totalAmount,
+            totalTaxed: p.totalTaxed,
+            policyDescription: p.policyDescription,
+            numberOfInsureds: p.numberOfInsureds,
+            numberOfPersons: p.numberOfPersons,
+            averageAge: p.averageAge,
+            avgPricePerPerson: p.avgPricePerPerson,
+          })),
+        },
+      },
+      include: {
+        policies: {
+          include: {
+            policy: {
+              include: {
+                company: true,
+              },
+            },
+          },
+        },
+        client: true,
+        broker: true,
+      },
+    });
+    await prisma.user.updateMany({
+      where: {
+        id: {
+          in: [clientId, ...(type === "BROKER" ? userId : brokerId)],
+        },
+      },
+      data: {
+        clientCount: {
+          increment: 1,
+        },
+        managedCount: {
+          increment: 1,
+        }
+      },
+    })
+    return NextResponse.json(record, { status: 201 });
+  } catch (error) {
+    console.error("Error creating bulk record:", error);
+    return NextResponse.json(
+      { error: "Error creating bulk record" },
       { status: 500 }
     );
   }

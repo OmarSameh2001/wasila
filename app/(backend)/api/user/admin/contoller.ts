@@ -15,7 +15,7 @@ export const getUserById = async (req: NextRequest, userId: number) => {
         contactInfo: true,
         dob: true,
         broker: { select: { id: true, name: true } },
-        records: { select: { id: true, policyDescription: true } },
+        records: { select: { id: true, issueDate: true, state: true } },
       },
     });
 
@@ -52,7 +52,7 @@ export const getBrokerById = async (req: NextRequest, userId: number) => {
         contactInfo: true,
         dob: true,
         clients: { select: { id: true, name: true } },
-        records: { select: { id: true, policyDescription: true } },
+        records: { select: { id: true, issueDate: true, state: true } },
         managedPolicies: { select: { id: true, name: true } },
       },
     });
@@ -88,7 +88,7 @@ export const getAllUsers = async (req: NextRequest) => {
     );
 
     const params = handleUrl(url, "user") || {};
-    params.type = "USER";
+    if(!params.type) params.type = { in: ["USER", "CLIENT"] };
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -97,8 +97,9 @@ export const getAllUsers = async (req: NextRequest) => {
           email: true,
           id: true,
           name: true,
-          username: true,
-          dob: true,
+          // username: true,
+          // dob: true,
+          // broker: { select: { id: true, name: true } },
           clientCount: true,
         },
         skip: (page - 1) * limit,

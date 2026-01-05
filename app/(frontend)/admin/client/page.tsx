@@ -1,12 +1,18 @@
+"use client";
+import { useQuery } from "@tanstack/react-query";
 import Table from "../../_components/table/table";
-import { clientsColumns, clientsList } from "../../_dto/user";
+import { brokersColumns, brokersList, clientsColumns } from "../../_dto/user";
+import { getUsers } from "../../_services/user";
 
-export default function AdminPolicy() {
-  
+export default function AdminClients() {
+  const { isLoading, data } = useQuery({
+    queryKey: ["adminClients"],
+    queryFn: () => getUsers(1, 10, ""),
+  });
   return (
     <div className="">
       <div className="p-5">
-        <Table name="Clients" columns={clientsColumns} data={clientsList} actions={[]} loading={false} query="adminClients" />
+        <Table name="Clients" columns={clientsColumns} data={data?.data.users ?? []} actions={[]} loading={isLoading} query="adminClients" />
       </div>
     </div>
   );

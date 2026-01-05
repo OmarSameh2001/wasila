@@ -33,13 +33,10 @@ export const recordsList = [{
 
 export const recordsColumns = [
   { name: "Id", key: "id", type: "text" },
-  { name: "Total Amount", key: "totalAmount", type: "text" },
   { name: "State", key: "state", type: "text" },
   { name: "Client", key: "client", type: "text" },
-  { name: "Agent", key: "agent", type: "text" },
-  { name: "Policy Description", key: "policyDescription", type: "text" },
-//   { name: "Created At", key: "createdAt", type: "text" },
-  { name: "Updated At", key: "updatedAt", type: "text" },
+  { name: "Broker", key: "broker", type: "text" },
+  { name: "Issued At", key: "issueDate", type: "date" },
 ]
 
 
@@ -89,3 +86,32 @@ export const editableRecordColumns: DynamicFormField[] = [
     type: "text",
   },
 ];
+
+
+
+export interface CalculatedPolicyRecord {
+  policyId: number;
+  policyName: string;
+  companyName: string;
+  companyLogo: string;
+  numberOfInsureds: number;
+  numberOfPersons: number;
+  averageAge: number;
+  totalAmount: number;
+  totalTaxed: number;
+  avgPricePerPerson: number;
+  policyDescription: string;
+  insuredPeople: InsuredPerson[];
+}
+export interface InsuredPersonData {
+  birthDate: string;
+  type: "Employee" | "Dependent";
+}
+
+export interface InsuredPerson {
+  age: number;
+  type: "Employee" | "Dependent";
+  price: number;
+  isInsured: boolean;
+  reason?: string;
+}

@@ -6,13 +6,7 @@ import { getRecords } from "../../_services/record";
 import { PopupContext } from "../../_components/utils/context/popup_provider";
 import { useContext, useState } from "react";
 import { useRouter } from 'next/navigation'
-export default function AdminRecord() {
-  const { setComponent, setIsOpen } = useContext(PopupContext);
-  const [newCompany, setNewCompany] = useState({
-    name: "",
-    address: "",
-    logo: "",
-  });
+export default function AdminRecords() {
 
   const router = useRouter()
 
@@ -25,13 +19,14 @@ export default function AdminRecord() {
   function handleAddNew() {
     router.push('/admin/record/create')
   }
+  console.log(data);
   return (
     <div className="">
       <div className="p-5">
         <Table
           name="Records"
           columns={recordsColumns}
-          data={data?.data ?? []}
+          data={data?.data?.data ?? []}
           actions={[]}
           loading={isLoading}
           addNew={handleAddNew}

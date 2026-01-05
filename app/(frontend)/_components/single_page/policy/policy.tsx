@@ -8,14 +8,16 @@ import DynamicSearchField from "../../form/search_field";
 import DynamicInputField from "../../form/dynamic_input_field";
 import { createPolicy, updatePolicy } from "@/app/(frontend)/_services/policy";
 import HealthPricing from "./health_pricing";
+import { useRouter } from "next/navigation";
 
 export default function SinglePolicyEditable({
   policy,
 }: {
   policy: HealthPolicy;
 }) {
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(!(typeof policy === "object" && Object.keys(policy).length > 0));
   const [editedPolicy, setEditedPolicy] = useState<HealthPolicy>(policy || {});
+  const router = useRouter();
 
   const handleCancel = () => {
     setEditedPolicy(policy);
@@ -23,11 +25,17 @@ export default function SinglePolicyEditable({
   };
 
   const handleSave = (e: any) => {
+    try{
     e.preventDefault();
-    if(!editedPolicy.companyId) window.alert("Please select a company");
+    if (!editedPolicy.companyId) window.alert("Please select a company");
     isCreate
       ? createPolicy(editedPolicy)
       : updatePolicy(editedPolicy.id, editedPolicy);
+
+    router.push("/admin/policy");
+    }catch(e){
+      console.log(e);
+    }
   };
 
   const updatePolicyField = (field: string, value: any) => {
@@ -49,16 +57,21 @@ export default function SinglePolicyEditable({
     }));
   };
 
-  const isCreate = !(typeof policy === "object" && Object.keys(policy).length > 0);
+  const isCreate = !(
+    typeof policy === "object" && Object.keys(policy).length > 0
+  );
   // console.log(isCreate);
   return (
-    <div className="flex flex-col min-h-[70vh] justify-center items-center p-4 pb-12 bg-[#2386c9] dark:bg-gray-800">
+    <div className="flex min-w-full flex-col min-h-[70vh] justify-center items-center p-4 pb-12 bg-[#2386c9] dark:bg-gray-800">
       <h1 className="text-2xl font-bold mb-6">Single Policy</h1>
 
       {
         // const isEditing = editingId === policy.id
 
-        <form className="w-full max-w-10/16 my-4" onSubmit={(e) => handleSave(e)}>
+        <form
+          className="w-full max-w-10/16 my-4"
+          onSubmit={(e) => handleSave(e)}
+        >
           <div
             className={`flex items-center ${
               policy?.company ? "justify-between" : "justify-end"
@@ -80,13 +93,13 @@ export default function SinglePolicyEditable({
                     <Save className="h-4 w-4 mr-2" />
                     Save
                   </button>
-                  <button
+                  {!isCreate && <button
                     className="flex flex-col items-center"
                     onClick={() => handleCancel()}
                   >
                     <X className="h-4 w-4 mr-2" />
                     Cancel
-                  </button>
+                  </button>}
                 </>
               ) : isCreate ? (
                 <button
@@ -129,7 +142,7 @@ export default function SinglePolicyEditable({
                       handleChange={updatePolicyField}
                     />
                   ) : (
-                    <p className="font-medium">{policy?.company.name}</p>
+                    <p className="text-sm">{policy?.company.name}</p>
                   )}
                 </div>
 
@@ -145,7 +158,7 @@ export default function SinglePolicyEditable({
                       }
                     />
                   ) : (
-                    <p className="font-medium">{policy?.name}</p>
+                    <p className="text-sm">{policy?.name}</p>
                   )}
                 </div>
 
@@ -157,7 +170,7 @@ export default function SinglePolicyEditable({
                         key: "type",
                         label: "Type",
                         type: "select",
-                        choices: [ "HEALTH", "SME"],
+                        choices: ["HEALTH", "SME"],
                         required: true,
                       }}
                       formState={editedPolicy}
@@ -197,7 +210,7 @@ export default function SinglePolicyEditable({
 
             <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">
-                Coverage Details
+                Life Benefits
               </h3>
               <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center justify-between">
@@ -288,7 +301,7 @@ export default function SinglePolicyEditable({
 
             <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">
-                Medical Services
+                Medical Benifits
               </h3>
               <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
@@ -363,7 +376,13 @@ export default function SinglePolicyEditable({
                     </p>
                   )}
                 </div>
-
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">
+                In-Patient Benifits
+              </h3>
+              <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
                   <label>In-Patient Accommodation</label>
                   {isEditing ? (
@@ -425,7 +444,13 @@ export default function SinglePolicyEditable({
                     </p>
                   )}
                 </div>
-
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">
+                Out-Patient Benifits
+              </h3>
+              <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
                   <label>Doctor Consultation</label>
                   {isEditing ? (
@@ -495,7 +520,13 @@ export default function SinglePolicyEditable({
                     <p className="text-sm">{policy?.healthPolicy.medication}</p>
                   )}
                 </div>
-
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">
+                Special Conditions
+              </h3>
+              <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
                   <label>Dental</label>
                   {isEditing ? (
@@ -527,14 +558,6 @@ export default function SinglePolicyEditable({
                     <p className="text-sm">{policy?.healthPolicy.optical}</p>
                   )}
                 </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">
-                Special Conditions
-              </h3>
-              <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
                   <label>Maternity Limit</label>
                   {isEditing ? (
@@ -570,7 +593,13 @@ export default function SinglePolicyEditable({
                     </p>
                   )}
                 </div>
-
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">
+                Other Benefits
+              </h3>
+              <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
                   <label>Pre-Existing Cases</label>
                   {isEditing ? (
@@ -640,7 +669,14 @@ export default function SinglePolicyEditable({
                     </p>
                   )}
                 </div>
+              </div>
+            </div>
 
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">
+                Reimbursement Rules
+              </h3>
+              <div className="flex flex-wrap justify-between gap-4">
                 <div className="space-y-2 flex gap-4 items-center">
                   <label>Reimbursement Coverage</label>
                   {isEditing ? (
@@ -665,7 +701,6 @@ export default function SinglePolicyEditable({
                 </div>
               </div>
             </div>
-
             {/* <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">
                 Statistics

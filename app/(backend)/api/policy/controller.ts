@@ -4,7 +4,7 @@ import { filterPrisma } from "../../_lib/filtering";
 
 export async function createPolicy(req: NextRequest) {
   try {
-    const { type, name, companyId, tax, brokerId, carDetails, healthDetails } = await req.json();
+    const { type, name, companyId, tax, brokerId, carDetails, healthPolicy } = await req.json();
 
     const policy = await prisma.policy.create({
       data: {
@@ -31,52 +31,51 @@ export async function createPolicy(req: NextRequest) {
         }),
         
         // Conditionally create health policy
-        ...((type === "HEALTH" || type === "SME") && healthDetails && {
+        ...((type === "HEALTH" || type === "SME") && healthPolicy && {
           healthPolicy: {
             create: {
               // Life Benefits
-              lifeInsurance: healthDetails.lifeInsurance,
-              totalPermanentDisability: healthDetails.totalPermanentDisability,
-              accidentalDeath: healthDetails.accidentalDeath,
-              partialPermanentDisability: healthDetails.partialPermanentDisability,
+              lifeInsurance: healthPolicy.lifeInsurance,
+              totalPermanentDisability: healthPolicy.totalPermanentDisability,
+              accidentalDeath: healthPolicy.accidentalDeath,
+              partialPermanentDisability: healthPolicy.partialPermanentDisability,
               
               // Medical Benefits
-              medicalTpa: healthDetails.medicalTpa,
-              network: healthDetails.network,
-              areaOfCoverage: healthDetails.areaOfCoverage,
-              annualCeilingPerPerson: Number(healthDetails.annualCeilingPerPerson),
+              medicalTpa: healthPolicy.medicalTpa,
+              network: healthPolicy.network,
+              areaOfCoverage: healthPolicy.areaOfCoverage,
+              annualCeilingPerPerson: healthPolicy.annualCeilingPerPerson,
               
               // In-Patient Benefits
-              inPatientAccommodation: healthDetails.inPatientAccommodation,
-              icu: healthDetails.icu,
-              parentAccommodation: healthDetails.parentAccommodation,
+              inPatientAccommodation: healthPolicy.inPatientAccommodation,
+              icu: healthPolicy.icu,
+              parentAccommodation: healthPolicy.parentAccommodation,
               
               // Out-Patient Benefits
-              doctorConsultation: healthDetails.doctorConsultation,
-              labScan: healthDetails.labScan,
-              physiotherapy: healthDetails.physiotherapy,
-              medication: healthDetails.medication,
+              doctorConsultation: healthPolicy.doctorConsultation,
+              labScan: healthPolicy.labScan,
+              physiotherapy: healthPolicy.physiotherapy,
+              medication: healthPolicy.medication,
               
               // Additional Benefits
-              dental: healthDetails.dental,
-              optical: healthDetails.optical,
-              maternityLimit: healthDetails.maternityLimit,
-              newbornCeiling: healthDetails.newbornCeiling,
+              dental: healthPolicy.dental,
+              optical: healthPolicy.optical,
+              maternityLimit: healthPolicy.maternityLimit,
+              newbornCeiling: healthPolicy.newbornCeiling,
               
               // Other Benefits
-              preExistingCases: healthDetails.preExistingCases,
-              newChronic: healthDetails.newChronic,
-              organTransplant: healthDetails.organTransplant,
-              groundAmbulance: healthDetails.groundAmbulance,
+              preExistingCases: healthPolicy.preExistingCases,
+              newChronic: healthPolicy.newChronic,
+              organTransplant: healthPolicy.organTransplant,
+              groundAmbulance: healthPolicy.groundAmbulance,
               
               // Reimbursement Rules
-              reimbursementCoverage: healthDetails.reimbursementCoverage,
+              reimbursementCoverage: healthPolicy.reimbursementCoverage,
               
               
               // Handle nested pricing (composite type array)
-              healthPricings: healthDetails.healthPricings?.map((pricing: any) => ({
-                minAge: Number(pricing.minAge),
-                maxAge: Number(pricing.maxAge),
+              healthPricings: healthPolicy.healthPricings?.map((pricing: any) => ({
+                age: Number(pricing.age),
                 mainPrice: Number(pricing.mainPrice),
                 dependentPrice: Number(pricing.dependentPrice),
               })) || [],

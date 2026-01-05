@@ -113,6 +113,31 @@ export default function DynamicSearchField({
           required={field.required && !selectedItem}
         />
 
+        {selectedItem&& selectedItem?.logo ? (
+          <img
+            className="h-6 w-6 rounded-full absolute inset-y-2 end-15 flex items-center z-20"
+            src={selectedItem.logo}
+            alt={selectedItem.name || "logo"}
+          />
+        ): selectedItem && selectedItem?.id ? (
+          <span>
+                <svg
+                  className="shrink-0 size-3.5 text-blue-600 dark:text-blue-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+              </span>
+        ): null}
+
         {(inputValue || selectedItem) && ( // Check inputValue instead of search
           <div className="absolute inset-y-0 end-8 flex items-center z-20">
             <button

@@ -29,15 +29,15 @@ export const resendVerification = async (data: any) => {
   return await axiosInstance.post("/user/verify/resend_email", data);
 }
 
-export const getBrokers = async (search = "") => {
+export const getBrokers = async (page = 1, limit = 10, search = "") => {
   return await axiosInstance.get(
-    "/user/admin/broker" + (search ? `?${search}` : "")
+    `/user/admin/broker?page=${page}&limit=${limit}` + (search ? `&${search}` : "")
   );
 };
 
-export const getUsers = async (search = "") => {
+export const getUsers = async (page = 1, limit = 10, search = "") => {
   return await axiosInstance.get(
-    "/user/admin/user" + (search ? `?${search}` : "")
+    `/user/admin/user?page=${page}&limit=${limit}` + (search ? `&${search}` : "")
   );
 };
 

@@ -23,25 +23,33 @@ export function handleUrl(url: URL, modelName: string) {
   );
 }
 
-export const filterPrisma = async <T>(
+export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
   model: {
-    findMany: (args: any) => Promise<T[]>;
-    count: (args: any) => Promise<number>;
+    findMany: (args: {
+      where?: TWhereInput;
+      skip?: number;
+      take?: number;
+      include?: TInclude;
+      select?: TSelect;
+    }) => Promise<T[]>;
+    count: (args: { where?: TWhereInput }) => Promise<number>;
   },
   page: number,
   limit: number,
-  params?: { [key: string]: string | number },
+  params?: TWhereInput,
   url?: URL,
   modelName?: string,
-  include: any = {},
-  select: any = {}
-) => {
+  include?: TInclude,
+  select?: TSelect
+): Promise<NextResponse> => {
   //: Promise<PaginatedResult<T>>
   try {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.max(limit, 1);
     // console.log("url", url)
-    if (url && modelName) params = { ...params, ...handleUrl(url, modelName) };
+    if (url && modelName) {
+      params = { ...params, ...handleUrl(url, modelName) } as TWhereInput;
+    }
 
     const skip = (safePage - 1) * safeLimit;
     console.log(
@@ -62,7 +70,10 @@ export const filterPrisma = async <T>(
         skip,
         take: safeLimit,
         ...(Object.keys(include || {}).length ? { include } : {}),
-        ...(!Object.keys(include || {}).length && Object.keys(select || {}).length ? { select } : {}),
+        ...(!Object.keys(include || {}).length &&
+        Object.keys(select || {}).length
+          ? { select }
+          : {}),
       }),
       model.count({
         ...(params && { where: params }),

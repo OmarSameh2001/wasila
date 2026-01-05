@@ -64,13 +64,20 @@ enum Role {
   CLIENT
 }
 
+model Company {
+  id       Int      @id @default(autoincrement())
+  name     String   @unique
+  address  String?
+  logo     String?
+  policies Policy[]
 
-
+  @@map("companies")
+}
 
 model Record {
   id           Int      @id @default(autoincrement())
-  totalAmount  Decimal  @db.Decimal(20, 2)  
-  totalTaxed   Decimal  @db.Decimal(20, 2)
+  //totalAmount  Decimal  @db.Decimal(20, 2)  
+  //totalTaxed   Decimal  @db.Decimal(20, 2)
   state        CrmState
   
   // The person who OWNS the policy (The Client)
@@ -80,10 +87,11 @@ model Record {
   // The broker who created the record
   brokerId       Int
   broker        User   @relation("BrokerRelation", fields: [brokerId], references: [id])
-  
-  policyId     Int
-  policy       Policy   @relation(fields: [policyId], references: [id])
-  policyDescription String
+
+  // The policies related to this record
+  policies      RecordPolicy[]
+
+  issueDate     DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -91,7 +99,6 @@ model Record {
   @@map("records")
   @@index([clientId])
   @@index([brokerId])
-  @@index([policyId])
 }
 
 enum CrmState {
@@ -101,14 +108,22 @@ enum CrmState {
   LOST
 }
 
-model Company {
-  id       Int      @id @default(autoincrement())
-  name     String   @unique
-  address  String?
-  logo     String?
-  policies Policy[]
-
-  @@map("companies")
+model RecordPolicy {
+  recordId          Int
+  policyId          Int
+  totalAmount       Decimal @db.Decimal(20, 2)
+  totalTaxed        Decimal @db.Decimal(20, 2)
+  policyDescription String
+  numberOfInsureds  Int
+  numberOfPersons   Int
+  averageAge        Decimal @db.Decimal(10, 2)
+  avgPricePerPerson  Decimal @db.Decimal(10, 2)
+  
+  record            Record  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  policy            Policy  @relation(fields: [policyId], references: [id])
+  
+  @@id([recordId, policyId])
+  @@map("record_policies")
 }
 
 model Policy {
@@ -126,7 +141,7 @@ model Policy {
   // Relations to Subtypes
   carPolicy    CarPolicy?
   healthPolicy HealthPolicy?
-  records      Record[]
+  records      RecordPolicy[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -141,7 +141,7 @@ export const getClientById = async (
         id: true,
         name: true,
         username: true,
-        records: { select: { id: true, policyDescription: true } },
+        records: true,
         clientCount: true,
       },
     });

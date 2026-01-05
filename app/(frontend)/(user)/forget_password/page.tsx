@@ -84,7 +84,7 @@ const ForgotPasswordPage = () => {
         <div className="mt-8">
           <button
             onClick={() => router.push('/login')}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline cursor-pointer"
           >
             ← Back to Sign In
           </button>

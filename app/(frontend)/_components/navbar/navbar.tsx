@@ -115,9 +115,8 @@ export default function Navbar() {
             const isActive = useActiveNav(item.href);
 
             return (
-              <DisclosureButton
+              <Link
                 key={item.name}
-                as="a"
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
                 className={classNames(
@@ -128,7 +127,7 @@ export default function Navbar() {
                 )}
               >
                 {item.name}
-              </DisclosureButton>
+              </Link>
             );
           })}
         </div>
