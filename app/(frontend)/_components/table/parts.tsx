@@ -10,12 +10,12 @@ export function TableColumn({ type, data }: any) {
       return (
         <div className="flex items-center justify-center">
           {logo && (
-            <div className="w-10 h-10 shrink-0 mr-2 sm:mr-3 flex items-center">
-              <Image
-                className="rounded-full"
+            <div className="shrink-0 mr-2 sm:mr-3 flex items-center">
+              <img
+                className="w-10 h-10 rounded object-cover"
                 src={logo}
-                width={40}
-                height={40}
+                // width={40}
+                // height={40}
                 alt={name || "logo"}
               />
             </div>
@@ -48,17 +48,18 @@ import {
   PencilSquareIcon,
   InformationCircleIcon,
 } from "@heroicons/react/20/solid";
-import { ActionButton } from "./table";
+// import { ActionButton } from "./table";
 import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 import { useContext } from "react";
 import { PopupContext } from "../utils/context/popup_provider";
+import { TableActionButton } from "../../_dto/general";
 
 export function TableIcon({
   action,
   row,
   query,
 }: {
-  action: ActionButton;
+  action: TableActionButton;
   row: any;
   query?: string;
 }) {

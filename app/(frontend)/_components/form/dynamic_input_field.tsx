@@ -23,10 +23,10 @@ export default function DynamicInputField({
           value={formState?.[field.key] ?? ""}
           onChange={(e) => handleChange(field.key, e.target.value)}
           required={field.required ?? false}
-          className="border border-dark dark:border-gray-300 rounded px-2 py-1 mx-5"
+          className="border border-dark dark:border-gray-300 rounded px-2 py-1 w-fit"
         >
           <option value="" className="dark:bg-black">
-            Select an option
+            *None*
           </option>
           {field.choices?.map((choice: any) => (
             <option key={choice} value={choice} className="dark:bg-black">

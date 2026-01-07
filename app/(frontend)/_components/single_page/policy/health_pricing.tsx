@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Upload } from "lucide-react";
+import { HealthPricings } from "@/app/(frontend)/_dto/policy";
 
-interface HealthPricing {
-  age: number;
-  mainPrice?: number;
-  dependentPrice?: number;
-}
+// interface HealthPricingData {
+//   mainPrice?: number | null;
+//   dependentPrice?: number | null;
+// }
+
+// interface HealthPricings {
+//   [age: string]: HealthPricingData;
+// }
 
 interface HealthPricingProps {
-  pricings: HealthPricing[];
+  pricings: HealthPricings;
   isEditing: boolean;
-  onPricingsChange: (pricings: HealthPricing[]) => void;
+  onPricingsChange: (pricings: HealthPricings) => void;
 }
 
 export default function HealthPricing({
@@ -25,29 +29,49 @@ export default function HealthPricing({
   const [dependentPriceText, setDependentPriceText] = useState("");
   const [importError, setImportError] = useState("");
 
-  const sortedPricings = [...pricings].sort((a, b) => a.age - b.age);
+  // Convert object to sorted array for display
+  const sortedPricings = Object.entries(pricings)
+    .map(([age, data]) => ({
+      age: Number(age),
+      ...data,
+    }))
+    .sort((a, b) => a.age - b.age);
 
   const handleAddPricing = () => {
     const newAge = sortedPricings.length > 0 
       ? Math.max(...sortedPricings.map(p => p.age)) + 1 
       : 0;
     
-    onPricingsChange([
+    onPricingsChange({
       ...pricings,
-      { age: newAge, mainPrice: 0, dependentPrice: 0 }
-    ]);
+      [newAge.toString()]: { mainPrice: 0, dependentPrice: 0 }
+    });
   };
 
   const handleRemovePricing = (age: number) => {
-    onPricingsChange(pricings.filter(p => p.age !== age));
+    const newPricings = { ...pricings };
+    delete newPricings[age.toString()];
+    onPricingsChange(newPricings);
   };
 
-  const handleUpdatePricing = (age: number, field: keyof HealthPricing, value: number) => {
-    onPricingsChange(
-      pricings.map(p => 
-        p.age === age ? { ...p, [field]: value } : p
-      )
-    );
+  const handleUpdateAge = (oldAge: number, newAge: number) => {
+    if (oldAge === newAge) return;
+    
+    const newPricings = { ...pricings };
+    const data = newPricings[oldAge.toString()];
+    delete newPricings[oldAge.toString()];
+    newPricings[newAge.toString()] = data;
+    onPricingsChange(newPricings);
+  };
+
+  const handleUpdatePrice = (age: number, field: 'mainPrice' | 'dependentPrice', value: number | null) => {
+    onPricingsChange({
+      ...pricings,
+      [age.toString()]: {
+        ...pricings[age.toString()],
+        [field]: value,
+      }
+    });
   };
 
   const parseBulkText = (text: string): Map<number, number> => {
@@ -58,7 +82,7 @@ export default function HealthPricing({
       const parts = line.trim().split(/\s+/);
       if (parts.length >= 2) {
         const age = parseInt(parts[0]);
-        const priceStr = parts[1].replace(/[,\s-]/g, '');
+        const priceStr = parts[1].replace(/[,\s]/g, '');
         
         if (!isNaN(age) && priceStr && priceStr !== '-') {
           const price = parseFloat(priceStr);
@@ -85,11 +109,20 @@ export default function HealthPricing({
       }
 
       const allAges = new Set([...mainPrices.keys(), ...dependentPrices.keys()]);
-      const newPricings: HealthPricing[] = Array.from(allAges).map(age => ({
-        age,
-        mainPrice: mainPrices.get(age),
-        dependentPrice: dependentPrices.get(age),
-      }));
+      const newPricings: HealthPricings = {};
+      
+      allAges.forEach(age => {
+        const mainPrice = mainPrices.get(age);
+        const dependentPrice = dependentPrices.get(age);
+        
+        // Only add if at least one price exists
+        if (mainPrice !== undefined || dependentPrice !== undefined) {
+          newPricings[age.toString()] = {
+            mainPrice: mainPrice ?? null,
+            dependentPrice: dependentPrice ?? null,
+          };
+        }
+      });
 
       onPricingsChange(newPricings);
       setShowBulkImport(false);
@@ -100,7 +133,7 @@ export default function HealthPricing({
     }
   };
 
-  if (!isEditing && pricings.length === 0) {
+  if (!isEditing && sortedPricings.length === 0) {
     return null;
   }
 
@@ -138,7 +171,7 @@ export default function HealthPricing({
             </label>
             <textarea
               className="w-full border rounded p-2 font-mono text-sm h-32"
-              placeholder="18 5,186.00&#10;19 5,186.00&#10;20 5,186.00"
+              placeholder="18 5186.00&#10;19 5186.00&#10;20 5186.00"
               value={mainPriceText}
               onChange={(e) => setMainPriceText(e.target.value)}
             />
@@ -150,7 +183,7 @@ export default function HealthPricing({
             </label>
             <textarea
               className="w-full border rounded p-2 font-mono text-sm h-32"
-              placeholder="0 4,722.00&#10;1 4,722.00&#10;16 -"
+              placeholder="0 4722.00&#10;1 4722.00&#10;16 -"
               value={dependentPriceText}
               onChange={(e) => setDependentPriceText(e.target.value)}
             />
@@ -198,9 +231,7 @@ export default function HealthPricing({
                     type="number"
                     className="border rounded p-2 w-20"
                     value={pricing.age}
-                    onChange={(e) =>
-                      handleUpdatePricing(pricing.age, "age", Number(e.target.value))
-                    }
+                    onChange={(e) => handleUpdateAge(pricing.age, Number(e.target.value))}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -209,13 +240,13 @@ export default function HealthPricing({
                     type="number"
                     step="0.01"
                     className="border rounded p-2 w-32"
-                    value={pricing.mainPrice || ""}
-                    placeholder="Optional"
+                    value={pricing.mainPrice ?? ""}
+                    placeholder="No price"
                     onChange={(e) =>
-                      handleUpdatePricing(
+                      handleUpdatePrice(
                         pricing.age,
                         "mainPrice",
-                        e.target.value ? Number(e.target.value) : 0
+                        e.target.value ? Number(e.target.value) : null
                       )
                     }
                   />
@@ -226,13 +257,13 @@ export default function HealthPricing({
                     type="number"
                     step="0.01"
                     className="border rounded p-2 w-32"
-                    value={pricing.dependentPrice || ""}
-                    placeholder="Optional"
+                    value={pricing.dependentPrice ?? ""}
+                    placeholder="No price"
                     onChange={(e) =>
-                      handleUpdatePricing(
+                      handleUpdatePrice(
                         pricing.age,
                         "dependentPrice",
-                        e.target.value ? Number(e.target.value) : 0
+                        e.target.value ? Number(e.target.value) : null
                       )
                     }
                   />
@@ -246,11 +277,19 @@ export default function HealthPricing({
                 </button>
               </div>
             ) : (
-              <p className="text-sm">
-                Age {pricing.age}: 
-                {pricing.mainPrice !== undefined && ` Main: ${pricing.mainPrice.toFixed(2)}`}
-                {pricing.dependentPrice !== undefined && ` | Dependent: ${pricing.dependentPrice.toFixed(2)}`}
-              </p>
+              <div className="flex justify-between sm:w-8/12">
+                <p className="text-sm font-medium">Age {pricing.age}</p>
+                <p className="text-sm">
+                  {pricing.mainPrice !== null && pricing.mainPrice !== undefined
+                    ? `Employee: ${pricing.mainPrice.toFixed(2)}`
+                    : "Employee: N/A"}
+                </p>
+                <p className="text-sm">
+                  {pricing.dependentPrice !== null && pricing.dependentPrice !== undefined
+                    ? `Dependent: ${pricing.dependentPrice.toFixed(2)}`
+                    : "Dependent: N/A"}
+                </p>
+              </div>
             )}
           </div>
         ))}

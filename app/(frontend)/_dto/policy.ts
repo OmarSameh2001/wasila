@@ -1,47 +1,12 @@
 import { DynamicFormField } from "../_components/form/dynamic_form";
-import { companiesList } from "./company";
+import { TableColumn } from "./general";
 
-export const policiesList = [
-  {
-    id: 1,
-    type: "CAR",
-    name: "Full",
-    company: companiesList[0].name,
-    tax: 0.2,
-    brokerId: 1,
-    records: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 2,
-    type: "HEALTH",
-    name: "General",
-    company: companiesList[1].name,
-    tax: 0.1,
-    brokerId: 2,
-    records: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 3,
-    type: "SME",
-    name: "Full",
-    company: companiesList[2].name,
-    tax: 0.1,
-    brokerId: 3,
-    records: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-export const policyColumns: any[] = [
-  {
-    name: "Id",
-    key: "id",
-    type: "text",
-  },
+export const policyColumns: TableColumn[] = [
+  // {
+  //   name: "Id",
+  //   key: "id",
+  //   type: "text",
+  // },
   {
     name: "Type",
     key: "type",
@@ -136,13 +101,20 @@ export interface HealthPolicy extends Policy {
     reimbursementCoverage: string;
     // numberOfInsuredMembers: number;
     // averagePremiumPerHead: number;
-    healthPricings?: healthPricing[];
+    healthPricings?: HealthPricings;
   };
 }
-export interface healthPricing {
-  age: number;
-  mainPrice?: number;
-  dependentPrice?: number;
+// export interface healthPricing {
+//   age: number;
+//   mainPrice?: number;
+//   dependentPrice?: number;
+// }
+export interface HealthPricings {
+  [age: string]: HealthPricingData;
+}
+interface HealthPricingData {
+  mainPrice?: number | null;
+  dependentPrice?: number | null;
 }
 // export interface HealthPolicyWithPricing extends HealthPolicy {
 //   healthPricings?: healthPricing[];
@@ -176,3 +148,13 @@ export const editablePolicyColumns: DynamicFormField[] = [
     required: true,
   },
 ];
+
+export const healthPolicyGroups: Record<string, string[]> = {
+  'Life Benefits': ['lifeInsurance', 'totalPermanentDisability', 'accidentalDeath', 'partialPermanentDisability'],
+  'Medical Benefits': ['medicalTpa', 'network', 'areaOfCoverage', 'annualCeilingPerPerson'],
+  'In-Patient Benefits': ['inPatientAccommodation', 'icu', 'parentAccommodation'],
+  'Out-Patient Benefits': ['doctorConsultation', 'labScan', 'physiotherapy', 'medication'],
+  'Additional Benefits': ['dental', 'optical', 'maternityLimit', 'newbornCeiling'],
+  'Other Benefits': ['preExistingCases', 'newChronic', 'organTransplant', 'groundAmbulance'],
+  'Reimbursement Rules': ['reimbursementCoverage']
+};

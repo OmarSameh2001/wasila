@@ -220,7 +220,7 @@ model HealthPolicy {
   
   policyId        Int             @unique
   policy          Policy          @relation(fields: [policyId], references: [id])
-  healthPricings  Json[]
+  healthPricings  Json?
   
   @@map("health_policies")
 }

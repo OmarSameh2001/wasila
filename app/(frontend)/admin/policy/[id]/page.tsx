@@ -11,10 +11,9 @@ export default function AdminSinglePolicy() {
         queryKey: ["adminPolicy", id],
         queryFn: () => (isNaN(Number(id)) ? null : getPolicy(Number(id))),
       });
-      console.log(data);
     return (
         <div className="flex flex-col min-h-[70vh] justify-center items-center">
-            <SinglePolicyEditable policy={data?.data}/>
+            <SinglePolicyEditable policy={data?.data} isLoading={isLoading}/>
         </div>
     );
 }

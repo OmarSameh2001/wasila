@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import Table from "../../_components/table/table";
-import { brokersColumns, brokersList } from "../../_dto/user";
+import { brokersColumns } from "../../_dto/user";
 import { getBrokers } from "../../_services/user";
 
 export default function AdminBrokers() {
@@ -12,7 +12,22 @@ export default function AdminBrokers() {
   return (
     <div className="">
       <div className="p-5">
-        <Table name="Brokers" columns={brokersColumns} data={data?.data.users ?? []} actions={[]} loading={isLoading} query="adminBrokers" />
+        <Table
+          name="Brokers"
+          columns={brokersColumns}
+          data={data?.data.users ?? []}
+          actions={[]}
+          loading={isLoading}
+          query="adminBrokers"
+          pagination={{
+            currentPage: 1,
+            hasNextPage: false,
+            itemsPerPage: 10,
+            totalPages: 0,
+            setCurrentPage: () => {},
+            setItemsPerPage: () => {},
+          }}
+        />
       </div>
     </div>
   );

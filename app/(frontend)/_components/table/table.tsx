@@ -1,24 +1,9 @@
 "use client";
 import { TableColumn, TableIcon } from "./parts";
-import { AxiosResponse } from "axios";
 import { usePathname, useRouter } from "next/navigation";
-
-export interface ActionButton {
-  name: string;
-  onClick: (
-    id: number,
-    value?: any
-  ) => Promise<AxiosResponse<any, any, {}>> | void;
-}
-interface TableProps {
-  name: string;
-  columns: any[];
-  data: any[];
-  actions?: ActionButton[];
-  loading: boolean;
-  query: string;
-  addNew?: () => void;
-}
+import { TableProps } from "../../_dto/general";
+import CustomPagination from "../pagination/pagination";
+import LoadingPage from "../utils/loading/loading";
 
 function ColumnHeader({ columns }: { columns: any[] }) {
   return (columns ?? []).map((column: any) => (
@@ -36,21 +21,24 @@ function Table({
   loading,
   query,
   addNew,
+  pagination,
 }: TableProps) {
   const router = useRouter();
   const pathname = usePathname();
   return (
-    <div className="col-span-full xl:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl">
+    <div className="col-span-full xl:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl border border-gray-400 dark:border-gray-200">
       <header className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
         <h2 className="font-semibold text-gray-800 dark:text-gray-100">
           {name || "Table"}
         </h2>
-        <button
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer"
-          onClick={addNew}
-        >
-          Add New {name || ""}
-        </button>
+        {addNew && (
+          <button
+            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded cursor-pointer"
+            onClick={addNew}
+          >
+            Add New {name || ""}
+          </button>
+        )}
       </header>
       <div className="p-3">
         {/* Table */}
@@ -105,7 +93,25 @@ function Table({
             </table>
           </div>
         ) : loading ? (
-          <div className="text-center">Loading...</div>
+          <table className="table-auto w-full">
+            {/* Table header */}
+            <thead className="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50">
+              <tr>
+                <ColumnHeader columns={columns} />
+              </tr>
+            </thead>
+            {/* Table body */}
+            <tbody>
+              <tr className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                <td
+                  className="py-5 whitespace-nowrap text-center"
+                  colSpan={columns.length}
+                >
+                  <LoadingPage height="h-16" width="w-16" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         ) : (
           <table className="table-auto w-full">
             {/* Table header */}
@@ -117,7 +123,10 @@ function Table({
             {/* Table body */}
             <tbody>
               <tr className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                <td className="py-5 whitespace-nowrap text-center" colSpan={columns.length}>
+                <td
+                  className="py-5 whitespace-nowrap text-center"
+                  colSpan={columns.length}
+                >
                   No data found try to change your filters
                 </td>
               </tr>
@@ -125,6 +134,14 @@ function Table({
           </table>
         )}
       </div>
+      <CustomPagination
+        currentPage={pagination?.currentPage}
+        totalPages={pagination?.totalPages}
+        hasNextPage={pagination?.hasNextPage}
+        itemsPerPage={pagination?.itemsPerPage}
+        setItemsPerPage={pagination?.setItemsPerPage}
+        setCurrentPage={pagination?.setCurrentPage}
+      />
     </div>
   );
 }

@@ -25,6 +25,7 @@ const modelFields: Record<string, Record<string, string>> = {
     'companyId': 'number',
     'tax': 'number',
     'brokerId': 'number',
+    "name": "string"
   },
 //   CarPolicy: new Set(['id', 'ownDamage', 'thirdParty', 'fire', 'theft', 'make', 'model', 'year', 'mileage', 'policyId']),
 //   HealthPolicy: new Set(['id', 'lifeInsurance', 'totalPermanentDisability', 'accidentalDeath', 'partialPermanentDisability', 'medicalTpa', 'network', 'areaOfCoverage', 'annualCeilingPerPerson', 'inPatientAccommodation', 'icu', 'parentAccommodation', 'doctorConsultation', 'labScan', 'physiotherapy', 'medication', 'dental', 'optical', 'maternityLimit', 'newbornCeiling', 'preExistingCases', 'newChronic', 'organTransplant', 'groundAmbulance', 'reimbursementCoverage', 'numberOfInsuredMembers', 'averagePremiumPerHead', 'policyId']),

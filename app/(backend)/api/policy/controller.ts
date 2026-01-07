@@ -4,7 +4,8 @@ import { filterPrisma } from "../../_lib/filtering";
 
 export async function createPolicy(req: NextRequest) {
   try {
-    const { type, name, companyId, tax, brokerId, carDetails, healthPolicy } = await req.json();
+    const { type, name, companyId, tax, brokerId, carDetails, healthPolicy } =
+      await req.json();
 
     const policy = await prisma.policy.create({
       data: {
@@ -13,75 +14,72 @@ export async function createPolicy(req: NextRequest) {
         companyId: Number(companyId),
         tax: tax ? Number(tax) : null,
         ...(brokerId && { brokerId: Number(brokerId) }),
-        
+
         // Conditionally create car policy
-        ...(type === "CAR" && carDetails && {
-          carPolicy: {
-            create: {
-              ownDamage: carDetails.ownDamage,
-              thirdParty: carDetails.thirdParty,
-              fire: carDetails.fire,
-              theft: carDetails.theft,
-              make: carDetails.make,
-              model: carDetails.model,
-              year: Number(carDetails.year),
-              mileage: Number(carDetails.mileage),
+        ...(type === "CAR" &&
+          carDetails && {
+            carPolicy: {
+              create: {
+                ownDamage: carDetails.ownDamage,
+                thirdParty: carDetails.thirdParty,
+                fire: carDetails.fire,
+                theft: carDetails.theft,
+                make: carDetails.make,
+                model: carDetails.model,
+                year: Number(carDetails.year),
+                mileage: Number(carDetails.mileage),
+              },
             },
-          },
-        }),
-        
+          }),
+
         // Conditionally create health policy
-        ...((type === "HEALTH" || type === "SME") && healthPolicy && {
-          healthPolicy: {
-            create: {
-              // Life Benefits
-              lifeInsurance: healthPolicy.lifeInsurance,
-              totalPermanentDisability: healthPolicy.totalPermanentDisability,
-              accidentalDeath: healthPolicy.accidentalDeath,
-              partialPermanentDisability: healthPolicy.partialPermanentDisability,
-              
-              // Medical Benefits
-              medicalTpa: healthPolicy.medicalTpa,
-              network: healthPolicy.network,
-              areaOfCoverage: healthPolicy.areaOfCoverage,
-              annualCeilingPerPerson: healthPolicy.annualCeilingPerPerson,
-              
-              // In-Patient Benefits
-              inPatientAccommodation: healthPolicy.inPatientAccommodation,
-              icu: healthPolicy.icu,
-              parentAccommodation: healthPolicy.parentAccommodation,
-              
-              // Out-Patient Benefits
-              doctorConsultation: healthPolicy.doctorConsultation,
-              labScan: healthPolicy.labScan,
-              physiotherapy: healthPolicy.physiotherapy,
-              medication: healthPolicy.medication,
-              
-              // Additional Benefits
-              dental: healthPolicy.dental,
-              optical: healthPolicy.optical,
-              maternityLimit: healthPolicy.maternityLimit,
-              newbornCeiling: healthPolicy.newbornCeiling,
-              
-              // Other Benefits
-              preExistingCases: healthPolicy.preExistingCases,
-              newChronic: healthPolicy.newChronic,
-              organTransplant: healthPolicy.organTransplant,
-              groundAmbulance: healthPolicy.groundAmbulance,
-              
-              // Reimbursement Rules
-              reimbursementCoverage: healthPolicy.reimbursementCoverage,
-              
-              
-              // Handle nested pricing (composite type array)
-              healthPricings: healthPolicy.healthPricings?.map((pricing: any) => ({
-                age: Number(pricing.age),
-                mainPrice: Number(pricing.mainPrice),
-                dependentPrice: Number(pricing.dependentPrice),
-              })) || [],
+        ...((type === "HEALTH" || type === "SME") &&
+          healthPolicy && {
+            healthPolicy: {
+              create: {
+                // Life Benefits
+                lifeInsurance: healthPolicy.lifeInsurance,
+                totalPermanentDisability: healthPolicy.totalPermanentDisability,
+                accidentalDeath: healthPolicy.accidentalDeath,
+                partialPermanentDisability:
+                  healthPolicy.partialPermanentDisability,
+
+                // Medical Benefits
+                medicalTpa: healthPolicy.medicalTpa,
+                network: healthPolicy.network,
+                areaOfCoverage: healthPolicy.areaOfCoverage,
+                annualCeilingPerPerson: healthPolicy.annualCeilingPerPerson,
+
+                // In-Patient Benefits
+                inPatientAccommodation: healthPolicy.inPatientAccommodation,
+                icu: healthPolicy.icu,
+                parentAccommodation: healthPolicy.parentAccommodation,
+
+                // Out-Patient Benefits
+                doctorConsultation: healthPolicy.doctorConsultation,
+                labScan: healthPolicy.labScan,
+                physiotherapy: healthPolicy.physiotherapy,
+                medication: healthPolicy.medication,
+
+                // Additional Benefits
+                dental: healthPolicy.dental,
+                optical: healthPolicy.optical,
+                maternityLimit: healthPolicy.maternityLimit,
+                newbornCeiling: healthPolicy.newbornCeiling,
+
+                // Other Benefits
+                preExistingCases: healthPolicy.preExistingCases,
+                newChronic: healthPolicy.newChronic,
+                organTransplant: healthPolicy.organTransplant,
+                groundAmbulance: healthPolicy.groundAmbulance,
+
+                // Reimbursement Rules
+                reimbursementCoverage: healthPolicy.reimbursementCoverage,
+
+                healthPricings: healthPolicy.healthPricings,
+              },
             },
-          },
-        }),
+          }),
       },
       include: {
         carPolicy: true,
@@ -90,12 +88,15 @@ export async function createPolicy(req: NextRequest) {
         broker: true,
       },
     });
-    
+
     return NextResponse.json(policy, { status: 201 });
   } catch (error) {
     console.error("Error creating policy:", error);
     return NextResponse.json(
-      { error: "Error creating policy", details: error instanceof Error ? error.message : String(error) },
+      {
+        error: "Error creating policy",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
@@ -163,20 +164,20 @@ export async function getPolicyById(req: NextRequest, id: number) {
       },
       include: {
         carPolicy: true,
-        healthPolicy:  true,
+        healthPolicy: true,
         company: {
           select: {
             id: true,
             name: true,
             logo: true,
-          }
+          },
         },
         broker: {
           select: {
             id: true,
             name: true,
-          }
-        }
+          },
+        },
       },
     });
 
@@ -196,135 +197,49 @@ export async function updatePolicy(
   brokerId?: number,
   userType?: string
 ) {
+  const startTime = Date.now();
+  console.log("▶️ updatePolicy START", { id });
+
   try {
     const body = await req.json();
-    const { type, name, companyId, tax, carDetails, healthDetails, ...otherData } = body;
+    const policyId = Number(id);
 
-    // Build the where clause
-    const whereClause: any = { id: Number(id) };
+    // Build safety for numeric types
+    const companyId = body.companyId ? Number(body.companyId) : undefined;
+    const taxValue = body.tax !== undefined ? Number(body.tax) : undefined;
+
+    const policyWhere: any = { id: policyId };
     if (userType === "BROKER" && brokerId) {
-      whereClause.brokerId = Number(brokerId);
+      policyWhere.brokerId = Number(brokerId);
     }
 
-    // First, fetch the existing policy to know its type
-    const existingPolicy = await prisma.policy.findUnique({
-      where: whereClause,
-      include: {
-        carPolicy: true,
-        healthPolicy: true,
+    console.log("⏳ Running Single Transactional Update...");
+
+    // SINGLE CALL: This handles Policy + HealthPolicy + JSON in one go
+    // 1. Destructure the healthPolicy to remove the problematic IDs
+    // We pull out 'id' and 'policyId' and group everything else into 'restOfHealth'
+    const { id: _, policyId: __, ...restOfHealth } = body.healthPolicy;
+
+    const result = await prisma.policy.update({
+      where: { id: policyId },
+      data: {
+        name: body.name,
+        companyId: companyId,
+        tax: taxValue,
+        healthPolicy: {
+          upsert: {
+            create: {
+              ...restOfHealth,
+              // Ensure healthPricings is passed as the object it is
+              healthPricings: restOfHealth.healthPricings || {},
+            },
+            update: {
+              ...restOfHealth,
+              healthPricings: restOfHealth.healthPricings || {},
+            },
+          },
+        },
       },
-    });
-
-    if (!existingPolicy) {
-      return NextResponse.json({ error: "Policy not found" }, { status: 404 });
-    }
-
-    // Build update data
-    const updateData: any = {
-      ...(name && { name }),
-      ...(companyId && { companyId: Number(companyId) }),
-      ...(tax !== undefined && { tax: tax ? Number(tax) : null }),
-    };
-
-    // Update car policy if type is CAR and carDetails provided
-    if (existingPolicy.type === "CAR" && carDetails) {
-      if (existingPolicy.carPolicy) {
-        updateData.carPolicy = {
-          update: {
-            ownDamage: carDetails.ownDamage,
-            thirdParty: carDetails.thirdParty,
-            fire: carDetails.fire,
-            theft: carDetails.theft,
-            make: carDetails.make,
-            model: carDetails.model,
-            year: Number(carDetails.year),
-            mileage: Number(carDetails.mileage),
-          },
-        };
-      } else {
-        updateData.carPolicy = {
-          create: {
-            ownDamage: carDetails.ownDamage,
-            thirdParty: carDetails.thirdParty,
-            fire: carDetails.fire,
-            theft: carDetails.theft,
-            make: carDetails.make,
-            model: carDetails.model,
-            year: Number(carDetails.year),
-            mileage: Number(carDetails.mileage),
-          },
-        };
-      }
-    }
-
-    // Update health policy if type is HEALTH or SME and healthDetails provided
-    if ((existingPolicy.type === "HEALTH" || existingPolicy.type === "SME") && healthDetails) {
-      const healthData: any = {
-        // Life Benefits
-        lifeInsurance: healthDetails.lifeInsurance,
-        totalPermanentDisability: healthDetails.totalPermanentDisability,
-        accidentalDeath: healthDetails.accidentalDeath,
-        partialPermanentDisability: healthDetails.partialPermanentDisability,
-        
-        // Medical Benefits
-        medicalTpa: healthDetails.medicalTpa,
-        network: healthDetails.network,
-        areaOfCoverage: healthDetails.areaOfCoverage,
-        annualCeilingPerPerson: Number(healthDetails.annualCeilingPerPerson),
-        
-        // In-Patient Benefits
-        inPatientAccommodation: healthDetails.inPatientAccommodation,
-        icu: healthDetails.icu,
-        parentAccommodation: healthDetails.parentAccommodation,
-        
-        // Out-Patient Benefits
-        doctorConsultation: healthDetails.doctorConsultation,
-        labScan: healthDetails.labScan,
-        physiotherapy: healthDetails.physiotherapy,
-        medication: healthDetails.medication,
-        
-        // Additional Benefits
-        dental: healthDetails.dental,
-        optical: healthDetails.optical,
-        maternityLimit: healthDetails.maternityLimit,
-        newbornCeiling: healthDetails.newbornCeiling,
-        
-        // Other Benefits
-        preExistingCases: healthDetails.preExistingCases,
-        newChronic: healthDetails.newChronic,
-        organTransplant: healthDetails.organTransplant,
-        groundAmbulance: healthDetails.groundAmbulance,
-        
-        // Reimbursement Rules
-        reimbursementCoverage: healthDetails.reimbursementCoverage,
-        
-        // Enrollment & Pricing
-        numberOfInsuredMembers: Number(healthDetails.numberOfInsuredMembers),
-        averagePremiumPerHead: Number(healthDetails.averagePremiumPerHead),
-        
-        // Handle nested pricing (composite type array)
-        healthPricings: healthDetails.healthPricings?.map((pricing: any) => ({
-          minAge: Number(pricing.minAge),
-          maxAge: Number(pricing.maxAge),
-          mainPrice: Number(pricing.mainPrice),
-          dependentPrice: Number(pricing.dependentPrice),
-        })) || [],
-      };
-
-      if (existingPolicy.healthPolicy) {
-        updateData.healthPolicy = {
-          update: healthData,
-        };
-      } else {
-        updateData.healthPolicy = {
-          create: healthData,
-        };
-      }
-    }
-
-    const policy = await prisma.policy.update({
-      where: whereClause,
-      data: updateData,
       include: {
         carPolicy: true,
         healthPolicy: true,
@@ -333,11 +248,12 @@ export async function updatePolicy(
       },
     });
 
-    return NextResponse.json(policy, { status: 200 });
-  } catch (error) {
-    console.error("Error updating policy:", error);
+    console.log(`✅ updatePolicy COMPLETE in ${Date.now() - startTime}ms`);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error: any) {
+    console.error("❌ updatePolicy FAILED:", error);
     return NextResponse.json(
-      { error: "Error updating policy", details: error instanceof Error ? error.message : String(error) },
+      { error: "Update failed", details: error.message },
       { status: 500 }
     );
   }
@@ -362,9 +278,7 @@ export async function deletePolicy(id: number, brokerId: number, type: string) {
   }
 }
 
-export async function searchPolicy(
-  req: NextRequest,
-) {
+export async function searchPolicy(req: NextRequest) {
   try {
     const url = new URL(req.url);
     return await filterPrisma(
@@ -375,7 +289,7 @@ export async function searchPolicy(
       url,
       "policy",
       { company: { select: { name: true, logo: true } } },
-      { }
+      {}
     );
   } catch (error) {}
 }

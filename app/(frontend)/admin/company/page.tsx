@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect, useState } from "react";
 import Table from "../../_components/table/table";
-import { companiesColumns, companiesList, editableCompanyColumns } from "../../_dto/company";
+import { companiesColumns, editableCompanyColumns } from "../../_dto/company";
 import { PopupContext } from "../../_components/utils/context/popup_provider";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -61,6 +61,14 @@ export default function AdminCompany() {
           loading={isLoading}
           addNew={handleAddNew}
           query="adminCompanies"
+          pagination={{
+            currentPage: 1,
+            hasNextPage: false,
+            itemsPerPage: 10,
+            totalPages: 0,
+            setCurrentPage: () => {},
+            setItemsPerPage: () => {},
+          }}
         />
       </div>
     </div>

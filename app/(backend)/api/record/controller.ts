@@ -254,6 +254,7 @@ interface CalculatedPolicyRecord {
   totalAmount: number;
   totalTaxed: number;
   avgPricePerPerson: number;
+  policy: any;
   policyDescription: string;
   insuredPeople: {
     age: number;
@@ -279,23 +280,29 @@ function calculateAge(birthDate: string, issueDate: string): number {
 }
 
 function findPriceForAge(
-  healthPricings: any[],
+  healthPricings: any,
   age: number,
   isDependent: boolean
 ): { price: number | null; reason?: string } {
   // Find exact age match
-  const pricing = healthPricings.find((p: any) => p.age === age);
+  const pricing = healthPricings[age.toString()];
 
   if (!pricing) {
     return {
       price: null,
-      reason: `No pricing defined for age ${age}`,
+      reason: `No insurance for age ${age}`,
     };
   }
 
   const priceField = isDependent ? pricing.dependentPrice : pricing.mainPrice;
 
-  if (priceField === undefined || priceField === null || priceField === 0) {
+  // Check for invalid values: undefined, null, 0, or NaN
+  if (
+    priceField === undefined || 
+    priceField === null || 
+    priceField === 0 || 
+    isNaN(priceField)
+  ) {
     return {
       price: null,
       reason: `No ${isDependent ? "dependent" : "main"} price for age ${age}`,
@@ -333,11 +340,8 @@ export async function calculatePolicyRecords(req: NextRequest) {
             logo: true,
           },
         },
-        healthPolicy: {
-          select: {
-            healthPricings: true,
-          },
-        },
+        healthPolicy: true
+        
       },
     });
 
@@ -354,7 +358,7 @@ export async function calculatePolicyRecords(req: NextRequest) {
     for (const policy of policies) {
       if (!policy.healthPolicy) continue;
 
-      const healthPricings = policy.healthPolicy.healthPricings as any[];
+      const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
       const insuredPeople: CalculatedPolicyRecord["insuredPeople"] = [];
 
       let totalAmount = 0;
@@ -371,7 +375,7 @@ export async function calculatePolicyRecords(req: NextRequest) {
         const isDependent = person.type === "Dependent";
 
         const { price, reason } = findPriceForAge(
-          healthPricings,
+          healthPricingsObject,
           age,
           isDependent
         );
@@ -410,12 +414,14 @@ export async function calculatePolicyRecords(req: NextRequest) {
       const totalTaxed = totalAmount * (1 + taxRate);
 
       const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${people.length} - Avg age: ${averageAge}`;
-
+      const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy
+      
       calculatedRecords.push({
         policyId: policy.id,
         policyName: policy.name,
         companyName: policy.company.name,
         companyLogo: policy.company.logo || "",
+        policy: healthWithoutPricing,
         numberOfInsureds,
         numberOfPersons: people.length,
         averageAge,
@@ -501,9 +507,11 @@ export async function createBulkRecord(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
+    const effectiveBrokerId = type === "BROKER" ? userId : brokerId;
+
     const broker = await prisma.user.findUnique({
       where: {
-        ...(type === "BROKER" ? { id: userId } : { id: brokerId }),
+        id: effectiveBrokerId,
         type: "BROKER",
       },
     });
@@ -511,11 +519,12 @@ export async function createBulkRecord(
     if (!broker) {
       return NextResponse.json({ error: "Broker not found" }, { status: 404 });
     }
+    console.log("selectedPolicies", selectedPolicies);
     // Create record with record policies
     const record = await prisma.record.create({
       data: {
         clientId,
-        ...(type === "BROKER" ? { brokerId: userId } : { brokerId }),
+        brokerId: effectiveBrokerId,
         issueDate: issueDateParsed,
         state: state || "DRAFT",
         policies: {
@@ -548,7 +557,7 @@ export async function createBulkRecord(
     await prisma.user.updateMany({
       where: {
         id: {
-          in: [clientId, ...(type === "BROKER" ? userId : brokerId)],
+          in: [clientId, effectiveBrokerId],
         },
       },
       data: {

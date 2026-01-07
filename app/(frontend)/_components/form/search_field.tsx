@@ -100,7 +100,7 @@ export default function DynamicSearchField({
     <div className="w-fit relative">
       <div className="relative">
         <input
-          className="py-2.5 sm:py-3 ps-4 pe-9 block w-full bg-[#2e8ecf] border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+          className="py-2.5 sm:py-3 ps-4 pe-9 block w-full bg-gray-100 border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
           type="text"
           role="combobox"
           aria-expanded={isOpen}
@@ -122,7 +122,7 @@ export default function DynamicSearchField({
         ): selectedItem && selectedItem?.id ? (
           <span>
                 <svg
-                  className="shrink-0 size-3.5 text-blue-600 dark:text-blue-500"
+                  className="shrink-0 size-3.5 absolute inset-y-4 end-15 text-blue-600 dark:text-blue-500"
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
                   height="24"
