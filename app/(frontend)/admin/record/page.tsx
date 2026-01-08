@@ -8,7 +8,7 @@ export default function AdminRecords() {
   const router = useRouter();
 
   const { isLoading, isError, data, error } = useQuery({
-    queryKey: ["adminRecord"],
+    queryKey: ["adminRecords"],
     queryFn: () => getRecords(1, 10, ""),
   });
 
@@ -26,7 +26,7 @@ export default function AdminRecords() {
           actions={[]}
           loading={isLoading}
           addNew={handleAddNew}
-          query="adminRecord"
+          query="adminRecords"
           pagination={{
             currentPage: 1,
             hasNextPage: false,

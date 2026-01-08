@@ -199,13 +199,13 @@ export async function updateRecord(
   id: number
 ) {
   try {
-    const { data } = await req.json();
+    const { id: _id, clientId: _clientId, brokerId: _brokerId, client, broker, ...data } = await req.json();
 
-    const { clientId, brokerId: _brokerId, ...newData } = data;
-    const recordData = type === "BROKER" ? newData : data;
+    // const { clientId, brokerId: _brokerId, ...newData } = data;
+    // const recordData = type === "BROKER" ? newData : data;
     const record = await prisma.record.update({
       where: { id, ...(type === "BROKER" && { brokerId: userId }) },
-      data: { ...recordData },
+      data: { ...data },
     });
 
     return NextResponse.json(record, { status: 200 });

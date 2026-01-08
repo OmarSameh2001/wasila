@@ -9,5 +9,7 @@ export default function AdminRecord() {
     return <RecordCreate />;
   }
 
-  return <SingleRecordView />;
+  if(params.id) return <SingleRecordView id={params.id?.toString()} />;
+
+  return null;
 }

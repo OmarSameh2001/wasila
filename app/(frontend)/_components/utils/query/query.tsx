@@ -1,5 +1,5 @@
 "use client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { InvalidateQueryFilters, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,4 +26,10 @@ export default function QueryProvider({
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+}
+
+export function queryInvalidator(key: string) {
+  queryClient.invalidateQueries([key] as InvalidateQueryFilters<
+        readonly unknown[]
+      >);
 }
