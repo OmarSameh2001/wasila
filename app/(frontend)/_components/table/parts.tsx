@@ -46,10 +46,12 @@ import {
   TrashIcon,
   PencilSquareIcon,
   InformationCircleIcon,
+  DocumentIcon,
 } from "@heroicons/react/20/solid";
 import { TableActionButton } from "../../_dto/general";
 import { showConfirmToast } from "../utils/toaster/toaster";
 import { queryInvalidator } from "../utils/query/query";
+import { useRouter } from "next/navigation";
 
 export function TableActionIcon({
   action,
@@ -62,13 +64,14 @@ export function TableActionIcon({
   query?: string;
   tabelName?: string
 }) {
+  const router = useRouter();
   console.log(row);
   const name = row.name;
   async function handleDelete() {
     showConfirmToast({
       message: `Are you sure you want to delete ${name || "this"}?`,
       tableName: tabelName,
-      onConfirm: () => {action.onClick(row.id)
+      onConfirm: () => {action?.onClick?.(row.id)
         if(query) queryInvalidator(query)
       },
     })
@@ -87,7 +90,15 @@ export function TableActionIcon({
       return (
         <PencilSquareIcon
           className="text-yellow-500 size-7 cursor-pointer p-1"
-          onClick={() => action.onClick(row.id, row)}
+          onClick={() => action?.onClick?.(row.id, row)}
+          title={name ? action.name + " " + name : action.name}
+        />
+      );
+    case "pdf":
+      return (
+        <DocumentIcon
+          className="text-blue-500 size-7 cursor-pointer p-1"
+          onClick={() => window.open(`/admin/record/${row.id}/pdf`, "_blank")}
           title={name ? action.name + " " + name : action.name}
         />
       );

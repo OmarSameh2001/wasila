@@ -1,251 +1,24 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { getRecord } from "../../_services/record";
+import { useQuery } from "@tanstack/react-query";
+import { RecordData, RecordPolicy } from "../../_dto/record";
+import PromiseHandler from "../utils/promise_handler/handler";
+import LoadingPage from "../utils/promise_handler/loading/loading";
+import { showErrorToast, showSuccessToast } from "../utils/toaster/toaster";
 
-interface PolicyData {
-  policyName: string;
-  companyName: string;
-  numberOfInsureds: number;
-  numberOfPersons: number;
-  averageAge: number;
-  totalAmount: number;
-  totalTaxed: number;
-  avgPricePerPerson: number;
-  policy: any;
-}
 
-function InsuranceReportPDF() {
+function InsuranceReportPDF({ id }: { id: string }) {
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const { isLoading, isError, data, error } = useQuery({
+    queryKey: ["adminRecord", id],
+    queryFn: () => getRecord(Number(id)),
+  });
+  const record = (data?.data as RecordData) || null;
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const financialData: PolicyData[] = [
-    {
-      policyName: "Elite",
-      companyName: "Axa",
-      policy: {
-        id: 9,
-        lifeInsurance: "Elite",
-        totalPermanentDisability: "100000",
-        accidentalDeath: "100000",
-        partialPermanentDisability: "100000",
-        medicalTpa: "Covered",
-        network: "AXA",
-        areaOfCoverage: "Covered",
-        annualCeilingPerPerson: "Covered",
-        inPatientAccommodation: "Covered",
-        icu: "Not Covered",
-        parentAccommodation: "Not Covered",
-        doctorConsultation: "Covered",
-        labScan: "Covered",
-        physiotherapy: "Covered",
-        medication: "Covered",
-        dental: "Covered",
-        optical: "Covered",
-        maternityLimit: "Covered",
-        newbornCeiling: "Not Covered",
-        preExistingCases: "Covered",
-        newChronic: "Covered",
-        organTransplant: "Covered",
-        groundAmbulance: "Covered",
-        reimbursementCoverage: "Covered",
-        policyId: 13,
-      },
-      numberOfInsureds: 60,
-      numberOfPersons: 66,
-      averageAge: 31,
-      totalAmount: 408333,
-      totalTaxed: 416907.99,
-      avgPricePerPerson: 6805.55,
-    },
-    {
-      policyName: "Fine",
-      companyName: "Axa",
-      policy: {
-        id: 9,
-        lifeInsurance: "Fine",
-        totalPermanentDisability: "100000",
-        accidentalDeath: "100000",
-        partialPermanentDisability: "100000",
-        medicalTpa: "Covered",
-        network: "AXA",
-        areaOfCoverage: "Covered",
-        annualCeilingPerPerson: "Covered",
-        inPatientAccommodation: "Covered",
-        icu: "Not Covered",
-        parentAccommodation: "Not Covered",
-        doctorConsultation: "Covered",
-        labScan: "Covered",
-        physiotherapy: "Covered",
-        medication: "Covered",
-        dental: "Covered",
-        optical: "Covered",
-        maternityLimit: "Covered",
-        newbornCeiling: "Not Covered",
-        preExistingCases: "Covered",
-        newChronic: "Covered",
-        organTransplant: "Covered",
-        groundAmbulance: "Covered",
-        reimbursementCoverage: "Covered",
-        policyId: 13,
-      },
-      numberOfInsureds: 60,
-      numberOfPersons: 66,
-      averageAge: 31,
-      totalAmount: 408333,
-      totalTaxed: 416907.99,
-      avgPricePerPerson: 6805.55,
-    },
-    {
-      policyName: "Top",
-      companyName: "Allianz",
-      policy: {
-        id: 9,
-        lifeInsurance: "Top",
-        totalPermanentDisability: "100000",
-        accidentalDeath: "100000",
-        partialPermanentDisability: "100000",
-        medicalTpa: "Covered",
-        network: "AXA",
-        areaOfCoverage: "Covered",
-        annualCeilingPerPerson: "Covered",
-        inPatientAccommodation: "Covered",
-        icu: "Not Covered",
-        parentAccommodation: "Not Covered",
-        doctorConsultation: "Covered",
-        labScan: "Covered",
-        physiotherapy: "Covered",
-        medication: "Covered",
-        dental: "Covered",
-        optical: "Covered",
-        maternityLimit: "Covered",
-        newbornCeiling: "Not Covered",
-        preExistingCases: "Covered",
-        newChronic: "Covered",
-        organTransplant: "Covered",
-        groundAmbulance: "Covered",
-        reimbursementCoverage: "Covered",
-        policyId: 13,
-      },
-      numberOfInsureds: 60,
-      numberOfPersons: 66,
-      averageAge: 31,
-      totalAmount: 408333,
-      totalTaxed: 416907.99,
-      avgPricePerPerson: 6805.55,
-    },
-    {
-      policyName: "Elite2",
-      companyName: "Axa",
-      policy: {
-        id: 9,
-        lifeInsurance: "Elite2",
-        totalPermanentDisability: "100000",
-        accidentalDeath: "100000",
-        partialPermanentDisability: "100000",
-        medicalTpa: "Covered",
-        network: "AXA",
-        areaOfCoverage: "Covered",
-        annualCeilingPerPerson: "Covered",
-        inPatientAccommodation: "Covered",
-        icu: "Not Covered",
-        parentAccommodation: "Not Covered",
-        doctorConsultation: "Covered",
-        labScan: "Covered",
-        physiotherapy: "Covered",
-        medication: "Covered",
-        dental: "Covered",
-        optical: "Covered",
-        maternityLimit: "Covered",
-        newbornCeiling: "Not Covered",
-        preExistingCases: "Covered",
-        newChronic: "Covered",
-        organTransplant: "Covered",
-        groundAmbulance: "Covered",
-        reimbursementCoverage: "Covered",
-        policyId: 13,
-      },
-      numberOfInsureds: 60,
-      numberOfPersons: 66,
-      averageAge: 31,
-      totalAmount: 408333,
-      totalTaxed: 416907.99,
-      avgPricePerPerson: 6805.55,
-    },
-    {
-      policyName: "Fine2",
-      companyName: "Axa",
-      policy: {
-        id: 9,
-        lifeInsurance: "Fine2",
-        totalPermanentDisability: "100000",
-        accidentalDeath: "100000",
-        partialPermanentDisability: "100000",
-        medicalTpa: "Covered",
-        network: "AXA",
-        areaOfCoverage: "Covered",
-        annualCeilingPerPerson: "Covered",
-        inPatientAccommodation: "Covered",
-        icu: "Not Covered",
-        parentAccommodation: "Not Covered",
-        doctorConsultation: "Covered",
-        labScan: "Covered",
-        physiotherapy: "Covered",
-        medication: "Covered",
-        dental: "Covered",
-        optical: "Covered",
-        maternityLimit: "Covered",
-        newbornCeiling: "Not Covered",
-        preExistingCases: "Covered",
-        newChronic: "Covered",
-        organTransplant: "Covered",
-        groundAmbulance: "Covered",
-        reimbursementCoverage: "Covered",
-        policyId: 13,
-      },
-      numberOfInsureds: 60,
-      numberOfPersons: 66,
-      averageAge: 31,
-      totalAmount: 408333,
-      totalTaxed: 416907.99,
-      avgPricePerPerson: 6805.55,
-    },
-    {
-      policyName: "Top2",
-      companyName: "Allianz",
-      policy: {
-        id: 9,
-        lifeInsurance: "Top2",
-        totalPermanentDisability: "100000",
-        accidentalDeath: "100000",
-        partialPermanentDisability: "100000",
-        medicalTpa: "Covered",
-        network: "AXA",
-        areaOfCoverage: "Covered",
-        annualCeilingPerPerson: "Covered",
-        inPatientAccommodation: "Covered",
-        icu: "Not Covered",
-        parentAccommodation: "Not Covered",
-        doctorConsultation: "Covered",
-        labScan: "Covered",
-        physiotherapy: "Covered",
-        medication: "Covered",
-        dental: "Covered",
-        optical: "Covered",
-        maternityLimit: "Covered",
-        newbornCeiling: "Not Covered",
-        preExistingCases: "Covered",
-        newChronic: "Covered",
-        organTransplant: "Covered",
-        groundAmbulance: "Covered",
-        reimbursementCoverage: "Covered",
-        policyId: 13,
-      },
-      numberOfInsureds: 60,
-      numberOfPersons: 66,
-      averageAge: 31,
-      totalAmount: 408333,
-      totalTaxed: 416907.99,
-      avgPricePerPerson: 6805.55,
-    },
-  ];
+  const financialData: RecordPolicy[] = record?.policies ?? [];
+  console.log(data?.data);
 
   const formatNumber = (num: number): string => {
     return num.toLocaleString("en-US", {
@@ -255,6 +28,7 @@ function InsuranceReportPDF() {
   };
 
   const downloadPDF = async (): Promise<void> => {
+    setPdfLoading(true);
     const element = reportRef.current;
 
     if (!element) {
@@ -263,14 +37,13 @@ function InsuranceReportPDF() {
     }
 
     try {
-
       // Dynamic imports - only load when needed
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
         import("html2canvas"),
         import("jspdf"),
       ]);
 
-      const slides = element.querySelectorAll(".slide");
+      const slides = element.querySelectorAll<HTMLElement>(".slide");
 
       if (slides.length === 0) {
         throw new Error("No slides found");
@@ -290,7 +63,7 @@ function InsuranceReportPDF() {
         if (i > 0) {
           pdf.addPage([1920, 1080], "landscape");
         }
-
+        slides[i].style.width = "1920px";
         // Capture slide with optimized settings
         const canvas = await html2canvas(slides[i] as HTMLElement, {
           scale: 1.5, // Balance between quality and performance
@@ -315,6 +88,7 @@ function InsuranceReportPDF() {
         // Clean up canvas to free memory
         canvas.width = 0;
         canvas.height = 0;
+        slides[i].style.width = "90vw";
       }
 
       // Save with date stamp
@@ -322,19 +96,17 @@ function InsuranceReportPDF() {
         new Date().toISOString().split("T")[0]
       }.pdf`;
       pdf.save(filename);
-
+      showSuccessToast("PDF generated successfully", 2000);
     } catch (error) {
       console.error("PDF generation failed:", error);
-      alert(
-        `Failed to generate PDF: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      showErrorToast("Failed to generate PDF");
+    } finally {
+      setPdfLoading(false);
     }
   };
 
-  const policyData = financialData.sort((a, b) =>
-    b.companyName.localeCompare(a.companyName)
+  const policyRecordData = financialData?.sort(
+    (a, b) => b?.companyName?.localeCompare(a?.companyName ?? "") ?? 0
   );
   const financialArabic: Record<string, string> = {
     numberOfInsureds: "عدد المؤمن عليهم",
@@ -353,6 +125,15 @@ function InsuranceReportPDF() {
     avgPricePerPerson: "Average Price per Person",
   };
   const financialKeys = Object.keys(financialArabic);
+
+  if (isLoading || isError)
+    return (
+      <PromiseHandler
+        isLoading={isLoading}
+        isError={isError}
+        message={"Error loading record"}
+      />
+    );
   return (
     <div
       style={{
@@ -383,14 +164,21 @@ function InsuranceReportPDF() {
             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
           }}
         >
-          📄 Download PDF
+          {pdfLoading ? (
+            <LoadingPage height="100px" width="100px" />
+          ) : (
+            "📄 Download PDF"
+          )}
         </button>
       </div>
+      {pdfLoading && (
+        <LoadingPage className="fixed inset-0 w-screen h-full bg-white dark:bg-black z-[1000]" />
+      )}
 
       <div ref={reportRef}>
-        <style>{`
+        <style>{` 
           .slide {
-            width: 1920px;
+            width: 90vw;
             height: 1080px;
             margin: 20px auto;
             background: white;
@@ -553,10 +341,15 @@ function InsuranceReportPDF() {
               paddingLeft: "40px",
             }}
           >
-            {/* <li style={{ marginBottom: "20px", color: "#1a237e" }}>
+            <li style={{ marginBottom: "0px", color: "#1a237e" }}>
               <span style={{ color: "#1a237e", marginRight: "20px" }}>•</span>
-              Insurance Companies Overview
-            </li> */}
+              Record Description
+            </li>
+            <div className="ml-10 flex flex-col gap-0 text-[#1a237e] underline">
+                {record?.broker?.name ? <span>Broker name: {record.broker.name}</span>: null}
+                {record?.client?.name ? <span>Client name: {record.client.name}</span>: null}
+                {record?.policies?.length && record?.policies?.length > 0 ? <span>Number of policies: {record?.policies?.length}</span>: null}
+            </div>
             <li style={{ marginBottom: "20px", color: "#1a237e" }}>
               <span style={{ color: "#1a237e", marginRight: "20px" }}>•</span>
               Benefits Summary
@@ -569,61 +362,6 @@ function InsuranceReportPDF() {
           <div className="page-number">2</div>
         </div>
 
-        {/* Slide 3: Wasila */}
-        {/* <div className="slide page-break">
-          <div className="logo">Wasila for Insurance</div>
-          <div className="company-card">
-            <h3
-              style={{
-                fontSize: "42px",
-                color: "#1a237e",
-                marginBottom: "30px",
-                fontWeight: "bold",
-              }}
-            >
-              Sarwa General
-            </h3>
-            <p
-              style={{
-                fontSize: "20px",
-                lineHeight: "1.8",
-                color: "#333",
-              }}
-            >
-              SARWA Insurance is an Egyptian joint-stock company registered with
-              number 40 for 2019 at the Financial Regulatory Authority (FRA).
-              Sarwa Insurance is set to be the fastest-growing and dynamic
-              insurance company offering a wide range of both Personal and
-              Commercial insurance solutions. Despite Sarwa Insurance's young
-              age, we've succeeded in delivering superb service to a wide and
-              diversified client base of individuals, SMEs, and corporate
-              spectrums. From day one, we've made sure to back our name by one
-              of the best "A" rated re-insurer in the globe to make sure that we
-              deliver nothing less than utmost credibility and protection to our
-              clients. Our extensive experience as individuals working on truly
-              international standards ensures that we can provide the most
-              effective and economical solutions to our clients.
-            </p>
-          </div>
-          <div className="page-number">5</div>
-        </div> */}
-
-        {/* Slide 6: Benefits Summary Title */}
-        {/* <div className="slide page-break">
-          <div className="logo">Wasila for Insurance</div>
-          <h2
-            style={{
-              fontSize: "56px",
-              color: "#1a237e",
-              fontWeight: "bold",
-              marginTop: "300px",
-              textAlign: "center",
-            }}
-          >
-            Benefits Summary
-          </h2>
-          <div className="page-number">3</div>
-        </div> */}
 
         {/* Slide 7: Benefits Table 1 */}
         <div className="slide page-break">
@@ -639,9 +377,9 @@ function InsuranceReportPDF() {
             Table of Benefits Comparison
           </h2>
           <table className="benefits-table">
-            <CustomTableHead policies={policyData} />
+            <CustomTableHead recordPolicies={policyRecordData} />
             <tbody>
-              <CustomTableRow policies={policyData} limit={12} />
+              <CustomTableRow recordPolicies={policyRecordData} limit={12} />
             </tbody>
           </table>
           <div className="page-number">4</div>
@@ -661,10 +399,10 @@ function InsuranceReportPDF() {
             Table of Benefits Comparison (Continued)
           </h2>
           <table className="benefits-table">
-            <CustomTableHead policies={policyData} />
+            <CustomTableHead recordPolicies={policyRecordData} />
             <tbody>
               <CustomTableRow
-                policies={policyData}
+                recordPolicies={policyRecordData}
                 startIndex={12}
                 limit={13}
               />
@@ -688,7 +426,7 @@ function InsuranceReportPDF() {
           </h2>
 
           <table className="benefits-table">
-            <CustomTableHead policies={policyData} />
+            <CustomTableHead recordPolicies={policyRecordData} />
             <tbody>
               {financialKeys.map((key) => (
                 <tr key={key}>
@@ -704,9 +442,9 @@ function InsuranceReportPDF() {
                       ({financialArabic[key] || key})
                     </div>
                   </td>
-                  {policyData.map((policyData, index) => (
+                  {policyRecordData?.map((policyData, index) => (
                     <td key={index}>
-                      {policyData[key as keyof typeof policyData]}
+                      {String(policyData[key as keyof typeof policyData] ?? "")}
                     </td>
                   ))}
                 </tr>
@@ -737,11 +475,11 @@ function InsuranceReportPDF() {
 }
 
 function CustomTableRow({
-  policies,
+  recordPolicies,
   startIndex = 0,
   limit,
 }: {
-  policies: PolicyData[];
+  recordPolicies: RecordPolicy[];
   startIndex?: number;
   limit?: number;
 }) {
@@ -806,11 +544,12 @@ function CustomTableRow({
   //     ? policies.slice(startIndex, startIndex + limit)
   //     : policies.slice(startIndex);
 
-  // Get all policy keys (excluding id and policyId)
+  // Get all policy keys (excluding id, policyId, and healthPricings)
   const policyKeys =
-    policies.length > 0
-      ? Object.keys(policies[0].policy).filter(
-          (key) => key !== "id" && key !== "policyId"
+    recordPolicies?.length > 0
+      ? Object.keys(recordPolicies[0].policy.healthPolicy).filter(
+          (key) =>
+            key !== "id" && key !== "policyId" && key !== "healthPricings"
         )
       : [];
   const displayedPoliciesKeys = limit
@@ -827,9 +566,13 @@ function CustomTableRow({
               ({arabicTranslations[key] || key})
             </div>
           </td>
-          {policies.map((policyData, index) => (
+          {recordPolicies.map((policyData, index) => (
             <td key={index}>
-              {policyData.policy[key as keyof typeof policyData.policy]}
+              {String(
+                policyData.policy.healthPolicy[
+                  key as keyof typeof policyData.policy.healthPolicy
+                ] ?? ""
+              )}
             </td>
           ))}
         </tr>
@@ -838,24 +581,24 @@ function CustomTableRow({
   );
 }
 function CustomTableHead({
-  policies,
+  recordPolicies,
 }: {
-  policies: { policyName: string; companyName: string }[];
+  recordPolicies: RecordPolicy[];
 }) {
-  const groupedPolicies = policies.reduce((acc, policy) => {
-    const company = policy.companyName;
+  const groupedPolicies = recordPolicies?.reduce((acc, policy) => {
+    const company = policy?.policy?.company?.name ?? "";
     if (!acc[company]) {
       acc[company] = [];
     }
     acc[company].push(policy);
     return acc;
-  }, {} as Record<string, typeof policies>);
+  }, {} as Record<string, typeof recordPolicies>);
 
   return (
     <thead className="text-center">
       <tr>
         <th>Company</th>
-        {Object.entries(groupedPolicies).map(
+        {Object.entries(groupedPolicies ?? {}).map(
           ([companyName, companyPolicies]) => (
             <th key={companyName} colSpan={companyPolicies.length}>
               {companyName}
@@ -865,15 +608,16 @@ function CustomTableHead({
       </tr>
       <tr>
         <th>Policy</th>
-        {Object.entries(groupedPolicies).map(([companyName, companyPolicies]) =>
-          companyPolicies.map((policy) => (
-            <th
-              className="text-center"
-              key={`${companyName}-${policy.policyName}`}
-            >
-              {policy.policyName}
-            </th>
-          ))
+        {Object.entries(groupedPolicies ?? {}).map(
+          ([companyName, companyPolicies]) =>
+            companyPolicies?.map((policy) => (
+              <th
+                className="text-center"
+                key={`${companyName}-${policy.policy.name}`}
+              >
+                {policy.policy.name}
+              </th>
+            ))
         )}
       </tr>
     </thead>

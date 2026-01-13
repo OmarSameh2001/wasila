@@ -78,7 +78,16 @@ export async function getRecord(
             email: true,
           },
         },
-        policies: true,
+        policies: {
+          include: {
+            policy: {
+              include: {
+                company: true,
+                healthPolicy: true,
+              },
+            },
+          },
+        },
       },
     });
     return NextResponse.json(record, { status: 200 });

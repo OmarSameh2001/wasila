@@ -11,7 +11,7 @@ const getFunction = async (name: string) => {
   switch (name) {
     case "Company":
       return searchCompany;
-    case "AdminClient":
+    case "User":
       return searchUser;
     case "Client":
       return searchClient;

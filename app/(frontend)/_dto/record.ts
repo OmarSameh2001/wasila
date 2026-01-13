@@ -1,6 +1,6 @@
 import { DynamicFormField } from "../_components/form/dynamic_form";
 import { TableColumn } from "./general";
-import { HealthPolicy } from "./policy";
+import { HealthPolicy, Policy } from "./policy";
 
 
 export const recordsColumns: TableColumn[] = [
@@ -87,4 +87,37 @@ export interface InsuredPerson {
   price: number;
   isInsured: boolean;
   reason?: string;
+}
+
+
+export interface RecordData {
+  id: number;
+  state: string;
+  clientId: number;
+  brokerId: number;
+  issueDate: string;
+  createdAt: string;
+  updatedAt: string;
+  client: {
+    id: number;
+    name: string;
+  };
+  broker: {
+    id: number;
+    name: string;
+  };
+  policies: RecordPolicy[];
+}
+export interface RecordPolicy {
+  recordId: number;
+  policyId: number;
+  companyName: string;
+  policy: HealthPolicy;
+  totalAmount: string;
+  totalTaxed: string;
+  policyDescription: string;
+  numberOfInsureds: number;
+  numberOfPersons: number;
+  averageAge: string;
+  avgPricePerPerson: string;
 }

@@ -10,6 +10,7 @@ import {
   Users,
   Calculator,
   ShoppingCart,
+  File,
 } from "lucide-react";
 import {
   CalculatedPolicyRecord,
@@ -18,9 +19,13 @@ import {
 import { healthPolicyGroups } from "@/app/(frontend)/_dto/policy";
 import { calculateRecords } from "@/app/(frontend)/_services/record";
 import { PopupContext } from "../../utils/context/popup_provider";
-import DynamicForm from "../../form/dynamic_form";
 import * as XLSX from "xlsx";
-import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../utils/toaster/toaster";
+import {
+  showLoadingError,
+  showLoadingSuccess,
+  showLoadingToast,
+} from "../../utils/toaster/toaster";
+import DynamicSearchField from "../../form/search_field";
 
 export default function RecordCreate() {
   const [step, setStep] = useState(1);
@@ -229,7 +234,10 @@ export default function RecordCreate() {
   };
   const handleFileUpload = () => {
     setComponent(
-      <div className="flex flex-col items-center justify-center gap-3">
+      <div className="flex flex-col items-center justify-center gap-5">
+        <h1 className="text-xl font-bold underline">
+          Excel of employees and dependents
+        </h1>
         <input
           type="file"
           accept=".xlsx"
@@ -241,12 +249,12 @@ export default function RecordCreate() {
           target="_blank"
           href="https://docs.google.com/spreadsheets/d/1UrHqf1Sd3TQGPF7pHKkKDWgbeVwPfCc3/edit?usp=sharing&ouid=108291203033422402688&rtpof=true&sd=true"
         >
-          get template
+          Fill this template then upload it
         </a>
         <button
           onClick={handleExcel}
           disabled={!excelFile}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer  disabled:cursor-not-allowed"
         >
           Upload
         </button>
@@ -254,13 +262,9 @@ export default function RecordCreate() {
     );
   };
 
-  useEffect(() => {
-    console.log(excelFile);
-  }, [excelFile]);
-
   const handleExcel = async () => {
     if (!excelFile) return;
-    setComponent(null)
+    setComponent(null);
     let toastId = showLoadingToast("Parsing uploaded file...");
     try {
       setError("");
@@ -277,14 +281,6 @@ export default function RecordCreate() {
         defval: "",
         raw: false,
       });
-
-      /**
-       * Expected row format example:
-       * {
-       *   birthDate: "1990-01-01",
-       *   type: "Employee"
-       * }
-       */
 
       const lines: string[] = [];
 
@@ -312,9 +308,12 @@ export default function RecordCreate() {
       }
 
       // 🔑 This is the key line
-      setCsvText((prev) => prev + "\n" +lines.join("\n"));
+      setCsvText((prev) => prev + "\n" + lines.join("\n"));
 
-      showLoadingSuccess(toastId, "File parsed successfully added: " + lines.length+" records.");
+      showLoadingSuccess(
+        toastId,
+        "File parsed successfully added: " + lines.length + " records."
+      );
       setComponent(null); // close popup
     } catch (err) {
       console.error(err);
@@ -323,17 +322,17 @@ export default function RecordCreate() {
     }
   };
 
+  const handleClientValue = (key: string, value: string)=>{
+    setClientId(value)
+    console.log(value)
+  }
+  const handleBrokerValue = (key: string, value: string)=>{
+    setBrokerId(value)
+    console.log(value)
+  }
   const selectedRecords = calculatedRecords.filter((r) =>
     selectedPolicies.has(r.policyId)
   );
-  // const totalSelectedAmount = selectedRecords.reduce(
-  //   (sum, r) => sum + r.totalAmount,
-  //   0
-  // );
-  // const totalSelectedTaxed = selectedRecords.reduce(
-  //   (sum, r) => sum + r.totalTaxed,
-  //   0
-  // );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 p-4 sm:p-8">
@@ -413,8 +412,13 @@ export default function RecordCreate() {
             </p>
             <p className="text-gray-600 dark:text-gray-200 mb-6">
               Or you can upload an excel file{" "}
-              <button onClick={handleFileUpload} className="underline">
-                here
+              <button
+                type="button"
+                onClick={handleFileUpload}
+                className="flex items-center gap-2 px-3 py-1 text-sm border rounded hover:bg-gray-400 cursor-pointer"
+              >
+                <File className="h-4 w-4" />
+                Excel Import
               </button>
             </p>
             <textarea
@@ -958,22 +962,44 @@ export default function RecordCreate() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-6">
-              <label className="block mb-2 font-medium">Client ID</label>
-              <input
+              <label className="block mb-2 font-medium">Client</label>
+              {/* <input
                 type="number"
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg"
                 placeholder="Enter client ID"
-              />
-              <label className="block my-2 font-medium">Broker ID</label>
-              <input
+              /> */}
+              <DynamicSearchField
+                      field={{
+                        key: "clientId",
+                        label: "User",
+                        type: "search",
+                        required: true,
+                        // prev: "company.name",
+                      }}
+                      formState={{clientId}}
+                      handleChange={handleClientValue}
+                    />
+              <label className="block my-2 font-medium">Broker</label>
+              <DynamicSearchField
+                      field={{
+                        key: "brokerId",
+                        label: "Broker",
+                        type: "search",
+                        required: true,
+                        // prev: "company.name",
+                      }}
+                      formState={{brokerId}}
+                      handleChange={handleBrokerValue}
+                    />
+              {/* <input
                 type="number"
                 value={brokerId}
                 onChange={(e) => setBrokerId(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg"
                 placeholder="Enter broker ID"
-              />
+              /> */}
               <div className="mt-6 flex sm:flex-row flex-col gap-4">
                 <button
                   onClick={() => {

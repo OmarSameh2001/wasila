@@ -33,7 +33,7 @@ export default function AdminRecords() {
           name="Records"
           columns={recordsColumns}
           data={data?.data?.data ?? []}
-          actions={[]}
+          actions={[{name: "PDF"}]}
           loading={isLoading}
           addNew={handleAddNew}
           query="adminRecords"

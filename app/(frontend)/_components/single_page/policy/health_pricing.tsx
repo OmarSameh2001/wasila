@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { useContext, useState } from "react";
+import { File, Plus, Trash2, Upload } from "lucide-react";
 import { HealthPricings } from "@/app/(frontend)/_dto/policy";
+
+import * as XLSX from "xlsx";
+import { showErrorToast, showLoadingError, showLoadingSuccess, showLoadingToast } from "../../utils/toaster/toaster";
+import { PopupContext } from "../../utils/context/popup_provider";
 
 // interface HealthPricingData {
 //   mainPrice?: number | null;
@@ -28,6 +32,8 @@ export default function HealthPricing({
   const [mainPriceText, setMainPriceText] = useState("");
   const [dependentPriceText, setDependentPriceText] = useState("");
   const [importError, setImportError] = useState("");
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const { setComponent } = useContext(PopupContext);
 
   // Convert object to sorted array for display
   const sortedPricings = Object.entries(pricings)
@@ -133,6 +139,87 @@ export default function HealthPricing({
     }
   };
 
+  const handleFileUpload = () => {
+    setComponent(
+      <div className="flex flex-col items-center justify-center gap-5">
+        <h1 className="text-xl font-bold underline">Excel of pricings</h1>
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        />
+        <a
+          className="underline"
+          target="_blank"
+          href="https://docs.google.com/spreadsheets/d/1cZGCLmRkT8CLfBPNuiTUIOlxuV7QOVNs/edit?usp=drive_link&ouid=108291203033422402688&rtpof=true&sd=true"
+        >
+          Fill this template then upload it
+        </a>
+        {Object.keys(pricings ?? {}).length > 0 ?  <span className="text-red-700 font-bold">This will remove old pricings*</span> : null}
+        <button
+          onClick={handleExcel}
+          disabled={!excelFile}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer disabled:cursor-not-allowed"
+        >
+          Upload
+        </button>
+      </div>
+    );
+  };
+
+  const handleExcel = async () => {
+    if (!excelFile) return;
+    setComponent(null);
+    let toastId = showLoadingToast("Parsing uploaded file...");
+    try {
+      const arrayBuffer = await excelFile.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+  
+      // Use the first sheet
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+  
+      // Convert sheet to JSON
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  
+      const newPricings: HealthPricings = {};
+  
+      for (const row of rows) {
+        const ageStr = row["Age"];
+        const mainStr = row["Employee Pricing"];
+        const dependentStr = row["Dependent Pricing"];
+  
+        if (ageStr === undefined || ageStr === "" || (!mainStr && !dependentStr)) continue;
+  
+        const age = Number(ageStr);
+        if (isNaN(age)) continue;
+  
+        const mainPrice = mainStr !== "" ? parseFloat(String(mainStr).replace(/,/g, "")) : null;
+        const dependentPrice = dependentStr !== "" ? parseFloat(String(dependentStr).replace(/,/g, "")) : null;
+  
+        newPricings[age.toString()] = {
+          mainPrice,
+          dependentPrice,
+        };
+      }
+  
+      if (Object.keys(newPricings).length === 0) {
+        showErrorToast("No valid rows found in Excel file.");
+        return;
+      }
+  
+      onPricingsChange(newPricings);
+  
+      showLoadingSuccess(toastId, `File parsed successfully: ${Object.keys(newPricings).length} records added.`);
+      setComponent(null); // close popup
+    } catch (err) {
+      console.error(err);
+      showLoadingError(toastId, "Failed to parse Excel file.");
+    }
+  };
+  
+  
   if (!isEditing && sortedPricings.length === 0) {
     return null;
   }
@@ -143,6 +230,14 @@ export default function HealthPricing({
         <h3 className="text-lg font-semibold">Health Pricing</h3>
         {isEditing && (
           <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleFileUpload}
+              className="flex items-center gap-2 px-3 py-1 text-sm border rounded hover:bg-gray-100"
+            >
+              <File className="h-4 w-4" />
+              Excel Import
+            </button>
             <button
               type="button"
               onClick={() => setShowBulkImport(!showBulkImport)}

@@ -15,37 +15,11 @@ import {
 import { useEffect, useState } from "react";
 import { queryInvalidator } from "../../utils/query/query";
 import LoadingPage from "../../utils/promise_handler/loading/loading";
+import { RecordData } from "@/app/(frontend)/_dto/record";
 
-interface RecordPolicy {
-  recordId: number;
-  policyId: number;
-  totalAmount: string;
-  totalTaxed: string;
-  policyDescription: string;
-  numberOfInsureds: number;
-  numberOfPersons: number;
-  averageAge: string;
-  avgPricePerPerson: string;
-}
 
-interface RecordData {
-  id: number;
-  state: string;
-  clientId: number;
-  brokerId: number;
-  issueDate: string;
-  createdAt: string;
-  updatedAt: string;
-  client: {
-    id: number;
-    name: string;
-  };
-  broker: {
-    id: number;
-    name: string;
-  };
-  policies: RecordPolicy[];
-}
+
+
 
 export default function SingleRecordView({ id }: { id: string }) {
   let { isLoading, isError, data, error } = useQuery({
@@ -113,6 +87,9 @@ export default function SingleRecordView({ id }: { id: string }) {
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
                   Record #{record.id}
                 </h1>
+                <a className="text-gray-600 mt-1 dark:text-gray-300 underline" href={`/admin/record/${id}/pdf`} target="_blank">
+                  Get Pdf
+                </a>
                 <p className="text-gray-600 mt-1 dark:text-gray-300">
                   Created {formatDate(record.createdAt)}
                 </p>

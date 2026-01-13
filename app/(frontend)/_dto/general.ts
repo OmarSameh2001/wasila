@@ -19,7 +19,7 @@ export interface FilterableField {
 
 export interface TableActionButton {
   name: string;
-  onClick: (
+  onClick?: (
     id: number,
     value?: any
   ) => Promise<AxiosResponse<any, any, {}>> | void;

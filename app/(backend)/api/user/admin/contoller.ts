@@ -77,7 +77,6 @@ export const getBrokerById = async (req: NextRequest, userId: number) => {
   }
 };
 
-
 export const getAllUsers = async (req: NextRequest) => {
   try {
     const url = new URL(req.url);
@@ -88,7 +87,7 @@ export const getAllUsers = async (req: NextRequest) => {
     );
 
     const params = handleUrl(url, "user") || {};
-    if(!params.type) params.type = { in: ["USER", "CLIENT"] };
+    if (!params.type) params.type = { in: ["USER", "CLIENT"] };
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -133,7 +132,6 @@ export const getAllUsers = async (req: NextRequest) => {
     );
   }
 };
-
 
 export const getAllBrokers = async (req: NextRequest) => {
   try {
@@ -185,20 +183,23 @@ export const getAllBrokers = async (req: NextRequest) => {
   }
 };
 
-
 export async function searchUser(req: NextRequest, type: "BROKER" | "USER") {
   try {
-    
     const url = new URL(req.url);
+    type Role = "USER" | "CLIENT" | "BROKER";
+
+    const newType: Role | { in: Role[] } =
+      type === "USER" ? { in: ["USER", "CLIENT"] } : type;
+      
     return await filterPrisma(
       prisma.user,
       1,
       10,
-      {type},
+      { type: newType },
       url,
       "user",
       {},
-      { name: true, id: true, username:true }
+      { name: true, id: true, username: true }
     );
   } catch (error) {}
 }
