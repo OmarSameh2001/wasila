@@ -1,9 +1,11 @@
 export default function ErrorPage({
   height,
   width,
+  message,
 }: {
   height?: string;
   width?: string;
+  message?: string;
 }) {
   return (
     <div
@@ -18,6 +20,9 @@ export default function ErrorPage({
       
         <span className="text-2xl font-bold text-gray-900 dark:text-white mt-4">
           Wasila
+        </span>
+        <span className="text-lg font-bold text-gray-900 dark:text-white mt-4">
+          {message}
         </span>
     </div>
   );

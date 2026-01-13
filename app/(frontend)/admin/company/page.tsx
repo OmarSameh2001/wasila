@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import Table from "../../_components/table/table";
 import { companiesColumns, editableCompanyColumns } from "../../_dto/company";
 import { PopupContext } from "../../_components/utils/context/popup_provider";
@@ -11,15 +11,20 @@ import {
   updateCompany,
 } from "../../_services/company";
 import DynamicForm from "../../_components/form/dynamic_form";
+import { filterableCompanyColumns } from "../../_dto/general";
+import DynamicFilter from "../../_components/fliter/filter_bar";
 
 export default function AdminCompany() {
   const { setComponent } = useContext(PopupContext);
+  const [searchParams, setSearchParams] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { isLoading, data } = useQuery({
-    queryKey: ["adminCompanies"],
-    queryFn: () => getCompanies(1, 10, ""),
+    queryKey: ["adminCompanies", searchParams, currentPage, itemsPerPage],
+    queryFn: () => getCompanies(currentPage, itemsPerPage, searchParams),
   });
-  
+
   function handleAddNew() {
     setComponent(
       <DynamicForm
@@ -50,6 +55,10 @@ export default function AdminCompany() {
   return (
     <div className="">
       <div className="p-5">
+        <DynamicFilter
+          onSearch={setSearchParams}
+          fields={filterableCompanyColumns}
+        />
         <Table
           name="Companies"
           columns={companiesColumns}
@@ -62,12 +71,12 @@ export default function AdminCompany() {
           addNew={handleAddNew}
           query="adminCompanies"
           pagination={{
-            currentPage: 1,
-            hasNextPage: false,
-            itemsPerPage: 10,
-            totalPages: 0,
-            setCurrentPage: () => {},
-            setItemsPerPage: () => {},
+            currentPage,
+            setCurrentPage,
+            totalPages: data?.data?.totalPages || 1,
+            hasNextPage: data?.data?.hasNextPage || false,
+            itemsPerPage,
+            setItemsPerPage,
           }}
         />
       </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { login } from "../../_services/user";
 import { useRouter } from "next/navigation";
 import Validator from "../../_helpers/validator";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,25 +20,26 @@ export default function LoginPage() {
     errors.email = Validator.validateEmail(email).message;
     errors.password = Validator.validatePassword(password).message;
     setError(errors);
-    console.log(errors);
 
     // returns true if any error occurs
     return Object.entries(errors).some(([key, value]) => value !== "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    let toastId;
     try {
       e.preventDefault();
       
       if (validateForm()) return;
       setLoading(true);
 
-      const res = await login({ email, password });
-
-      console.log("Login:", { email, password });
+      toastId = showLoadingToast("Signing In...");
+      await login({ email, password });
+      showLoadingSuccess(toastId, "Signed In Successfully");
       setLoading(false);
       router.push("/");
-    } catch (err) {
+    } catch (err: any) {
+      if (toastId) showLoadingError(toastId, err.response.data.error);
       console.log(err);
       setLoading(false);
     }

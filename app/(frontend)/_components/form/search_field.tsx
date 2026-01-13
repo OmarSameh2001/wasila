@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState, useRef, useCallback, ChangeEvent } from "react";
+import { useState, useRef, useCallback, ChangeEvent, useEffect } from "react";
 import { searchCompany } from "../../_services/company";
 import { searchBroker, searchClient, searchUser } from "../../_services/user";
 import { searchPolicy } from "../../_services/policy";
@@ -96,6 +96,9 @@ export default function DynamicSearchField({
 
   const choices = data?.data?.data || [];
 
+  useEffect(()=>{
+    if(formState[field.key] === "") setSelectedItem("")
+  }, [formState[field.key]])
   return (
     <div className="w-fit relative">
       <div className="relative">

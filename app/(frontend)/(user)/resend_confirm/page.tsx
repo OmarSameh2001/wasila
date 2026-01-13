@@ -3,6 +3,7 @@ import { useState } from "react";
 import { resendVerification } from "../../_services/user";
 import Validator from "../../_helpers/validator";
 import { useRouter } from "next/navigation";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
 
 const ResendConfirmationPage = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ const ResendConfirmationPage = () => {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
+    let toastId;
     try {
       e.preventDefault();
       const valid = Validator.validateEmail(email);
@@ -21,10 +23,13 @@ const ResendConfirmationPage = () => {
         return;
       }
       setLoading(true);
+      toastId = showLoadingToast("Sending Confirmation Code...");
       const res = await resendVerification({ email });
+      showLoadingSuccess(toastId, "Confirmation Code Sent Successfully, Please Check Your Inbox.");
       setSubmitted(true);
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
+      if (toastId) showLoadingError(toastId, err.response.data.error);
       console.log(err);
       setLoading(false);
     }

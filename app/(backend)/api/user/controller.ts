@@ -201,7 +201,7 @@ export const registerUser = async (req: NextRequest) => {
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Error registering user, please try again or contact support" },
       { status: 500 }
     );
   }
@@ -505,13 +505,12 @@ export const resendVerification = async (req: NextRequest) => {
     });
 
     if (!user) {
-      // Don't reveal if user exists
       return NextResponse.json(
-        { message: "Verification email has been sent." },
-        { status: 200 }
+        { error: "Email not found" },
+        { status: 400 }
       );
     }
-
+    console.log(user);
     if (user) {
       if (user.emailVerified) {
         return NextResponse.json(
@@ -582,13 +581,13 @@ export const forgotPassword = async (req: NextRequest) => {
       where: { email },
     });
 
-    // Always return success to prevent email enumeration
+    
     if (!user) {
       return NextResponse.json(
         {
-          message: "If the email exists, a password reset link has been sent.",
+          error: "Email not found",
         },
-        { status: 200 }
+        { status: 400 }
       );
     }
 

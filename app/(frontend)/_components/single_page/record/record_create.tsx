@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Upload,
   Check,
@@ -16,6 +16,11 @@ import {
   InsuredPersonData,
 } from "@/app/(frontend)/_dto/record";
 import { healthPolicyGroups } from "@/app/(frontend)/_dto/policy";
+import { calculateRecords } from "@/app/(frontend)/_services/record";
+import { PopupContext } from "../../utils/context/popup_provider";
+import DynamicForm from "../../form/dynamic_form";
+import * as XLSX from "xlsx";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../utils/toaster/toaster";
 
 export default function RecordCreate() {
   const [step, setStep] = useState(1);
@@ -45,6 +50,8 @@ export default function RecordCreate() {
     // maxAverageAge: 100,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const { setComponent } = useContext(PopupContext);
 
   const parseCsv = () => {
     try {
@@ -53,11 +60,17 @@ export default function RecordCreate() {
       const parsed: InsuredPersonData[] = [];
 
       for (const line of lines) {
-        const parts = line.trim().split("\t");
+        const parts = line.trim().split(/\s+/);
         if (parts.length >= 2) {
           const [birthDate, type] = parts;
-          if ((type === "Employee" || type === "Dependent") && birthDate) {
-            parsed.push({ birthDate, type });
+          if (
+            (type.toLowerCase() === "employee" ||
+              type.toLowerCase() === "dependent") &&
+            birthDate
+          ) {
+            const newType =
+              parts[1].toLowerCase() === "employee" ? "Employee" : "Dependent";
+            parsed.push({ birthDate, type: newType });
           }
         }
       }
@@ -65,6 +78,12 @@ export default function RecordCreate() {
       if (parsed.length === 0) {
         setError(
           "No valid data found. Format: DATE\\tEmployee or DATE\\tDependent"
+        );
+        return;
+      }
+      if (parsed.length > 250) {
+        setError(
+          "Maximum 250 people allowed. Please reduce the number of people."
         );
         return;
       }
@@ -105,15 +124,12 @@ export default function RecordCreate() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("/api/record/calculate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ people, issueDate }),
+      const response = calculateRecords({
+        people,
+        issueDate,
       });
 
-      if (!response.ok) throw new Error("Failed to calculate policies");
-
-      const data = await response.json();
+      const data = (await response).data;
       setCalculatedRecords(data.calculatedRecords);
       setStep(3);
     } catch (err) {
@@ -190,13 +206,11 @@ export default function RecordCreate() {
       record.totalAmount <= filters.maxTotalAmount &&
       record.totalTaxed >= filters.minTotalTaxed &&
       record.totalTaxed <= filters.maxTotalTaxed &&
-      record.averageAge >= filters.minAverageAge
-      && (
-  filters.companyName === "" ||
-  record.companyName
-    .toLowerCase()
-    .includes(filters.companyName.toLowerCase())
-)
+      record.averageAge >= filters.minAverageAge &&
+      (filters.companyName === "" ||
+        record.companyName
+          .toLowerCase()
+          .includes(filters.companyName.toLowerCase()))
       // record.averageAge <= filters.maxAverageAge
     );
   });
@@ -212,6 +226,101 @@ export default function RecordCreate() {
       companyName: "",
       // maxAverageAge: 100,
     });
+  };
+  const handleFileUpload = () => {
+    setComponent(
+      <div className="flex flex-col items-center justify-center gap-3">
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        />
+        <a
+          className="underline"
+          target="_blank"
+          href="https://docs.google.com/spreadsheets/d/1UrHqf1Sd3TQGPF7pHKkKDWgbeVwPfCc3/edit?usp=sharing&ouid=108291203033422402688&rtpof=true&sd=true"
+        >
+          get template
+        </a>
+        <button
+          onClick={handleExcel}
+          disabled={!excelFile}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Upload
+        </button>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    console.log(excelFile);
+  }, [excelFile]);
+
+  const handleExcel = async () => {
+    if (!excelFile) return;
+    setComponent(null)
+    let toastId = showLoadingToast("Parsing uploaded file...");
+    try {
+      setError("");
+
+      const arrayBuffer = await excelFile.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+      // Use first sheet
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      // Convert sheet to JSON (rows)
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet, {
+        defval: "",
+        raw: false,
+      });
+
+      /**
+       * Expected row format example:
+       * {
+       *   birthDate: "1990-01-01",
+       *   type: "Employee"
+       * }
+       */
+
+      const lines: string[] = [];
+
+      for (const row of rows) {
+        const birthDate = row["Date Of Birth"] || null;
+        const type = row["Type"] || null;
+        console.log(birthDate, type, row);
+        if (!birthDate || !type) continue;
+
+        const normalizedType = type.toString().toLowerCase();
+        if (normalizedType !== "employee" && normalizedType !== "dependent")
+          continue;
+
+        lines.push(`${birthDate}\t${type}`);
+      }
+
+      if (lines.length === 0) {
+        setError("No valid rows found in Excel file.");
+        return;
+      }
+
+      if (lines.length > 250) {
+        setError("Maximum 250 people allowed.");
+        return;
+      }
+
+      // 🔑 This is the key line
+      setCsvText((prev) => prev + "\n" +lines.join("\n"));
+
+      showLoadingSuccess(toastId, "File parsed successfully added: " + lines.length+" records.");
+      setComponent(null); // close popup
+    } catch (err) {
+      console.error(err);
+      showLoadingError(toastId, "Failed to parse Excel file.");
+      setError("Failed to parse Excel file.");
+    }
   };
 
   const selectedRecords = calculatedRecords.filter((r) =>
@@ -300,7 +409,13 @@ export default function RecordCreate() {
               Upload Employee & Dependent Data
             </h2>
             <p className="text-gray-600 dark:text-gray-200 mb-6">
-              Paste your data with birth dates and types (tab-separated)
+              Paste your data with birth dates and types Ex: (mm/dd/yyyy TYPE)
+            </p>
+            <p className="text-gray-600 dark:text-gray-200 mb-6">
+              Or you can upload an excel file{" "}
+              <button onClick={handleFileUpload} className="underline">
+                here
+              </button>
             </p>
             <textarea
               className="w-full h-64 border-2 border-gray-300 rounded-lg p-4 font-mono text-sm"
@@ -422,7 +537,9 @@ export default function RecordCreate() {
             {/* Filter Panel */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">Filter Policies {filteredRecords.length} policies found</h3>
+                <h3 className="text-xl font-bold">
+                  Filter Policies {filteredRecords.length} policies found
+                </h3>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -572,7 +689,6 @@ export default function RecordCreate() {
                         // placeholder="0"
                       />
                     </div> */}
-                    
                   </div>
 
                   {/* Average Age Filter */}

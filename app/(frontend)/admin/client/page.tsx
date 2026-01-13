@@ -3,15 +3,27 @@ import { useQuery } from "@tanstack/react-query";
 import Table from "../../_components/table/table";
 import { clientsColumns } from "../../_dto/user";
 import { getUsers } from "../../_services/user";
+import { useState } from "react";
+import DynamicFilter from "../../_components/fliter/filter_bar";
+import { filterableCLientColumns } from "../../_dto/general";
 
 export default function AdminClients() {
+  const [searchParams, setSearchParams] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const { isLoading, data } = useQuery({
-    queryKey: ["adminClients"],
-    queryFn: () => getUsers(1, 10, ""),
+    queryKey: ["adminClients", searchParams, currentPage, itemsPerPage],
+    queryFn: () => getUsers(currentPage, itemsPerPage, searchParams),
   });
   return (
     <div className="">
       <div className="p-5">
+        <DynamicFilter
+          onSearch={setSearchParams}
+          fields={filterableCLientColumns}
+        />
+
         <Table
           name="Clients"
           columns={clientsColumns}
@@ -20,12 +32,12 @@ export default function AdminClients() {
           loading={isLoading}
           query="adminClients"
           pagination={{
-            currentPage: 1,
-            hasNextPage: false,
-            itemsPerPage: 10,
-            totalPages: 0,
-            setCurrentPage: () => {},
-            setItemsPerPage: () => {},
+            currentPage,
+            setCurrentPage,
+            totalPages: data?.data?.totalPages || 1,
+            hasNextPage: data?.data?.hasNextPage || false,
+            itemsPerPage,
+            setItemsPerPage,
           }}
         />
       </div>

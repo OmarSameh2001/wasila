@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { verifyEmail } from "../../_services/user";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
 
 const VerifyEmailPage = () => {
   const searchParams = useSearchParams();
@@ -20,12 +21,16 @@ const VerifyEmailPage = () => {
       setLoading(false);
       return;
     }
-
+    const toastId = showLoadingToast("Verifying Email...");
     // Auto-verify on page load
     verifyEmail({ token, email })
       .then(() => setSubmitted(true))
+      .then(() => {
+        showLoadingSuccess(toastId, "Email Verified Successfully");
+      })
       .catch((err: any) => {
         setError(err?.response?.data?.error || "Verification failed");
+        showLoadingError(toastId, err?.response?.data?.error);
       })
       .finally(() => setLoading(false));
   }, [searchParams]);

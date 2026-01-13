@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { queryInvalidator } from "../../utils/query/query";
-import LoadingPage from "../../utils/loading/loading";
+import LoadingPage from "../../utils/promise_handler/loading/loading";
 
 interface RecordPolicy {
   recordId: number;

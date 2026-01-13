@@ -7,7 +7,7 @@ import {
 import {
   getPolicies,
 } from "../../_services/policy";
-import { InvalidateQueryFilters, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { filterablePolicyColumns } from "../../_dto/general";
 import DynamicFilter from "../../_components/fliter/filter_bar";

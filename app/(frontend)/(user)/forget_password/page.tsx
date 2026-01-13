@@ -3,6 +3,8 @@ import { useState } from "react";
 import { forgetPassword } from "../../_services/user";
 import Validator from "../../_helpers/validator";
 import { useRouter } from "next/navigation";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
+import { AxiosError } from "axios";
 
 // Forgot Password Page Component
 const ForgotPasswordPage = () => {
@@ -14,6 +16,7 @@ const ForgotPasswordPage = () => {
   const router = useRouter();
 
   const handleSubmit = async () => {
+    let toastId;
     try{
     const valid = Validator.validateEmail(email);
     if (valid.message) {
@@ -21,12 +24,15 @@ const ForgotPasswordPage = () => {
       return;
     }
     setLoading(true);
-    const response = await forgetPassword(email);
+    toastId = showLoadingToast("Creating Password Reset Link...");
+    await forgetPassword(email);
+    showLoadingSuccess(toastId, "Password Reset Link Sent Successfully");
     setSubmitted(true);
     setLoading(false);
-    } catch (err) {
+    } catch (err: AxiosError  | any) {
       console.log(err);
       setLoading(false);
+      if (toastId) showLoadingError(toastId, err.response.data.error);
     }
   };
 

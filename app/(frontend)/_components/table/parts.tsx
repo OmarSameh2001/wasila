@@ -1,4 +1,3 @@
-import Image from "next/image";
 
 export function TableColumn({ type, data }: any) {
   switch (type) {
@@ -48,42 +47,33 @@ import {
   PencilSquareIcon,
   InformationCircleIcon,
 } from "@heroicons/react/20/solid";
-// import { ActionButton } from "./table";
-import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
-import { useContext } from "react";
-import { PopupContext } from "../utils/context/popup_provider";
 import { TableActionButton } from "../../_dto/general";
+import { showConfirmToast } from "../utils/toaster/toaster";
+import { queryInvalidator } from "../utils/query/query";
 
-export function TableIcon({
+export function TableActionIcon({
   action,
   row,
   query,
+  tabelName
 }: {
   action: TableActionButton;
   row: any;
   query?: string;
+  tabelName?: string
 }) {
-  const { setComponent } = useContext(PopupContext);
-  const queryClient = useQueryClient();
+  console.log(row);
   const name = row.name;
   async function handleDelete() {
-    const del = window.confirm(
-      `Are you sure you want to delete ${name || "this"}?`
-    );
-    if (del) {
-      await action.onClick(row.id);
-    }
-    if (query)
-      queryClient.invalidateQueries([query] as InvalidateQueryFilters<
-        readonly unknown[]
-      >);
+    showConfirmToast({
+      message: `Are you sure you want to delete ${name || "this"}?`,
+      tableName: tabelName,
+      onConfirm: () => {action.onClick(row.id)
+        if(query) queryInvalidator(query)
+      },
+    })
   }
 
-  // async function handleEdit() {
-  //   setComponent(
-
-  //   )
-  // }
   switch (action.name.toLowerCase()) {
     case "delete":
       return (

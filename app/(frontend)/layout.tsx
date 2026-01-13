@@ -7,6 +7,7 @@ import { PopupProvider } from "./_components/utils/context/popup_provider";
 import QueryProvider from "./_components/utils/query/query";
 import PopupComponent from "./_components/popup/popup";
 import { ThemeProvider } from "./_components/utils/theme/provider";
+import { Toaster } from "react-hot-toast";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -30,25 +31,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`antialiased`}
-      >
+      <body className={`antialiased`}>
         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-  storageKey="theme"
-          >
-        <AuthProvider>
-          <PopupProvider>
-            <QueryProvider>
-            <Navbar />
-            <PopupComponent />
-            {children}
-            </QueryProvider>
-          </PopupProvider>
-        </AuthProvider>
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          storageKey="theme"
+        >
+          <Toaster position="top-right" reverseOrder={false} />
+          <AuthProvider>
+            <PopupProvider>
+              <QueryProvider>
+                <Navbar />
+                <PopupComponent />
+                {children}
+              </QueryProvider>
+            </PopupProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

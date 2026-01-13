@@ -5,8 +5,9 @@ export const clientsColumns: TableColumn[] = [
   { name: "Id", key: "id", type: "text" },
   { name: "Name", key: "name", type: "text" },
   { name: "Email", key: "email", type: "text" },
-//   { name: "Broker", key: "broker.name", type: "text" },
+  { name: "Broker", key: "broker", type: "text" },
   { name: "Records Count", key: "clientCount", type: "text" },
+  { name: "Type", key: "type", type: "text" },
 ]
 
 

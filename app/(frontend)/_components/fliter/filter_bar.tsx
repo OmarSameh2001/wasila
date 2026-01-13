@@ -45,7 +45,10 @@ const getOperatorsForType = (type: string) => {
   }
 };
 
-export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) {
+export default function DynamicFilter({
+  fields,
+  onSearch,
+}: DynamicFilterProps) {
   const [filters, setFilters] = useState<FilterValues>(() => {
     const initial: FilterValues = {};
     fields.forEach((field) => {
@@ -88,13 +91,19 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
     const resetFilters: FilterValues = {};
     fields.forEach((field) => {
       const operators = getOperatorsForType(field.type);
-      resetFilters[field.key] = { operator: operators[0]?.value || "eq", value: "" };
+      resetFilters[field.key] = {
+        operator: operators[0]?.value || "eq",
+        value: "",
+      };
     });
     setFilters(resetFilters);
     onSearch("");
+    // setIsExpanded(false);
   };
 
-  const activeFiltersCount = Object.values(filters).filter((f) => f.value).length;
+  const activeFiltersCount = Object.values(filters).filter(
+    (f) => f.value
+  ).length;
 
   const renderValueInput = (field: FilterableField) => {
     const filter = filters[field.key];
@@ -122,7 +131,9 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
       return (
         <select
           value={filter.value}
-          onChange={(e) => handleFilterChange(field.key, "value", e.target.value)}
+          onChange={(e) =>
+            handleFilterChange(field.key, "value", e.target.value)
+          }
           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
         >
           <option value="">All</option>
@@ -140,7 +151,9 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
       return (
         <select
           value={filter.value}
-          onChange={(e) => handleFilterChange(field.key, "value", e.target.value)}
+          onChange={(e) =>
+            handleFilterChange(field.key, "value", e.target.value)
+          }
           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
         >
           <option value="">All</option>
@@ -156,7 +169,9 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
         <input
           type="date"
           value={filter.value}
-          onChange={(e) => handleFilterChange(field.key, "value", e.target.value)}
+          onChange={(e) =>
+            handleFilterChange(field.key, "value", e.target.value)
+          }
           className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
         />
       );
@@ -168,7 +183,9 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
         <input
           type="number"
           value={filter.value}
-          onChange={(e) => handleFilterChange(field.key, "value", e.target.value)}
+          onChange={(e) =>
+            handleFilterChange(field.key, "value", e.target.value)
+          }
           placeholder="Value"
           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
         />
@@ -190,7 +207,14 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700 mb-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-neutral-700">
+      <div
+        className={
+          "flex items-center justify-between p-3" +
+          (isExpanded
+            ? " border-b border-gray-200 dark:border-neutral-700"
+            : "")
+        }
+      >
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -198,12 +222,19 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
             className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white"
           >
             <svg
-              className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+              className={`w-4 h-4 transition-transform ${
+                isExpanded ? "rotate-180" : ""
+              }`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
             Filters
             {activeFiltersCount > 0 && (
@@ -218,7 +249,8 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
           <button
             type="button"
             onClick={handleSearch}
-            className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            disabled={activeFiltersCount === 0}
+            className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer"
           >
             Apply
           </button>
@@ -226,7 +258,7 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
             <button
               type="button"
               onClick={handleReset}
-              className="px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors"
+              className="px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors cursor-pointer"
             >
               Reset
             </button>
@@ -235,42 +267,49 @@ export default function DynamicFilter({ fields, onSearch }: DynamicFilterProps) 
       </div>
 
       {/* Filter Fields */}
-      {isExpanded && (
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {fields.map((field) => {
-              const operators = getOperatorsForType(field.type);
-              const showOperator = operators.length > 1;
+      <div
+        className={`
+     transition-all duration-300 ease-in
+    ${isExpanded ? "p-4" : "opacity-0 max-h-0 pointer-events-none"}
+  `}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {fields.map((field) => {
+            const operators = getOperatorsForType(field.type);
+            const showOperator = operators.length > 1;
 
-              return (
-                <div key={field.key} className="space-y-1">
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {field.label}
-                  </label>
-                  <div className="flex gap-1">
-                    {showOperator && (
-                      <select
-                        value={filters[field.key].operator}
-                        onChange={(e) =>
-                          handleFilterChange(field.key, "operator", e.target.value)
-                        }
-                        className="w-16 px-1.5 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
-                      >
-                        {operators.map((op) => (
-                          <option key={op.value} value={op.value}>
-                            {op.label}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                    <div className="flex-1">{renderValueInput(field)}</div>
-                  </div>
+            return (
+              <div key={field.key} className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  {field.label}
+                </label>
+                <div className="flex gap-1">
+                  {showOperator && (
+                    <select
+                      value={filters[field.key].operator}
+                      onChange={(e) =>
+                        handleFilterChange(
+                          field.key,
+                          "operator",
+                          e.target.value
+                        )
+                      }
+                      className="w-16 px-1.5 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
+                    >
+                      {operators.map((op) => (
+                        <option key={op.value} value={op.value}>
+                          {op.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <div className="flex-1">{renderValueInput(field)}</div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

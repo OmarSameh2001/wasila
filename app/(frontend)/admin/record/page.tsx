@@ -4,12 +4,18 @@ import Table from "../../_components/table/table";
 import { recordsColumns } from "../../_dto/record";
 import { getRecords } from "../../_services/record";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { filterableRecordColumns } from "../../_dto/general";
+import DynamicFilter from "../../_components/fliter/filter_bar";
 export default function AdminRecords() {
   const router = useRouter();
+  const [searchParams, setSearchParams] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { isLoading, isError, data, error } = useQuery({
-    queryKey: ["adminRecords"],
-    queryFn: () => getRecords(1, 10, ""),
+    queryKey: ["adminRecords", searchParams, currentPage, itemsPerPage],
+    queryFn: () => getRecords(currentPage, itemsPerPage, searchParams),
   });
 
   function handleAddNew() {
@@ -19,6 +25,10 @@ export default function AdminRecords() {
   return (
     <div className="">
       <div className="p-5">
+        <DynamicFilter
+          onSearch={setSearchParams}
+          fields={filterableRecordColumns}
+        />
         <Table
           name="Records"
           columns={recordsColumns}
@@ -28,12 +38,12 @@ export default function AdminRecords() {
           addNew={handleAddNew}
           query="adminRecords"
           pagination={{
-            currentPage: 1,
-            hasNextPage: false,
-            itemsPerPage: 10,
-            totalPages: 0,
-            setCurrentPage: () => {},
-            setItemsPerPage: () => {},
+            currentPage,
+            setCurrentPage,
+            totalPages: data?.data?.totalPages || 1,
+            hasNextPage: data?.data?.hasNextPage || false,
+            itemsPerPage,
+            setItemsPerPage,
           }}
         />
       </div>

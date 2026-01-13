@@ -4,6 +4,7 @@ import { useState } from "react";
 import Validator from "../../_helpers/validator";
 import { registerBroker } from "../../_services/user";
 import { Eye, EyeOff } from "lucide-react";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -38,18 +39,21 @@ const RegisterPage = () => {
     return Object.entries(errors).some(([key, value]) => value !== "");
   };
   const handleSubmit = async (e: React.FormEvent) => {
+    let toastId;
     try {
       e.preventDefault();
       console.log(formData);
       if (validateForm()) return;
 
       setLoading(true);
+
+      toastId = showLoadingToast("Creating Account...");
       const response = await registerBroker(formData);
-      console.log("Register:", formData);
-      console.log("Register Response:", response);
+      showLoadingSuccess(toastId, "Account Created Successfully");
       setLoading(false);
       router.push("/login");
-    } catch (err) {
+    } catch (err: any) {
+      if (toastId) showLoadingError(toastId, err.response.data.error);
       console.log(err);
       setLoading(false);
     }

@@ -92,16 +92,6 @@ export const filterablePolicyColumns: FilterableField[] = [
     searchType: "search",
     searchLabel: "Broker",
   },
-  {
-    key: "createdAt",
-    label: "Created At",
-    type: "date",
-  },
-  {
-    key: "updatedAt",
-    label: "Updated At",
-    type: "date",
-  },
 ];
 
 // Record Filterable Columns
@@ -115,14 +105,14 @@ export const filterableRecordColumns: FilterableField[] = [
   {
     key: "clientId",
     label: "Client",
-    type: "number",
+    type: "id",
     searchType: "search",
     searchLabel: "Client",
   },
   {
     key: "brokerId",
     label: "Broker",
-    type: "number",
+    type: "id",
     searchType: "search",
     searchLabel: "Broker",
   },
@@ -144,7 +134,7 @@ export const filterableRecordColumns: FilterableField[] = [
 ];
 
 // User Filterable Columns
-export const filterableUserColumns: FilterableField[] = [
+const filterableUserColumns: FilterableField[] = [
   {
     key: "name",
     label: "Name",
@@ -204,47 +194,118 @@ export const filterableUserColumns: FilterableField[] = [
     type: "date",
   },
 ];
-
-// RecordPolicy Filterable Columns
-export const filterableRecordPolicyColumns: FilterableField[] = [
+export const filterableBrokerColumns: FilterableField[] = [
   {
-    key: "recordId",
-    label: "Record ID",
-    type: "number",
+    key: "name",
+    label: "Name",
+    type: "text",
   },
   {
-    key: "policyId",
-    label: "Policy ID",
-    type: "number",
+    key: "username",
+    label: "Username",
+    type: "text",
   },
   {
-    key: "totalAmount",
-    label: "Total Amount",
-    type: "number",
+    key: "email",
+    label: "Email",
+    type: "text",
   },
   {
-    key: "totalTaxed",
-    label: "Total Taxed",
+    key: "managedCount",
+    label: "Managed Records",
     type: "number",
   },
-  {
-    key: "numberOfInsureds",
-    label: "Number of Insureds",
-    type: "number",
-  },
-  {
-    key: "numberOfPersons",
-    label: "Number of Persons",
-    type: "number",
-  },
-  {
-    key: "averageAge",
-    label: "Average Age",
-    type: "number",
-  },
-  {
-    key: "avgPricePerPerson",
-    label: "Avg Price Per Person",
-    type: "number",
-  },
+  // {
+  //   key: "dob",
+  //   label: "Date of Birth",
+  //   type: "date",
+  // },
 ];
+export const filterableCLientColumns: FilterableField[] = [
+  {
+    key: "name",
+    label: "Name",
+    type: "text",
+  },
+  {
+    key: "username",
+    label: "Username",
+    type: "text",
+  },
+  {
+    key: "email",
+    label: "Email",
+    type: "text",
+  },
+  {
+    key: "type",
+    label: "Type",
+    type: "select",
+    choices: ["USER", "CLIENT"],
+  },
+  {
+    key: "emailVerified",
+    label: "Email Verified",
+    type: "boolean",
+  },
+  {
+    key: "brokerId",
+    label: "Broker",
+    type: "id",
+    searchType: "search",
+    searchLabel: "Broker",
+  },
+  {
+    key: "clientCount",
+    label: "Records Count",
+    type: "number",
+  },
+  // {
+  //   key: "dob",
+  //   label: "Date of Birth",
+  //   type: "date",
+  // },
+];
+// RecordPolicy Filterable Columns
+// export const filterableRecordPolicyColumns: FilterableField[] = [
+//   {
+//     key: "recordId",
+//     label: "Record ID",
+//     type: "number",
+//   },
+//   {
+//     key: "policyId",
+//     label: "Policy ID",
+//     type: "number",
+//   },
+//   {
+//     key: "totalAmount",
+//     label: "Total Amount",
+//     type: "number",
+//   },
+//   {
+//     key: "totalTaxed",
+//     label: "Total Taxed",
+//     type: "number",
+//   },
+//   {
+//     key: "numberOfInsureds",
+//     label: "Number of Insureds",
+//     type: "number",
+//   },
+//   {
+//     key: "numberOfPersons",
+//     label: "Number of Persons",
+//     type: "number",
+//   },
+//   {
+//     key: "averageAge",
+//     label: "Average Age",
+//     type: "number",
+//   },
+//   {
+//     key: "avgPricePerPerson",
+//     label: "Avg Price Per Person",
+//     type: "number",
+//   },
+// ];

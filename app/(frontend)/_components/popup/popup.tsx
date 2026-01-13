@@ -8,7 +8,7 @@ export default function PopupComponent() {
   if (!component) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
       <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
         <button
           onClick={() => setComponent(null)}
@@ -16,7 +16,6 @@ export default function PopupComponent() {
         >
           Close
         </button>
-
         {component}
       </div>
     </div>

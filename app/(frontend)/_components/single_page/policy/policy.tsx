@@ -8,8 +8,9 @@ import { useParams, useRouter } from "next/navigation";
 import DynamicSearchField from "../../form/search_field";
 import DynamicInputField from "../../form/dynamic_input_field";
 import HealthPricing from "./health_pricing";
-import LoadingPage from "../../utils/loading/loading";
+import LoadingPage from "../../utils/promise_handler/loading/loading";
 import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../utils/toaster/toaster";
 
 export default function SinglePolicyEditable({
   policy,
@@ -36,18 +37,26 @@ export default function SinglePolicyEditable({
   };
 
   const handleSave = async (e: any) => {
+    let toastId;
     try {
       e.preventDefault();
       if (!editedPolicy.companyId) window.alert("Please select a company");
-      isCreate
-        ? await createPolicy(editedPolicy)
-        : await updatePolicy(editedPolicy.id, editedPolicy);
+      if (isCreate) {
+        toastId = showLoadingToast("Creating Policy...");
+        await createPolicy(editedPolicy);
+        showLoadingSuccess(toastId, "Policy Created Successfully");
+      } else {
+        toastId = showLoadingToast("Updating Policy...");
+        await updatePolicy(editedPolicy.id, editedPolicy);
+        showLoadingSuccess(toastId, "Policy Updated Successfully");
+      }
 
       queryClient.invalidateQueries(["adminPolicy"] as InvalidateQueryFilters<
         readonly unknown[]
       >);
       router.push("/admin/policy");
     } catch (e) {
+      if (toastId) showLoadingError(toastId, "Something went wrong");
       console.log(e);
     }
   };

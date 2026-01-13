@@ -1,9 +1,9 @@
 "use client";
-import { TableColumn, TableIcon } from "./parts";
+import { TableActionIcon, TableColumn } from "./parts";
 import { usePathname, useRouter } from "next/navigation";
 import { TableProps } from "../../_dto/general";
 import CustomPagination from "../pagination/pagination";
-import LoadingPage from "../utils/loading/loading";
+import LoadingPage from "../utils/promise_handler/loading/loading";
 
 function ColumnHeader({ columns }: { columns: any[] }) {
   return (columns ?? []).map((column: any) => (
@@ -78,11 +78,12 @@ function Table({
                     {actions && actions.length > 0 && (
                       <td className="p-2 whitespace-nowrap flex gap-2 items-center justify-center">
                         {actions?.map((action, index) => (
-                          <TableIcon
+                          <TableActionIcon
                             action={action}
                             key={action.name + index}
                             row={row}
                             query={query}
+                            tabelName={name}
                           />
                         ))}
                       </td>
