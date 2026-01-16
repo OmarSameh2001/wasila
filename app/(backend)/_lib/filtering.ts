@@ -8,16 +8,23 @@ export interface PaginatedResult<T> {
 }
 
 export function handleUrl(url: URL, modelName: string) {
+  
+  const orMode = url.searchParams.get("orMode") === "true";
+  
   return [...url.searchParams].reduce<Record<string, any>>(
     (acc, [key, value]) => {
       if (["page", "limit", "sort", "order"].includes(key)) return acc;
 
       const parsed = castParam(modelName, key, value);
-      // console.log(parsed);
+      
       if (!parsed) return acc;
 
-      // Merge into the final object
-      return { ...acc, ...parsed };
+      if (!orMode) return { ...acc, ...parsed };
+
+      return {
+        ...acc,
+        OR: [...(acc.OR ?? []), parsed],
+      };
     },
     {}
   );

@@ -25,7 +25,7 @@ export default function ProductsByType({ type }: { type: string }) {
   });
 
   function handleAddNew() {
-    router.push('/admin/policy/create')
+    router.push('/admin/product/create')
   }
   
   return (

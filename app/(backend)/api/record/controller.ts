@@ -39,7 +39,6 @@ export async function getRecords(
         policies: true,
       }
     );
-
   } catch (error) {
     console.error("Error fetching records:", error);
     return NextResponse.json(
@@ -109,7 +108,7 @@ export async function getRecord(
                     organTransplant: true,
                     groundAmbulance: true,
                     reimbursementCoverage: true,
-                  }
+                  },
                 },
               },
             },
@@ -235,7 +234,14 @@ export async function updateRecord(
   id: number
 ) {
   try {
-    const { id: _id, clientId: _clientId, brokerId: _brokerId, client, broker, ...data } = await req.json();
+    const {
+      id: _id,
+      clientId: _clientId,
+      brokerId: _brokerId,
+      client,
+      broker,
+      ...data
+    } = await req.json();
 
     // const { clientId, brokerId: _brokerId, ...newData } = data;
     // const recordData = type === "BROKER" ? newData : data;
@@ -256,13 +262,18 @@ export async function updateRecord(
 
 export async function deleteRecord(
   req: NextRequest,
-  brokerId: number,
+  userId: number,
   type: string,
-  id: number
+  recorId: number
 ) {
   try {
     const record = await prisma.record.delete({
-      where: { id, ...(type === "BROKER" && { brokerId }) },
+      where: { id: recorId, ...(type === "BROKER" && { brokerId: userId }) },
+    });
+
+    const user = await prisma.user.updateMany({
+      where: { id: { in: [record.clientId, record.brokerId] } },
+      data: { clientCount: { decrement: 1 }, managedCount: { decrement: 1 } },
     });
 
     return NextResponse.json(record, { status: 200 });
@@ -334,9 +345,9 @@ function findPriceForAge(
 
   // Check for invalid values: undefined, null, 0, or NaN
   if (
-    priceField === undefined || 
-    priceField === null || 
-    priceField === 0 || 
+    priceField === undefined ||
+    priceField === null ||
+    priceField === 0 ||
     isNaN(priceField)
   ) {
     return {
@@ -376,8 +387,7 @@ export async function calculateSmePolicyRecords(req: NextRequest) {
             logo: true,
           },
         },
-        healthPolicy: true
-        
+        healthPolicy: true,
       },
     });
 
@@ -450,8 +460,8 @@ export async function calculateSmePolicyRecords(req: NextRequest) {
       const totalTaxed = totalAmount * (1 + taxRate);
 
       const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${people.length} - Avg age: ${averageAge}`;
-      const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy
-      
+      const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy;
+
       calculatedRecords.push({
         policyId: policy.id,
         policyName: policy.name,
@@ -603,9 +613,9 @@ export async function createBulkRecord(
         },
         managedCount: {
           increment: 1,
-        }
+        },
       },
-    })
+    });
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
     console.error("Error creating bulk record:", error);
@@ -615,7 +625,6 @@ export async function createBulkRecord(
     );
   }
 }
-
 
 interface FamilyData {
   main: string; // date string from date input
@@ -645,7 +654,10 @@ interface CalculatedIndividualPolicyRecord {
   }[];
 }
 
-function calculateAgeFromDateInput(dateInput: string, issueDate: string): number {
+function calculateAgeFromDateInput(
+  dateInput: string,
+  issueDate: string
+): number {
   const birth = new Date(dateInput);
   const today = new Date(issueDate);
   let age = today.getFullYear() - birth.getFullYear();
@@ -675,9 +687,9 @@ function findPriceForFamilyMember(
   const priceField = isMain ? pricing.mainPrice : pricing.dependentPrice;
 
   if (
-    priceField === undefined || 
-    priceField === null || 
-    priceField === 0 || 
+    priceField === undefined ||
+    priceField === null ||
+    priceField === 0 ||
     isNaN(priceField)
   ) {
     return {
@@ -735,7 +747,8 @@ export async function calculateIndividualPolicyRecords(req: NextRequest) {
       if (!policy.healthPolicy) continue;
 
       const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
-      const insuredFamily: CalculatedIndividualPolicyRecord["insuredPeople"] = [];
+      const insuredFamily: CalculatedIndividualPolicyRecord["insuredPeople"] =
+        [];
 
       let totalAmount = 0;
       let numberOfInsureds = 0;
@@ -831,9 +844,9 @@ export async function calculateIndividualPolicyRecords(req: NextRequest) {
       const totalTaxed = totalAmount * (1 + taxRate);
 
       const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${totalFamilyMembers} family members - Avg age: ${averageAge}`;
-      
+
       const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy;
-      
+
       calculatedRecords.push({
         policyId: policy.id,
         policyName: policy.name,
@@ -946,16 +959,18 @@ export async function createBulkIndividualRecord(
         state: state || "DRAFT",
         type: "Individual_Medical",
         policies: {
-          create: selectedPolicies.map((p: CalculatedIndividualPolicyRecord) => ({
-            policyId: p.policyId,
-            totalAmount: p.totalAmount,
-            totalTaxed: p.totalTaxed,
-            policyDescription: p.policyDescription,
-            numberOfInsureds: p.numberOfInsureds,
-            numberOfPersons: p.numberOfPersons,
-            averageAge: p.averageAge,
-            avgPricePerPerson: p.avgPricePerPerson,
-          })),
+          create: selectedPolicies.map(
+            (p: CalculatedIndividualPolicyRecord) => ({
+              policyId: p.policyId,
+              totalAmount: p.totalAmount,
+              totalTaxed: p.totalTaxed,
+              policyDescription: p.policyDescription,
+              numberOfInsureds: p.numberOfInsureds,
+              numberOfPersons: p.numberOfPersons,
+              averageAge: p.averageAge,
+              avgPricePerPerson: p.avgPricePerPerson,
+            })
+          ),
         },
       },
       include: {

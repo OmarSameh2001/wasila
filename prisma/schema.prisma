@@ -17,12 +17,13 @@ model User{
   id       Int   @id @default(autoincrement())
   name     String
   username String   @unique
-  email    String?   @unique
+  email    String   @unique
   password String
   type     Role
   refreshToken String?
   contactInfo Json?
   dob      DateTime?
+  leadSource String?
 
   // Email verification and password reset
   emailVerified        Boolean   @default(false)

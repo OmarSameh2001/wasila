@@ -7,7 +7,6 @@ import PromiseHandler from "../utils/promise_handler/handler";
 import LoadingPage from "../utils/promise_handler/loading/loading";
 import { showErrorToast, showSuccessToast } from "../utils/toaster/toaster";
 
-
 function InsuranceReportPDF({ id }: { id: string }) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const { isLoading, isError, data, error } = useQuery({
@@ -92,9 +91,7 @@ function InsuranceReportPDF({ id }: { id: string }) {
       }
 
       // Save with date stamp
-      const filename = `insurance-report-${
-        new Date().toISOString().split("T")[0]
-      }.pdf`;
+      const filename = `Qoute-${record?.client?.name}-Issued: ${record?.issueDate?.split("T")[0]}.pdf`;
       pdf.save(filename);
       showSuccessToast("PDF generated successfully", 2000);
     } catch (error) {
@@ -179,6 +176,7 @@ function InsuranceReportPDF({ id }: { id: string }) {
         <style>{` 
           .slide {
             width: 90vw;
+            min-width: 1080px;
             height: 1080px;
             margin: 20px auto;
             background: white;
@@ -346,9 +344,21 @@ function InsuranceReportPDF({ id }: { id: string }) {
               Record Description
             </li>
             <div className="ml-10 flex flex-col gap-0 text-[#1a237e] underline">
-                {record?.broker?.name ? <span>Broker name: {record.broker.name}</span>: null}
-                {record?.client?.name ? <span>Client name: {record.client.name}</span>: null}
-                {record?.policies?.length && record?.policies?.length > 0 ? <span>Number of policies: {record?.policies?.length}</span>: null}
+              {record?.broker?.name ? (
+                <span>Broker name: {record.broker.name}</span>
+              ) : null}
+              {record?.client?.name ? (
+                <span>Client name: {record.client.name}</span>
+              ) : null}
+              {record?.policies?.length && record?.policies?.length > 0 ? (
+                <span>Number of policies: {record?.policies?.length}</span>
+              ) : null}
+              <div className="flex justify-between">
+              {record?.issueDate ? (
+                <span>Issue date: {record?.issueDate?.split("T")[0]}</span>
+              ) : null}
+              <span>Created at: {new Date().toLocaleString()}</span>
+              </div>
             </div>
             <li style={{ marginBottom: "20px", color: "#1a237e" }}>
               <span style={{ color: "#1a237e", marginRight: "20px" }}>•</span>
@@ -361,7 +371,6 @@ function InsuranceReportPDF({ id }: { id: string }) {
           </ul>
           <div className="page-number">2</div>
         </div>
-
 
         {/* Slide 7: Benefits Table 1 */}
         <div className="slide page-break">

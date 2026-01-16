@@ -34,6 +34,8 @@ import {
 } from "../../utils/toaster/toaster";
 import DynamicSearchField from "../../form/search_field";
 import DynamicForm, { DynamicFormField } from "../../form/dynamic_form";
+import { createClient } from "@/app/(frontend)/_services/user";
+import { editableClientColumns } from "@/app/(frontend)/_dto/user";
 
 export default function QuoteCreate() {
   const [step, setStep] = useState(1);
@@ -109,7 +111,7 @@ export default function QuoteCreate() {
       }
 
       setPeople(parsed);
-      setStep(2);
+      setStep(3);
     } catch (err) {
       setError("Error parsing CSV. Please check format.");
     }
@@ -126,8 +128,10 @@ export default function QuoteCreate() {
     return age;
   };
 
-  const parseFamily = async () => {
+  const parseFamily = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
+    let toastId;
     try {
       const today = new Date();
       const mainDOB = new Date(family.main);
@@ -181,6 +185,8 @@ export default function QuoteCreate() {
         }
       }
 
+      toastId = showLoadingToast("Calculating Family plans...");
+
       const response = await calculateIndividualRecords({
         family,
         issueDate,
@@ -189,8 +195,10 @@ export default function QuoteCreate() {
       const data = response.data;
 
       setCalculatedRecords(data.calculatedRecords);
+      if (toastId) showLoadingSuccess(toastId, "Family plans calculated.");
       setStep(4);
     } catch (err) {
+      if (toastId) showLoadingError(toastId, "Error calculating family plans.");
       setError("Error parsing Family. Please check date format.");
     }
   };
@@ -234,11 +242,10 @@ export default function QuoteCreate() {
 
   const createRecord = async () => {
     try {
-      console.log(client, clientId, type);
-      // if (!clientId) {
-      //   setError("Please enter client ID");
-      //   return;
-      // }
+      if (!clientId) {
+        setError("Please choose client");
+        return;
+      }
 
       if (selectedPolicies.size === 0) {
         setError("Please select at least one policy");
@@ -268,7 +275,7 @@ export default function QuoteCreate() {
       if (!response.ok) throw new Error("Failed to create record");
 
       const record = await response.json();
-      setStep(4);
+      setStep(5);
     } catch (err) {
       setError("Error creating record. Please try again.");
     } finally {
@@ -411,7 +418,6 @@ export default function QuoteCreate() {
   const handleClientValue = (value: any) => {
     setClient({ ...value, clientId: value.id, id: null });
     setClientId(value.id);
-    console.log(value);
   };
   const handleBrokerValue = (key: string, value: string) => {
     setBrokerId(value);
@@ -544,6 +550,23 @@ export default function QuoteCreate() {
                 handleChange={() => {}}
                 handleUi={handleClientValue}
               />
+              Or
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md text-sm font-medium bg-gray-200 dark:bg-gray-900 transition-colors cursor-pointer text-black dark:text-white flex items-center gap-2"
+                onClick={() => {
+                  setComponent(
+                    <DynamicForm
+                      fields={editableClientColumns}
+                      title="Add New Client"
+                      type="create"
+                      onSubmit={createClient}
+                    />
+                  );
+                }}
+              >
+                <Plus className="w-5 h-5" /> Add Client
+              </button>
             </div>
             <div className="flex gap-4 mb-6 ml-2 flex-col sm:flex-row items-center">
               <span className="text-lg font-semibold text-gray-600 dark:text-gray-200">
@@ -666,7 +689,7 @@ export default function QuoteCreate() {
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+              <form className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8" onSubmit={(e) => parseFamily(e)}>
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <Upload className="w-6 h-6 hidden sm:block" />
                   Upload Individual & Family
@@ -688,6 +711,7 @@ export default function QuoteCreate() {
                       onChange={(e) =>
                         setFamily({ ...family, main: e.target.value })
                       }
+                      required
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#141d2c]"
                     />
                   </div>
@@ -721,6 +745,7 @@ export default function QuoteCreate() {
                         <input
                           type="date"
                           value={dob}
+                          required
                           max={new Date().toISOString().split("T")[0]}
                           onChange={(e) => {
                             const updated = [...family.spouse];
@@ -777,6 +802,7 @@ export default function QuoteCreate() {
                         <input
                           type="date"
                           value={dob}
+                          required
                           max={new Date().toISOString().split("T")[0]}
                           onChange={(e) => {
                             const updated = [...family.children];
@@ -808,20 +834,22 @@ export default function QuoteCreate() {
                 <div className="flex gap-4">
                   <button
                     onClick={() => setStep(1)}
+                    type="button"
                     className="mt-4 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                   >
                     <ChevronLeft className="w-5 h-5" />
                     Back
                   </button>
                   <button
-                    onClick={parseFamily}
+                    // onClick={parseFamily}
+                    type="submit"
                     className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                   >
                     Parse Data
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
           ))}
 
@@ -861,7 +889,7 @@ export default function QuoteCreate() {
 
             <div className="flex gap-4 flex-col sm:flex-row">
               <button
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="px-2 py-1 sm:px-6 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -1307,7 +1335,7 @@ export default function QuoteCreate() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-6">
-              <label className="block my-2 font-medium">Broker</label>
+              {/* <label className="block my-2 font-medium">Broker</label>
               <DynamicSearchField
                 field={{
                   key: "brokerId",
@@ -1318,7 +1346,7 @@ export default function QuoteCreate() {
                 }}
                 formState={{ brokerId }}
                 handleChange={handleBrokerValue}
-              />
+              /> */}
               {/* <input
                 type="number"
                 value={brokerId}
@@ -1329,12 +1357,12 @@ export default function QuoteCreate() {
               <div className="mt-6 flex sm:flex-row flex-col gap-4">
                 <button
                   onClick={() => {
-                    if (
+                    if (filteredRecords.length <= 0 ||
                       window.confirm(
                         "Are you sure you want to go back it will delete the calculated records?"
                       )
                     )
-                      setStep(3);
+                      if(type === "SME") setStep(3); else setStep(2);
                   }}
                   className="px-2 py-1 sm:px-6 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                 >
@@ -1375,6 +1403,10 @@ export default function QuoteCreate() {
                 setCalculatedRecords([]);
                 setSelectedPolicies(new Set());
                 setClientId("");
+                setBrokerId("");
+                setClient("");
+                setType("");
+                setIssueDate("");
               }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >

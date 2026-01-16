@@ -11,10 +11,26 @@ export const addNewClient = async (
   userType: string
 ) => {
   try {
-    const { name, email, username } = await req.json();
+    const { name, email, username, leadSource, contactInfo } = await req.json();
 
     if(!name || !username) {
       return NextResponse.json({ error: "Please provide name and username" }, { status: 400 });
+    }
+
+    const repeatedClient = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username },
+          { email },
+        ],
+      },
+    });
+
+    if (repeatedClient) {
+      return NextResponse.json(
+        { error: "Username or email already exists" },
+        { status: 400 }
+      );
     }
     
     // placeholder because client cannot login without forgeting password to updated to user
@@ -23,12 +39,14 @@ export const addNewClient = async (
     const client = await prisma.user.create({
       data: {
         name,
-        ...(userType === "ADMIN" && { email }),
+        email,
         type: "CLIENT",
-        ...(userType === "BROKER" && { userId }),
+        ...(userType === "BROKER" && { brokerId: userId }),
         username:
           username || email.split("@")[0] + Math.floor(Math.random() * 1000),
         password: hashedPassword,
+        leadSource,
+        contactInfo,
       },
     });
 
@@ -53,7 +71,7 @@ export const changeClient = async (
   clientId: number
 ) => {
   try {
-    const { type: clientType, name, email, username } = await req.json();
+    const { type: clientType, name, email, username, leadSource, contactInfo } = await req.json();
 
     const user = await prisma.user.update({
       where: {
@@ -65,6 +83,8 @@ export const changeClient = async (
         name,
         email,
         username,
+        leadSource,
+        contactInfo,
         ...(type === "ADMIN" && { type: clientType }),
       },
     });
@@ -192,6 +212,7 @@ export const getAllClients = async (req: NextRequest, userId: number, type: stri
           name: true,
           username: true,
           clientCount: true,
+          leadSource: true,
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -236,11 +257,11 @@ export async function searchClient(
       prisma.user,
       1,
       10,
-      {...(type === "BROKER" && { brokerId: userId }), type: "CLIENT"},
+      {...(type === "BROKER" && { brokerId: userId }), type: { in: ["USER", "CLIENT"] }},
       url,
       "user",
       {},
-      { name: true, id: true }
+      { name: true, id: true, username: true }
     );
   } catch (error) {}
 }

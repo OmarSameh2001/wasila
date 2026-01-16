@@ -19,7 +19,7 @@ export default function AdminQoutes() {
   });
 
   function handleAddNew() {
-    router.push("/admin/record/create");
+    router.push("/admin/crm/create");
   }
   console.log(data);
   return (
@@ -34,6 +34,8 @@ export default function AdminQoutes() {
           columns={recordsColumns}
           data={data?.data?.data ?? []}
           actions={[{name: "PDF"}]}
+          addNew={handleAddNew}
+          buttonName="Get Qoute"
           loading={isLoading}
           query="qoutes"
           pagination={{

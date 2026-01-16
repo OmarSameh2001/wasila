@@ -98,7 +98,7 @@ export function TableActionIcon({
       return (
         <DocumentIcon
           className="text-blue-500 size-7 cursor-pointer p-1"
-          onClick={() => window.open(`/admin/record/${row.id}/pdf`, "_blank")}
+          onClick={() => window.open(`/admin/crm/${row.id}/pdf`, "_blank")}
           title={name ? action.name + " " + name : action.name}
         />
       );

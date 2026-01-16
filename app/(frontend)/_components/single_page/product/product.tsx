@@ -313,6 +313,11 @@ export default function SingleProductEditable({
                 isEditing={isEditing}
                 onChange={(val) => updateHealthPolicy("lifeInsurance", val)}
                 disabled={editedPolicy?.type === "Individual_Medical"}
+                title={
+                  editedPolicy?.type === "Individual_Medical"
+                    ? "Life Insurance is not available for Individual Medical"
+                    : ""
+                }
               />
               <PolicyField
                 label="Total Permanent Disability"
@@ -549,12 +554,14 @@ function PolicyField({
   isEditing,
   onChange,
   disabled = false,
+  title,
 }: {
   label: string;
   value: any;
   isEditing: boolean;
   onChange: (val: any) => void;
   disabled?: boolean;
+  title?: string;
 }) {
   return (
     <div className="space-y-2">
@@ -567,6 +574,7 @@ function PolicyField({
           onChange={(e) => onChange(e.target.value)}
           placeholder="Enter value"
           disabled={disabled}
+          title={title}
         />
       ) : (
         <p className="text-lg text-foreground p-1 bg-muted rounded-md">

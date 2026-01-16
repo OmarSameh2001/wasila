@@ -45,13 +45,13 @@ export default function DynamicSearchField({
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const delay = 1000;
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  const isUserField = ["Client", "Broker", "User"].includes(field.label)
   const { data, isLoading } = useQuery({
     queryKey: ["search" + field.label, search, field.label],
     queryFn: async () => {
       const fn = await getFunction(field.label);
       if (fn && search) {
-        return fn(`name_contains=${search}`);
+        return fn(isUserField ? `username_contains=${search}&name_contains=${search}&orMode=true` : `name_contains=${search}`);
       }
       return null;
     },
@@ -221,7 +221,12 @@ export default function DynamicSearchField({
                       className="w-6 h-6 rounded-full"
                     />
                   )}
+                  <div className="flex items-center">
                   <span>{item.name}</span>
+                  
+                  {isUserField &&
+                    item.username && <><span className="mx-1">|</span><span className="">@{item.username}</span></>}
+                  </div>
                   {formState?.[field.key] === item.id && (
                     <span>
                       <svg

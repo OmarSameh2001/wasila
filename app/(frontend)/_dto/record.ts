@@ -5,6 +5,7 @@ import { HealthPolicy, Policy } from "./policy";
 
 export const recordsColumns: TableColumn[] = [
   { name: "Id", key: "id", type: "text" },
+  { name: "Type", key: "type", type: "text" },
   { name: "State", key: "state", type: "text" },
   { name: "Client", key: "client", type: "text" },
   { name: "Broker", key: "broker", type: "text" },

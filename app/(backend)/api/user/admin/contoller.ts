@@ -101,6 +101,7 @@ export const getAllUsers = async (req: NextRequest) => {
           // dob: true,
           broker: { select: { id: true, name: true } },
           clientCount: true,
+          leadSource: true,
         },
         skip: (page - 1) * limit,
         take: limit,

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import DynamicSearchField from "./search_field";
 import { DynamicFormField } from "./dynamic_form";
+import ContactInputField from "./contact_field";
 
 export default function DynamicInputField({
   field,
@@ -18,7 +19,6 @@ export default function DynamicInputField({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
 
   switch (field.type) {
     case "checkbox":
@@ -164,7 +164,6 @@ export default function DynamicInputField({
         </div>
       );
     case "file":
-
       return (
         <div className="flex flex-col items-center justify-center">
           <input
@@ -191,13 +190,21 @@ export default function DynamicInputField({
           )}
         </div>
       );
+    case "contact":
+      return (
+        <ContactInputField
+          field={field}
+          formState={formState}
+          setFormState={setFormState}
+          disabled={disabled}
+        />
+      );
     default:
-      return null;
+      // return null;
       return (
         <input
           type={field.type || "text"}
-          checked={field.type === "checkbox" ? formState[field.key] : undefined}
-          value={field.type === "checkbox" ? undefined : formState[field.key]}
+          value={formState[field.key]}
           onChange={handleChange(field.key, field.type)}
           required={field.required ?? false}
           placeholder={field.label}

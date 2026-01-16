@@ -27,6 +27,7 @@ export type DynamicFormField<T = any> = {
   prev?: string;
   limit?: number;
   accept?: string;
+  adminOnly?: boolean;
   type?:
     | "text"
     | "email"
@@ -37,7 +38,7 @@ export type DynamicFormField<T = any> = {
     | "file"
     | "select"
     | "search"
-    | "image";
+    | "image"| "contact";
 };
 
 type DynamicFormProps = {
@@ -68,8 +69,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 }) => {
   const initialState: Record<string, any> = {};
   fields.forEach((field) => {
-    initialState[field.key] =
-      field.value ?? (field.type === "checkbox" ? false : "");
+    initialState[field.key] = field.value ?? (field.type === "checkbox" ? false : field.type === "contact" ? [] : "");
   });
 
   const [formState, setFormState] = useState<Record<string, any>>(initialState);
@@ -123,10 +123,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       setDisabled(false);
       if (query) queryInvalidator(query);
       setComponent(null);
-    } catch (e) {
+    } catch (e: any) {
       console.log(e);
       if (toastId && isToast)
-        showLoadingError(toastId, errorMessage || "Something went wrong");
+        showLoadingError(toastId, errorMessage || e.response.data.error || "Something went wrong");
       setDisabled(false);
     }
   };
@@ -134,7 +134,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const isChanged = fields.some(
     (field) => formState[field.key] !== field.value
   );
-
+console.log('Form state in DynamicForm:', formState);
   return (
     <form
       onSubmit={handleSubmit}
