@@ -5,6 +5,7 @@ import React, {
   useContext,
   useEffect,
   Dispatch,
+  SetStateAction,
 } from "react";
 import { PopupContext } from "../utils/context/popup_provider";
 import { AxiosResponse } from "axios";
@@ -25,6 +26,7 @@ export type DynamicFormField<T = any> = {
   choices?: string[];
   prev?: string;
   limit?: number;
+  accept?: string;
   type?:
     | "text"
     | "email"
@@ -44,9 +46,13 @@ type DynamicFormProps = {
   type?: "create" | "update";
   id?: number;
   query?: string;
+  isToast?: boolean;
+  successMessage?: string;
+  errorMessage?: string;
   onSubmit:
     | ((data: any, id: number) => Promise<AxiosResponse<any, any, {}>>)
     | ((id: number, data: any) => Promise<AxiosResponse<any, any, {}>>)
+    | Dispatch<SetStateAction<File | null>>;
 };
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
@@ -55,9 +61,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   type = "create",
   id,
   query,
+  isToast = true,
+  successMessage,
+  errorMessage,
   onSubmit,
 }) => {
-  
   const initialState: Record<string, any> = {};
   fields.forEach((field) => {
     initialState[field.key] =
@@ -68,7 +76,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [disabled, setDisabled] = useState(false);
   const { setComponent } = useContext(PopupContext);
-  
 
   const handleChange =
     (key: string, type?: string) =>
@@ -77,7 +84,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       if (type === "checkbox") value = (e.target as HTMLInputElement).checked;
       setFormState((prev) => ({ ...prev, [key]: value }));
     };
-
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -97,13 +103,21 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         setDisabled(true);
         if (type === "create") {
           console.log(formState);
-          toastId = showLoadingToast(title || "Creating...");
+          if (isToast) toastId = showLoadingToast(title || "Creating...");
           await onSubmit(formState, 0);
-          showLoadingSuccess(toastId, "Created Successfully");
+          if (isToast && toastId)
+            showLoadingSuccess(
+              toastId,
+              successMessage || "Created Successfully"
+            );
         } else if (type === "update") {
-          toastId = showLoadingToast(title || "Updating...");
+          if (isToast) toastId = showLoadingToast(title || "Updating...");
           await onSubmit(Number(id), formState);
-          showLoadingSuccess(toastId, "Updated Successfully");
+          if (isToast && toastId)
+            showLoadingSuccess(
+              toastId,
+              successMessage || "Updated Successfully"
+            );
         }
       }
       setDisabled(false);
@@ -111,13 +125,15 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       setComponent(null);
     } catch (e) {
       console.log(e);
-      if (toastId) showLoadingError(toastId, "Something went wrong");
+      if (toastId && isToast)
+        showLoadingError(toastId, errorMessage || "Something went wrong");
       setDisabled(false);
     }
   };
 
-
-  const isChanged = fields.some((field) => formState[field.key] !== field.value);
+  const isChanged = fields.some(
+    (field) => formState[field.key] !== field.value
+  );
 
   return (
     <form
@@ -128,7 +144,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       {fields.map((field) => (
         <div
           key={field.key}
-          style={{ marginBottom: "1rem", alignSelf: "start" }}
+          // style={{ marginBottom: "1rem", alignSelf: "start" }}
+          className="flex flex-col justify-center mb-3"
         >
           <label>
             {field.required && <span style={{ color: "red" }}>*</span>}
@@ -144,8 +161,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             <span style={{ color: "red" }}>{errors[field.key]}</span>
           )}
           {disabled ? (
-            <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/3">
-            </div>
+            <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/3"></div>
           ) : null}
         </div>
       ))}

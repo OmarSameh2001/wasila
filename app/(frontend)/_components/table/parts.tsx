@@ -7,9 +7,9 @@ export function TableColumn({ type, data }: any) {
       const name = typeof data === "object" ? data?.name : null;
 
       return (
-        <div className="flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
           {logo && (
-            <div className="shrink-0 mr-2 sm:mr-3 flex items-center">
+            <div className="shrink-0 flex items-center">
               <img
                 className="w-10 h-10 rounded object-cover"
                 src={logo}

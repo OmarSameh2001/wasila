@@ -93,6 +93,7 @@ export interface InsuredPerson {
 export interface RecordData {
   id: number;
   state: string;
+  type: string;
   clientId: number;
   brokerId: number;
   issueDate: string;

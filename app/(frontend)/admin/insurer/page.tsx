@@ -14,14 +14,14 @@ import DynamicForm from "../../_components/form/dynamic_form";
 import { filterableCompanyColumns } from "../../_dto/general";
 import DynamicFilter from "../../_components/fliter/filter_bar";
 
-export default function AdminCompany() {
+export default function AdminInsurers() {
   const { setComponent } = useContext(PopupContext);
   const [searchParams, setSearchParams] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { isLoading, data } = useQuery({
-    queryKey: ["adminCompanies", searchParams, currentPage, itemsPerPage],
+    queryKey: ["insurers", searchParams, currentPage, itemsPerPage],
     queryFn: () => getCompanies(currentPage, itemsPerPage, searchParams),
   });
 
@@ -29,9 +29,9 @@ export default function AdminCompany() {
     setComponent(
       <DynamicForm
         fields={editableCompanyColumns}
-        title="Add New Company"
+        title="Add New Insurer"
         type="create"
-        query="adminCompanies"
+        query="insurers"
         onSubmit={createCompany}
       />
     );
@@ -44,9 +44,9 @@ export default function AdminCompany() {
           ...column,
           value: data[column.key],
         }))}
-        title="Update Company"
+        title="Update Insurer"
         type="update"
-        query="adminCompanies"
+        query="insurers"
         id={id}
         onSubmit={updateCompany}
       />
@@ -60,7 +60,8 @@ export default function AdminCompany() {
           fields={filterableCompanyColumns}
         />
         <Table
-          name="Companies"
+          name="Insurers"
+          buttonName="Add Insurer"
           columns={companiesColumns}
           data={data?.data?.data}
           actions={[
@@ -69,7 +70,7 @@ export default function AdminCompany() {
           ]}
           loading={isLoading}
           addNew={handleAddNew}
-          query="adminCompanies"
+          query="insurers"
           pagination={{
             currentPage,
             setCurrentPage,

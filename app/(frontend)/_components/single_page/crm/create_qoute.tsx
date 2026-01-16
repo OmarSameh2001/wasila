@@ -11,13 +11,20 @@ import {
   Calculator,
   ShoppingCart,
   File,
+  Grid2x2Plus,
+  FileUser,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import {
   CalculatedPolicyRecord,
   InsuredPersonData,
 } from "@/app/(frontend)/_dto/record";
 import { healthPolicyGroups } from "@/app/(frontend)/_dto/policy";
-import { calculateRecords } from "@/app/(frontend)/_services/record";
+import {
+  calculateIndividualRecords,
+  calculateSmeRecords,
+} from "@/app/(frontend)/_services/record";
 import { PopupContext } from "../../utils/context/popup_provider";
 import * as XLSX from "xlsx";
 import {
@@ -26,8 +33,9 @@ import {
   showLoadingToast,
 } from "../../utils/toaster/toaster";
 import DynamicSearchField from "../../form/search_field";
+import DynamicForm, { DynamicFormField } from "../../form/dynamic_form";
 
-export default function RecordCreate() {
+export default function QuoteCreate() {
   const [step, setStep] = useState(1);
   const [csvText, setCsvText] = useState("");
   const [people, setPeople] = useState<InsuredPersonData[]>([]);
@@ -38,6 +46,7 @@ export default function RecordCreate() {
     new Set()
   );
   const [clientId, setClientId] = useState("");
+  const [client, setClient] = useState("");
   const [brokerId, setBrokerId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -55,10 +64,16 @@ export default function RecordCreate() {
     // maxAverageAge: 100,
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [type, setType] = useState<string | null>(null);
+  const [family, setFamily] = useState<{
+    main: string;
+    spouse: string[];
+    children: string[];
+  }>({ main: "", spouse: [], children: [] });
+
   const { setComponent } = useContext(PopupContext);
 
-  const parseCsv = () => {
+  const parseSme = () => {
     try {
       setError("");
       const lines = csvText.trim().split("\n");
@@ -100,43 +115,101 @@ export default function RecordCreate() {
     }
   };
 
+  const isFutureDate = (date: Date) => date > new Date();
+
+  const getAge = (dob: Date, today = new Date()) => {
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const parseFamily = async () => {
+    setError("");
+    try {
+      const today = new Date();
+      const mainDOB = new Date(family.main);
+
+      // Main member
+      if (isFutureDate(mainDOB)) {
+        setError("Main member's date of birth should be in the past.");
+        return;
+      }
+
+      if (getAge(mainDOB, today) < 18) {
+        setError("Main member should be at least 18 years old");
+        return;
+      }
+
+      // Spouse
+      if (family.spouse?.length > 0) {
+        const spouseDates = family.spouse.map((d) => new Date(d));
+
+        if (spouseDates.some(isFutureDate)) {
+          setError("The spouse's date of birth should be in the past.");
+          return;
+        }
+
+        if (
+          spouseDates.some((d) => getAge(d, today) < 18) &&
+          !window.confirm("Are you sure a spouse is under 18?")
+        ) {
+          return;
+        }
+      }
+
+      // Children
+      if (family.children?.length > 0) {
+        const childDates = family.children.map((d) => new Date(d));
+        console.log(childDates);
+        if (childDates.some(isFutureDate)) {
+          setError("The child's date of birth should be in the past.");
+          return;
+        }
+        console.log(
+          childDates.some((d) => d > mainDOB),
+          mainDOB,
+          childDates[0]
+        );
+        if (childDates.some((d) => getAge(mainDOB, d) < 16)) {
+          setError(
+            "The child should be at least 16 years younger than the main member."
+          );
+          return;
+        }
+      }
+
+      const response = await calculateIndividualRecords({
+        family,
+        issueDate,
+      });
+
+      const data = response.data;
+
+      setCalculatedRecords(data.calculatedRecords);
+      setStep(4);
+    } catch (err) {
+      setError("Error parsing Family. Please check date format.");
+    }
+  };
+
   const calculatePolicies = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
-      const cdate = new Date();
-      const idate = new Date(issueDate);
-      if (
-        cdate > idate &&
-        !(cdate.toDateString() === idate.toDateString()) &&
-        !window.confirm("Are you sure you want to create a record in the past?")
-      ) {
-        return;
-      }
-      const monthAhead = new Date(
-        cdate.getFullYear(),
-        cdate.getMonth() + 1,
-        cdate.getDate()
-      );
-      if (
-        idate > monthAhead &&
-        !window.confirm(
-          "Are you sure you want to create a record after more than a month?"
-        )
-      ) {
-        return;
-      }
 
       setLoading(true);
       setError("");
 
-      const response = calculateRecords({
+      const response = calculateSmeRecords({
         people,
         issueDate,
       });
 
       const data = (await response).data;
       setCalculatedRecords(data.calculatedRecords);
-      setStep(3);
+      setStep(4);
     } catch (err) {
       setError("Error calculating policies. Please try again.");
     } finally {
@@ -161,10 +234,11 @@ export default function RecordCreate() {
 
   const createRecord = async () => {
     try {
-      if (!clientId) {
-        setError("Please enter client ID");
-        return;
-      }
+      console.log(client, clientId, type);
+      // if (!clientId) {
+      //   setError("Please enter client ID");
+      //   return;
+      // }
 
       if (selectedPolicies.size === 0) {
         setError("Please select at least one policy");
@@ -178,12 +252,13 @@ export default function RecordCreate() {
         selectedPolicies.has(r.policyId)
       );
 
-      const response = await fetch("/api/record/create-bulk", {
+
+      const response = await fetch(type === "Individual_Medical" ? "/api/record/create-bulk/individual" : "/api/record/create-bulk/sme", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientId: parseInt(clientId),
-          brokerId: 1, // Replace with actual broker ID from session
+          clientId: 2,//parseInt(clientId)
+          brokerId: 1,
           state: "DRAFT",
           selectedPolicies: selected,
           issueDate: issueDate || new Date().toISOString(),
@@ -233,50 +308,63 @@ export default function RecordCreate() {
     });
   };
   const handleFileUpload = () => {
+    const fields: DynamicFormField[] = [
+      {
+        label: "Upload Excel File",
+        key: "excelFile",
+        type: "file",
+        required: true,
+        accept: ".xlsx,.xls",
+        limit: 1,
+      },
+    ];
+
     setComponent(
-      <div className="flex flex-col items-center justify-center gap-5">
-        <h1 className="text-xl font-bold underline">
-          Excel of employees and dependents
-        </h1>
-        <input
-          type="file"
-          accept=".xlsx"
-          onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      <div className="flex flex-col gap-4">
+        <DynamicForm
+          fields={fields}
+          title="Upload Excel of Employees and Dependents"
+          isToast={false}
+          onSubmit={async (data: any) => {
+            const file = data.excelFile;
+            if (!file) throw new Error("No file selected");
+
+            // Parse the file immediately
+            await parseExcelFile(file);
+
+            return { data: { success: true } };
+          }}
         />
-        <a
-          className="underline"
-          target="_blank"
-          href="https://docs.google.com/spreadsheets/d/1UrHqf1Sd3TQGPF7pHKkKDWgbeVwPfCc3/edit?usp=sharing&ouid=108291203033422402688&rtpof=true&sd=true"
-        >
-          Fill this template then upload it
-        </a>
-        <button
-          onClick={handleExcel}
-          disabled={!excelFile}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer  disabled:cursor-not-allowed"
-        >
-          Upload
-        </button>
+
+        {/* Template download link below the form */}
+        <div className="mt-4 p-4 bg-gray-100 rounded dark:bg-gray-800 flex flex-col items-center">
+          <p className="text-sm mb-2">
+            If you don't have the template, download and fill it:
+          </p>
+          <a
+            target="_blank"
+            href="https://docs.google.com/spreadsheets/d/1UrHqf1Sd3TQGPF7pHKkKDWgbeVwPfCc3/edit?usp=sharing&ouid=108291203033422402688&rtpof=true&sd=true"
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Download template
+          </a>
+        </div>
       </div>
     );
   };
 
-  const handleExcel = async () => {
-    if (!excelFile) return;
-    setComponent(null);
-    let toastId = showLoadingToast("Parsing uploaded file...");
+  // Extract the Excel parsing logic into a separate function
+  const parseExcelFile = async (file: File) => {
+    let toastId;
     try {
       setError("");
-
-      const arrayBuffer = await excelFile.arrayBuffer();
+      toastId = showLoadingToast("Parsing Excel file...");
+      const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
-      // Use first sheet
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
-      // Convert sheet to JSON (rows)
       const rows: any[] = XLSX.utils.sheet_to_json(sheet, {
         defval: "",
         raw: false,
@@ -287,7 +375,7 @@ export default function RecordCreate() {
       for (const row of rows) {
         const birthDate = row["Date Of Birth"] || null;
         const type = row["Type"] || null;
-        console.log(birthDate, type, row);
+
         if (!birthDate || !type) continue;
 
         const normalizedType = type.toString().toLowerCase();
@@ -298,38 +386,69 @@ export default function RecordCreate() {
       }
 
       if (lines.length === 0) {
-        setError("No valid rows found in Excel file.");
-        return;
+        showLoadingError(toastId, "No valid rows found in Excel file.");
+        throw new Error("No valid rows found in Excel file.");
       }
 
       if (lines.length > 250) {
-        setError("Maximum 250 people allowed.");
-        return;
+        showLoadingError(toastId, "Maximum 250 people allowed.");
+        throw new Error("Maximum 250 people allowed.");
       }
 
-      // 🔑 This is the key line
       setCsvText((prev) => prev + "\n" + lines.join("\n"));
-
       showLoadingSuccess(
         toastId,
-        "File parsed successfully added: " + lines.length + " records."
+        `Excel file parsed successfully.\n${lines.length} records added.`
       );
-      setComponent(null); // close popup
+      return lines.length;
     } catch (err) {
+      if (toastId) showLoadingError(toastId, "Error parsing Excel file.");
       console.error(err);
-      showLoadingError(toastId, "Failed to parse Excel file.");
-      setError("Failed to parse Excel file.");
+      throw err;
     }
   };
 
-  const handleClientValue = (key: string, value: string)=>{
-    setClientId(value)
-    console.log(value)
-  }
-  const handleBrokerValue = (key: string, value: string)=>{
-    setBrokerId(value)
-    console.log(value)
-  }
+  const handleClientValue = (value: any) => {
+    setClient({ ...value, clientId: value.id, id: null });
+    setClientId(value.id);
+    console.log(value);
+  };
+  const handleBrokerValue = (key: string, value: string) => {
+    setBrokerId(value);
+    console.log(value);
+  };
+
+  const handleQouteInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const cdate = new Date();
+      const idate = new Date(issueDate);
+      if (
+        cdate > idate &&
+        !(cdate.toDateString() === idate.toDateString()) &&
+        !window.confirm("Are you sure you want to create a record in the past?")
+      ) {
+        return;
+      }
+      const monthAhead = new Date(
+        cdate.getFullYear(),
+        cdate.getMonth() + 1,
+        cdate.getDate()
+      );
+      if (
+        idate > monthAhead &&
+        !window.confirm(
+          "Are you sure you want to create a record after more than a month?"
+        )
+      ) {
+        return;
+      }
+
+      setStep(2);
+    } catch (e) {
+      console.log(e);
+    }
+  };
   const selectedRecords = calculatedRecords.filter((r) =>
     selectedPolicies.has(r.policyId)
   );
@@ -340,10 +459,11 @@ export default function RecordCreate() {
         {/* Progress Steps */}
         <div className="mb-8 flex items-center justify-between hidden sm:flex">
           {[
-            { num: 1, label: "Upload Data", icon: FileSpreadsheet },
-            { num: 2, label: "Review People", icon: Users },
-            { num: 3, label: "Select Policies", icon: Calculator },
-            { num: 4, label: "Complete", icon: Check },
+            { num: 1, label: "Quote Info", icon: FileUser },
+            { num: 2, label: "Upload Data", icon: Grid2x2Plus },
+            { num: 3, label: "Review People", icon: Users },
+            { num: 4, label: "Select Plans", icon: Calculator },
+            { num: 5, label: "Complete", icon: Check },
           ].map(({ num, label, icon: Icon }, idx) => (
             <div key={num} className="flex items-center flex-1">
               <div className="flex flex-col items-center flex-1">
@@ -359,7 +479,7 @@ export default function RecordCreate() {
                 </div>
                 <span className="mt-2 text-sm font-medium">{label}</span>
               </div>
-              {idx < 3 && (
+              {idx < 4 && (
                 <div
                   className={`h-1 flex-1 ${
                     step > num ? "bg-blue-600" : "bg-gray-300"
@@ -373,10 +493,11 @@ export default function RecordCreate() {
         {/* Progress Indicators */}
         <div className="mb-8 flex items-center justify-between sm:hidden">
           {[
-            { num: 1, icon: FileSpreadsheet },
-            { num: 2, icon: Users },
-            { num: 3, icon: Calculator },
-            { num: 4, icon: Check },
+            { num: 1, icon: FileUser },
+            { num: 2, icon: Grid2x2Plus },
+            { num: 3, icon: Users },
+            { num: 4, icon: Calculator },
+            { num: 5, icon: Check },
           ].map(({ num, icon: Icon }) => (
             <div
               // onClick={() => setStep(num)}
@@ -400,75 +521,29 @@ export default function RecordCreate() {
           </div>
         )}
 
-        {/* Step 1: Upload CSV */}
+        {/* Step 1: Quote Info */}
         {step === 1 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Upload className="w-6 h-6 hidden sm:block" />
-              Upload Employee & Dependent Data
-            </h2>
-            <p className="text-gray-600 dark:text-gray-200 mb-6">
-              Paste your data with birth dates and types Ex: (mm/dd/yyyy TYPE)
-            </p>
-            <p className="text-gray-600 dark:text-gray-200 mb-6">
-              Or you can upload an excel file{" "}
-              <button
-                type="button"
-                onClick={handleFileUpload}
-                className="flex items-center gap-2 px-3 py-1 text-sm border rounded hover:bg-gray-400 cursor-pointer"
-              >
-                <File className="h-4 w-4" />
-                Excel Import
-              </button>
-            </p>
-            <textarea
-              className="w-full h-64 border-2 border-gray-300 rounded-lg p-4 font-mono text-sm"
-              placeholder="1/1/1990	Employee&#10;1/1/2015	Dependent&#10;"
-              value={csvText}
-              onChange={(e) => setCsvText(e.target.value)}
-            />
-            <button
-              onClick={parseCsv}
-              className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-            >
-              Parse Data
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Review People */}
-        {step === 2 && (
           <form
             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8"
-            onSubmit={(e) => calculatePolicies(e)}
+            onSubmit={(e) => handleQouteInfo(e)}
           >
-            <h2 className="text-2xl font-bold mb-4">Review Parsed Data</h2>
-            <div className="mb-6 flex flex-col sm:grid sm:grid-cols-3 gap-4">
-              <div className="p-4 bg-blue-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-3xl font-bold text-blue-600">
-                  {people.length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-200">
-                  Total People
-                </div>
-              </div>
-              <div className="p-4 bg-green-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-3xl font-bold text-green-600">
-                  {people.filter((p) => p.type === "Employee").length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-200">
-                  Employees
-                </div>
-              </div>
-              <div className="p-4 bg-purple-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-3xl font-bold text-purple-600">
-                  {people.filter((p) => p.type === "Dependent").length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-200">
-                  Dependents
-                </div>
-              </div>
+            <h1 className="text-2xl font-bold mb-6 underline">Qoute Info:</h1>
+            <div className="flex gap-4 mb-6 ml-2 flex-col sm:flex-row items-center">
+              <label className="text-lg font-semibold text-gray-600 dark:text-gray-200">
+                Client:
+              </label>
+              <DynamicSearchField
+                field={{
+                  key: "clientId",
+                  label: "User",
+                  type: "search",
+                  required: true,
+                  prev: "name",
+                }}
+                formState={client}
+                handleChange={() => {}}
+                handleUi={handleClientValue}
+              />
             </div>
             <div className="flex gap-4 mb-6 ml-2 flex-col sm:flex-row items-center">
               <span className="text-lg font-semibold text-gray-600 dark:text-gray-200">
@@ -479,7 +554,7 @@ export default function RecordCreate() {
                 value={issueDate}
                 onChange={(e) => setIssueDate(e.target.value ?? new Date())}
                 required
-                className="border border-gray-200 dark:border-gray-500 w-fit"
+                className="w-fit px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#141d2c]"
               />
               {issueDate && (
                 <div className="flex items-center flex-wrap gap-2 flex-col sm:flex-row">
@@ -514,6 +589,276 @@ export default function RecordCreate() {
                 </div>
               )}
             </div>
+            <div className="flex gap-4 mb-6 ml-2 flex-col sm:flex-row items-center">
+              <label className="text-lg font-semibold text-gray-600 dark:text-gray-200">
+                Plan Type:
+              </label>
+              <select
+                value={type ?? ""}
+                onChange={(e) => setType(e.target.value)}
+                required
+                className="border border-dark dark:border-gray-300 bg-white dark:bg-[#141d2c] rounded px-2 py-1 w-fit"
+              >
+                <option value="" className="dark:bg-black">
+                  *None*
+                </option>
+                <option value={"Individual_Medical"} className="dark:bg-black">
+                  Individual Medical
+                </option>
+                <option value={"SME"} className="dark:bg-black">
+                  SME
+                </option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 cursor-pointer"
+            >
+              <ChevronRight className="w-5 h-5" />
+              Next
+            </button>
+          </form>
+        )}
+        {/* Step 2: Upload CSV */}
+        {step === 2 &&
+          (type === "SME" ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Upload className="w-6 h-6 hidden sm:block" />
+                Upload Employee & Dependent Data
+              </h2>
+              <p className="text-gray-600 dark:text-gray-200 mb-6">
+                Paste your data with birth dates and types Ex: (mm/dd/yyyy TYPE)
+              </p>
+              <p className="text-gray-600 dark:text-gray-200 mb-6">
+                Or you can upload an excel file{" "}
+                <button
+                  type="button"
+                  onClick={handleFileUpload}
+                  className="flex items-center gap-2 px-3 py-1 text-sm border rounded hover:bg-gray-400 cursor-pointer"
+                >
+                  <File className="h-4 w-4" />
+                  Excel Import
+                </button>
+              </p>
+              <textarea
+                className="w-full h-64 border-2 border-gray-300 rounded-lg p-4 font-mono text-sm"
+                placeholder="1/1/1990	Employee&#10;1/1/2015	Dependent&#10;"
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+              />
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep(1)}
+                  className="mt-4 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  Back
+                </button>
+                <button
+                  onClick={parseSme}
+                  className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                >
+                  Parse Data
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Upload className="w-6 h-6 hidden sm:block" />
+                  Upload Individual & Family
+                </h2>
+
+                {/* Main Individual */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">
+                    Main Individual
+                  </h3>
+                  <div className="max-w-xs">
+                    <label className="block text-sm font-medium mb-1">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      value={family.main}
+                      max={new Date().toISOString().split("T")[0]}
+                      onChange={(e) =>
+                        setFamily({ ...family, main: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#141d2c]"
+                    />
+                  </div>
+                </div>
+
+                {/* Spouses */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold">Spouses</h3>
+                    {family.spouse.length < 4 && (
+                      <button
+                        onClick={() =>
+                          setFamily({
+                            ...family,
+                            spouse: [...family.spouse, ""],
+                          })
+                        }
+                        className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Spouse
+                      </button>
+                    )}
+                  </div>
+                  {family.spouse.map((dob, index) => (
+                    <div key={index} className="flex gap-2 mb-3 max-w-xs">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium mb-1">
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          value={dob}
+                          max={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => {
+                            const updated = [...family.spouse];
+                            updated[index] = e.target.value;
+                            setFamily({ ...family, spouse: updated });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#141d2c]"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          onClick={() =>
+                            setFamily({
+                              ...family,
+                              spouse: family.spouse.filter(
+                                (_, i) => i !== index
+                              ),
+                            })
+                          }
+                          className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Children */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold">Children</h3>
+                    {family.children.length < 10 && (
+                      <button
+                        onClick={() =>
+                          setFamily({
+                            ...family,
+                            children: [...family.children, ""],
+                          })
+                        }
+                        className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Child
+                      </button>
+                    )}
+                  </div>
+                  {family.children.map((dob, index) => (
+                    <div key={index} className="flex gap-2 mb-3 max-w-xs">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium mb-1">
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          value={dob}
+                          max={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => {
+                            const updated = [...family.children];
+                            updated[index] = e.target.value;
+                            setFamily({ ...family, children: updated });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#141d2c]"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          onClick={() =>
+                            setFamily({
+                              ...family,
+                              children: family.children.filter(
+                                (_, i) => i !== index
+                              ),
+                            })
+                          }
+                          className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="mt-4 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                    Back
+                  </button>
+                  <button
+                    onClick={parseFamily}
+                    className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    Parse Data
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+        {/* Step 3: Review People */}
+        {step === 3 && (
+          <form
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8"
+            onSubmit={(e) => calculatePolicies(e)}
+          >
+            <h2 className="text-2xl font-bold mb-4">Review Parsed Data</h2>
+            <div className="mb-6 flex flex-col sm:grid sm:grid-cols-3 gap-4">
+              <div className="p-4 bg-blue-50 dark:bg-gray-700 rounded-lg">
+                <div className="text-3xl font-bold text-blue-600">
+                  {people.length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-200">
+                  Total People
+                </div>
+              </div>
+              <div className="p-4 bg-green-50 dark:bg-gray-700 rounded-lg">
+                <div className="text-3xl font-bold text-green-600">
+                  {people.filter((p) => p.type === "Employee").length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-200">
+                  Employees
+                </div>
+              </div>
+              <div className="p-4 bg-purple-50 dark:bg-gray-700 rounded-lg">
+                <div className="text-3xl font-bold text-purple-600">
+                  {people.filter((p) => p.type === "Dependent").length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-200">
+                  Dependents
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-4 flex-col sm:flex-row">
               <button
                 onClick={() => setStep(1)}
@@ -525,7 +870,7 @@ export default function RecordCreate() {
               <button
                 // onClick={calculatePolicies}
                 type="submit"
-                disabled={loading || people.length === 0 || issueDate === ""}
+                disabled={loading || people.length === 0}
                 className="px-2 py-1 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:bg-gray-400"
               >
                 {loading ? "Calculating..." : "Calculate Policies"}
@@ -535,8 +880,8 @@ export default function RecordCreate() {
           </form>
         )}
 
-        {/* Step 3: Select Policies */}
-        {step === 3 && (
+        {/* Step 4: Select Policies */}
+        {step === 4 && (
           <div className="space-y-6">
             {/* Filter Panel */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -962,37 +1307,18 @@ export default function RecordCreate() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-6">
-              <label className="block mb-2 font-medium">Client</label>
-              {/* <input
-                type="number"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="Enter client ID"
-              /> */}
-              <DynamicSearchField
-                      field={{
-                        key: "clientId",
-                        label: "User",
-                        type: "search",
-                        required: true,
-                        // prev: "company.name",
-                      }}
-                      formState={{clientId}}
-                      handleChange={handleClientValue}
-                    />
               <label className="block my-2 font-medium">Broker</label>
               <DynamicSearchField
-                      field={{
-                        key: "brokerId",
-                        label: "Broker",
-                        type: "search",
-                        required: true,
-                        // prev: "company.name",
-                      }}
-                      formState={{brokerId}}
-                      handleChange={handleBrokerValue}
-                    />
+                field={{
+                  key: "brokerId",
+                  label: "Broker",
+                  type: "search",
+                  required: true,
+                  // prev: "company.name",
+                }}
+                formState={{ brokerId }}
+                handleChange={handleBrokerValue}
+              />
               {/* <input
                 type="number"
                 value={brokerId}
@@ -1008,7 +1334,7 @@ export default function RecordCreate() {
                         "Are you sure you want to go back it will delete the calculated records?"
                       )
                     )
-                      setStep(2);
+                      setStep(3);
                   }}
                   className="px-2 py-1 sm:px-6 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                 >
@@ -1028,8 +1354,8 @@ export default function RecordCreate() {
           </div>
         )}
 
-        {/* Step 4: Success */}
-        {step === 4 && (
+        {/* Step 5: Success */}
+        {step === 5 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-10 h-10 text-green-600" />

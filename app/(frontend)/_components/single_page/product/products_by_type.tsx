@@ -1,26 +1,27 @@
 "use client";
 import { useState } from "react";
-import Table from "../../_components/table/table";
 import {
   policyColumns,
-} from "../../_dto/policy";
+} from "../../../_dto/policy";
 import {
   getPolicies,
-} from "../../_services/policy";
+} from "../../../_services/policy";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { filterablePolicyColumns } from "../../_dto/general";
-import DynamicFilter from "../../_components/fliter/filter_bar";
+import { filterablePolicyColumns } from "../../../_dto/general";
+import DynamicFilter from "../../fliter/filter_bar";
+import Table from "../../table/table";
 
-export default function AdminPolicy() {
+export default function ProductsByType({ type }: { type: string }) {
   const router = useRouter()
   const [searchParams, setSearchParams] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  const filterType = type === "sme" ? `type=SME&` : "type=Individual_Medical&";
   const { isLoading, data } = useQuery({
-    queryKey: ["adminPolicies", searchParams, currentPage, itemsPerPage],
-    queryFn: () => getPolicies(currentPage, itemsPerPage, searchParams),
+    queryKey: [type + "_products", searchParams, currentPage, itemsPerPage],
+    queryFn: () => getPolicies(currentPage, itemsPerPage, filterType + searchParams),
   });
 
   function handleAddNew() {
@@ -33,14 +34,15 @@ export default function AdminPolicy() {
         <DynamicFilter onSearch={setSearchParams} fields={filterablePolicyColumns} />
 
         <Table
-          name="Policies"
+          name="Products"
+          buttonName="Add New Product"
           columns={policyColumns}
           data={data?.data?.data}
           actions={[
           ]}
           loading={isLoading}
           addNew={handleAddNew}
-          query="adminPolicies"
+          query="products"
           pagination={{
             currentPage,
             setCurrentPage,

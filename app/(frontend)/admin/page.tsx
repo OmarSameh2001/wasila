@@ -1,17 +1,28 @@
+import { Building2, ChartLine, Heart, ScrollText, Users, Users2 } from "lucide-react";
 import Link from "next/link";
 
-
-export default function AdminPage(){
-    return (
-        <div className="flex flex-col min-h-[70vh] justify-center items-center">
-            <h1 className="text-2xl font-bold">Welcome Admin</h1>
-            <div className="flex gap-10 mt-5 sm:flex-row flex-col">
-                <Link href="/admin/policy">Policies</Link>
-                <Link href="/admin/client">Clients</Link>
-                <Link href="/admin/record">Records</Link>
-                <Link href="/admin/broker">Brokers</Link>
-                <Link href="/admin/setting">Settings</Link>
+export default function AdminPage() {
+  const links = [
+    { href: "/admin/broker", title: "Brokers", Icon: Users2 },
+    { href: "/admin/client", title: "Clients", Icon: Users },
+    { href: "/admin/product", title: "Products", Icon: ScrollText },
+    { href: "/admin/insurer", title: "Insurers", Icon: Building2 },
+    { href: "/admin/crm", title: "CRM", Icon: ChartLine },
+  ];
+  return (
+    <div className="flex flex-col min-h-[70vh] justify-center items-center">
+      <h1 className="text-2xl font-bold">Welcome Admin</h1>
+      <div className="flex gap-10 mt-5 sm:flex-row flex-col">
+        {links.map((link) => (
+          <Link key={link.title} href={link.href} className="flex flex-col items-center justify-center gap-2 hover:scale-105 duration-300">
+            <div className="bg-gray-300 dark:bg-gray-800 p-6 rounded">
+              <link.Icon className="scale-180"/>
             </div>
-        </div>
-    );
+            <span>{link.title}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
+

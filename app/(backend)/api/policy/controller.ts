@@ -33,7 +33,7 @@ export async function createPolicy(req: NextRequest) {
           }),
 
         // Conditionally create health policy
-        ...((type === "HEALTH" || type === "SME") &&
+        ...((type === "Individual_Medical" || type === "SME") &&
           healthPolicy && {
             healthPolicy: {
               create: {
@@ -241,7 +241,7 @@ export async function updatePolicy(
         },
       },
       include: {
-        carPolicy: true,
+        // carPolicy: true,
         healthPolicy: true,
         company: true,
         broker: true,

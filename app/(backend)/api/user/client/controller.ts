@@ -1,3 +1,4 @@
+import { handlePrismaError } from "@/app/(backend)/_lib/errors";
 import { filterPrisma, handleUrl } from "@/app/(backend)/_lib/filtering";
 import { prisma } from "@/app/(backend)/_lib/prisma";
 import UserHelper from "@/app/(backend)/_lib/user";
@@ -12,6 +13,10 @@ export const addNewClient = async (
   try {
     const { name, email, username } = await req.json();
 
+    if(!name || !username) {
+      return NextResponse.json({ error: "Please provide name and username" }, { status: 400 });
+    }
+    
     // placeholder because client cannot login without forgeting password to updated to user
     const hashedPassword = (await UserHelper.hashPassword("12345678@Wa"))
       .hashedPassword;
@@ -36,10 +41,7 @@ export const addNewClient = async (
     );
   } catch (error) {
     console.error("Add new client error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handlePrismaError(error);
   }
 };
 

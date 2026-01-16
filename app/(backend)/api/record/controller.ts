@@ -83,7 +83,34 @@ export async function getRecord(
             policy: {
               include: {
                 company: true,
-                healthPolicy: true,
+                healthPolicy: {
+                  select: {
+                    lifeInsurance: true,
+                    totalPermanentDisability: true,
+                    accidentalDeath: true,
+                    partialPermanentDisability: true,
+                    medicalTpa: true,
+                    network: true,
+                    areaOfCoverage: true,
+                    annualCeilingPerPerson: true,
+                    inPatientAccommodation: true,
+                    icu: true,
+                    parentAccommodation: true,
+                    doctorConsultation: true,
+                    labScan: true,
+                    physiotherapy: true,
+                    medication: true,
+                    dental: true,
+                    optical: true,
+                    maternityLimit: true,
+                    newbornCeiling: true,
+                    preExistingCases: true,
+                    newChronic: true,
+                    organTransplant: true,
+                    groundAmbulance: true,
+                    reimbursementCoverage: true,
+                  }
+                },
               },
             },
           },
@@ -252,7 +279,7 @@ interface PersonData {
   type: "Employee" | "Dependent";
 }
 
-interface CalculatedPolicyRecord {
+interface CalculatedSmePolicyRecord {
   policyId: number;
   policyName: string;
   companyName: string;
@@ -321,7 +348,7 @@ function findPriceForAge(
   return { price: Number(priceField) };
 }
 
-export async function calculatePolicyRecords(req: NextRequest) {
+export async function calculateSmePolicyRecords(req: NextRequest) {
   try {
     const { people, policyIds, issueDate } = (await req.json()) as {
       people: PersonData[];
@@ -361,14 +388,14 @@ export async function calculatePolicyRecords(req: NextRequest) {
       );
     }
 
-    const calculatedRecords: CalculatedPolicyRecord[] = [];
+    const calculatedRecords: CalculatedSmePolicyRecord[] = [];
 
     // Calculate for each policy
     for (const policy of policies) {
       if (!policy.healthPolicy) continue;
 
       const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
-      const insuredPeople: CalculatedPolicyRecord["insuredPeople"] = [];
+      const insuredPeople: CalculatedSmePolicyRecord["insuredPeople"] = [];
 
       let totalAmount = 0;
       let numberOfInsureds = 0;
@@ -477,7 +504,7 @@ export async function createBulkRecord(
       clientId,
       brokerId,
       state,
-      selectedPolicies, // Array of CalculatedPolicyRecord
+      selectedPolicies, // Array of CalculatedSmePolicyRecord
       issueDate,
     } = await req.json();
 
@@ -536,8 +563,9 @@ export async function createBulkRecord(
         brokerId: effectiveBrokerId,
         issueDate: issueDateParsed,
         state: state || "DRAFT",
+        type: "SME",
         policies: {
-          create: selectedPolicies.map((p: CalculatedPolicyRecord) => ({
+          create: selectedPolicies.map((p: CalculatedSmePolicyRecord) => ({
             policyId: p.policyId,
             totalAmount: p.totalAmount,
             totalTaxed: p.totalTaxed,
@@ -583,6 +611,389 @@ export async function createBulkRecord(
     console.error("Error creating bulk record:", error);
     return NextResponse.json(
       { error: "Error creating bulk record" },
+      { status: 500 }
+    );
+  }
+}
+
+
+interface FamilyData {
+  main: string; // date string from date input
+  spouse: string[]; // array of date strings
+  children: string[]; // array of date strings
+}
+
+interface CalculatedIndividualPolicyRecord {
+  policyId: number;
+  policyName: string;
+  companyName: string;
+  companyLogo: string;
+  numberOfInsureds: number;
+  numberOfPersons: number;
+  averageAge: number;
+  totalAmount: number;
+  totalTaxed: number;
+  avgPricePerPerson: number;
+  policy: any;
+  policyDescription: string;
+  insuredPeople: {
+    age: number;
+    type: "Main" | "Spouse" | "Child";
+    price: number;
+    isInsured: boolean;
+    reason?: string;
+  }[];
+}
+
+function calculateAgeFromDateInput(dateInput: string, issueDate: string): number {
+  const birth = new Date(dateInput);
+  const today = new Date(issueDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
+
+function findPriceForFamilyMember(
+  healthPricings: any,
+  age: number,
+  isMain: boolean
+): { price: number | null; reason?: string } {
+  const pricing = healthPricings[age.toString()];
+
+  if (!pricing) {
+    return {
+      price: null,
+      reason: `No coverage available for age ${age}`,
+    };
+  }
+
+  const priceField = isMain ? pricing.mainPrice : pricing.dependentPrice;
+
+  if (
+    priceField === undefined || 
+    priceField === null || 
+    priceField === 0 || 
+    isNaN(priceField)
+  ) {
+    return {
+      price: null,
+      reason: `No ${isMain ? "main" : "dependent"} coverage for age ${age}`,
+    };
+  }
+
+  return { price: Number(priceField) };
+}
+
+export async function calculateIndividualPolicyRecords(req: NextRequest) {
+  try {
+    const { family, policyIds, issueDate } = (await req.json()) as {
+      family: FamilyData;
+      policyIds?: number[];
+      issueDate: string;
+    };
+
+    if (!family || !family.main) {
+      return NextResponse.json(
+        { error: "Main individual is required" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch all Individual Medical policies
+    const policies = await prisma.policy.findMany({
+      where: {
+        type: "Individual_Medical",
+        ...(policyIds && policyIds.length > 0 && { id: { in: policyIds } }),
+      },
+      include: {
+        company: {
+          select: {
+            name: true,
+            logo: true,
+          },
+        },
+        healthPolicy: true,
+      },
+    });
+
+    if (policies.length === 0) {
+      return NextResponse.json(
+        { error: "No Individual Medical policies found" },
+        { status: 404 }
+      );
+    }
+
+    const calculatedRecords: CalculatedIndividualPolicyRecord[] = [];
+
+    // Calculate for each policy
+    for (const policy of policies) {
+      if (!policy.healthPolicy) continue;
+
+      const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
+      const insuredFamily: CalculatedIndividualPolicyRecord["insuredPeople"] = [];
+
+      let totalAmount = 0;
+      let numberOfInsureds = 0;
+      let totalAge = 0;
+      let totalFamilyMembers = 1; // Start with main
+
+      // Process main individual
+      const mainAge = calculateAgeFromDateInput(family.main, issueDate);
+      const mainPricing = findPriceForFamilyMember(
+        healthPricingsObject,
+        mainAge,
+        true
+      );
+
+      // Skip this policy if main is not insured
+      if (mainPricing.price === null) {
+        continue;
+      }
+
+      totalAmount += mainPricing.price;
+      numberOfInsureds++;
+      totalAge += mainAge;
+
+      insuredFamily.push({
+        age: mainAge,
+        type: "Main",
+        price: mainPricing.price,
+        isInsured: true,
+      });
+
+      // Process spouses
+      for (const spouseDob of family.spouse) {
+        if (!spouseDob) continue;
+        totalFamilyMembers++;
+
+        const spouseAge = calculateAgeFromDateInput(spouseDob, issueDate);
+        const { price, reason } = findPriceForFamilyMember(
+          healthPricingsObject,
+          spouseAge,
+          false
+        );
+
+        if (price !== null) {
+          totalAmount += price;
+          numberOfInsureds++;
+          totalAge += spouseAge;
+        }
+
+        insuredFamily.push({
+          age: spouseAge,
+          type: "Spouse",
+          price: price || 0,
+          isInsured: price !== null,
+          reason,
+        });
+      }
+
+      // Process children
+      for (const childDob of family.children) {
+        if (!childDob) continue;
+        totalFamilyMembers++;
+
+        const childAge = calculateAgeFromDateInput(childDob, issueDate);
+        const { price, reason } = findPriceForFamilyMember(
+          healthPricingsObject,
+          childAge,
+          false
+        );
+
+        if (price !== null) {
+          totalAmount += price;
+          numberOfInsureds++;
+          totalAge += childAge;
+        }
+
+        insuredFamily.push({
+          age: childAge,
+          type: "Child",
+          price: price || 0,
+          isInsured: price !== null,
+          reason,
+        });
+      }
+
+      // Calculate totals
+      const averageAge =
+        numberOfInsureds > 0 ? Math.round(totalAge / numberOfInsureds) : 0;
+
+      const avgPricePerPerson =
+        numberOfInsureds > 0 ? totalAmount / numberOfInsureds : 0;
+
+      const taxRate = policy.tax ? Number(policy.tax) / 100 : 0;
+      const totalTaxed = totalAmount * (1 + taxRate);
+
+      const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${totalFamilyMembers} family members - Avg age: ${averageAge}`;
+      
+      const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy;
+      
+      calculatedRecords.push({
+        policyId: policy.id,
+        policyName: policy.name,
+        companyName: policy.company.name,
+        companyLogo: policy.company.logo || "",
+        policy: healthWithoutPricing,
+        numberOfInsureds,
+        numberOfPersons: totalFamilyMembers,
+        averageAge,
+        totalAmount,
+        totalTaxed,
+        avgPricePerPerson,
+        policyDescription,
+        insuredPeople: insuredFamily.sort((a, b) => a.age - b.age),
+      });
+    }
+
+    // Sort by total amount (best value first)
+    calculatedRecords.sort((a, b) => a.totalAmount - b.totalAmount);
+
+    return NextResponse.json(
+      {
+        calculatedRecords,
+        summary: {
+          totalFamilyMembers: 1 + family.spouse.length + family.children.length,
+          mainInsured: true,
+          spouseCount: family.spouse.length,
+          childrenCount: family.children.length,
+          policiesCalculated: calculatedRecords.length,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error calculating individual policy records:", error);
+    return NextResponse.json(
+      { error: "Error calculating individual policy records" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function createBulkIndividualRecord(
+  req: NextRequest,
+  userId: number,
+  type: string
+) {
+  try {
+    const {
+      clientId,
+      brokerId,
+      state,
+      selectedPolicies, // Array of CalculatedIndividualPolicyRecord
+      issueDate,
+    } = await req.json();
+
+    if (
+      !selectedPolicies ||
+      selectedPolicies.length === 0 ||
+      selectedPolicies.length > 6
+    ) {
+      return NextResponse.json(
+        { error: "Select between 1 and 6 policies" },
+        { status: 400 }
+      );
+    }
+
+    if (!issueDate || !clientId) {
+      return NextResponse.json(
+        { error: "Issue date and client is required" },
+        { status: 400 }
+      );
+    }
+
+    const issueDateParsed = new Date(issueDate);
+
+    if (isNaN(issueDateParsed.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid issue date" },
+        { status: 400 }
+      );
+    }
+
+    const client = await prisma.user.findUnique({
+      where: { id: clientId, type: { in: ["CLIENT", "USER"] } },
+    });
+
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    const effectiveBrokerId = type === "BROKER" ? userId : brokerId;
+
+    const broker = await prisma.user.findUnique({
+      where: {
+        id: effectiveBrokerId,
+        type: "BROKER",
+      },
+    });
+
+    if (!broker) {
+      return NextResponse.json({ error: "Broker not found" }, { status: 404 });
+    }
+
+    const record = await prisma.record.create({
+      data: {
+        clientId,
+        brokerId: effectiveBrokerId,
+        issueDate: issueDateParsed,
+        state: state || "DRAFT",
+        type: "Individual_Medical",
+        policies: {
+          create: selectedPolicies.map((p: CalculatedIndividualPolicyRecord) => ({
+            policyId: p.policyId,
+            totalAmount: p.totalAmount,
+            totalTaxed: p.totalTaxed,
+            policyDescription: p.policyDescription,
+            numberOfInsureds: p.numberOfInsureds,
+            numberOfPersons: p.numberOfPersons,
+            averageAge: p.averageAge,
+            avgPricePerPerson: p.avgPricePerPerson,
+          })),
+        },
+      },
+      include: {
+        policies: {
+          include: {
+            policy: {
+              include: {
+                company: true,
+              },
+            },
+          },
+        },
+        client: true,
+        broker: true,
+      },
+    });
+
+    await prisma.user.updateMany({
+      where: {
+        id: {
+          in: [clientId, effectiveBrokerId],
+        },
+      },
+      data: {
+        clientCount: {
+          increment: 1,
+        },
+        managedCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    return NextResponse.json(record, { status: 201 });
+  } catch (error) {
+    console.error("Error creating bulk individual record:", error);
+    return NextResponse.json(
+      { error: "Error creating bulk individual record" },
       { status: 500 }
     );
   }

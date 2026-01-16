@@ -31,11 +31,11 @@ const navigation = {
     // { name: "Settings", href: "/broker/settings" },
   ],
   admin: [
-    { name: "Records", href: "/admin/record" },
-    { name: "Clients", href: "/admin/client" },
-    { name: "Policies", href: "/admin/policy" },
     { name: "Brokers", href: "/admin/broker" },
-    { name: "Companies", href: "/admin/company" },
+    { name: "Clients", href: "/admin/client" },
+    { name: "Products", href: "/admin/product" },
+    { name: "Insurers", href: "/admin/insurer" },
+    { name: "CRM", href: "/admin/crm" },
   ],
   auth: [
     { name: "Login", href: "/login" },
@@ -74,9 +74,10 @@ export default function Navbar() {
           {/* Logo + Desktop Nav */}
           <div className="flex flex-1 items-center justify-center sm:justify-start">
             <Link href="/" className="flex items-center gap-x-2">
-              <div className="w-11 h-11 bg-blue-500 rounded flex items-center justify-center">
+              {/* <div className="w-11 h-11 bg-blue-500 rounded flex items-center justify-center">
                 <div className="rounded-full text-2xl font-bold">W</div>
-              </div>
+              </div> */}
+              <img src="/wasila_logo.png" alt="logo" className="w-11 h-9" />
               <span className="text-xl font-bold">Wasila</span>
             </Link>
             {/* <DarkToggle /> */}

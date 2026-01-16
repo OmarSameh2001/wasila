@@ -11,7 +11,7 @@ import { showErrorToast, showSuccessToast } from "../utils/toaster/toaster";
 function InsuranceReportPDF({ id }: { id: string }) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const { isLoading, isError, data, error } = useQuery({
-    queryKey: ["adminRecord", id],
+    queryKey: ["qoute", id],
     queryFn: () => getRecord(Number(id)),
   });
   const record = (data?.data as RecordData) || null;

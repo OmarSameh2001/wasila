@@ -22,6 +22,14 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "Wasila",
   description: "Wasila for insurance brokers",
+  icons: {
+    icon: [
+      { url: "/icon/wasila_icon_32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon/wasila_icon_192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon/wasila_icon_512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icon/wasila_icon_180.png",
+  },
 };
 
 export default function RootLayout({

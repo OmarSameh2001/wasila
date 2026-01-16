@@ -21,6 +21,18 @@ export const updateRecord = async (id: number, data: any) => {
     return await axiosInstance.put(`/record/${id}`, data);
 }
 
-export const calculateRecords = async (data: any) => {
-    return await axiosInstance.post("/record/calculate", data);
+export const calculateSmeRecords = async (data: any) => {
+    return await axiosInstance.post("/record/calculate/sme", data);
+}
+
+export const calculateIndividualRecords = async (data: any) => {
+    return await axiosInstance.post("/record/calculate/individual", data);
+}
+
+export const createSmeRecords = async (data: any) => {
+    return await axiosInstance.post("/record/create-bulk/sme", data);
+}
+
+export const createIndividualRecords = async (data: any) => {
+    return await axiosInstance.post("/record/create-bulk/individual", data);
 }

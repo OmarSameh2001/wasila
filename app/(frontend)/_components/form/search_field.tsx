@@ -28,13 +28,18 @@ export default function DynamicSearchField({
   field,
   formState,
   handleChange,
+  handleUi,
 }: {
   field: DynamicFormField;
   formState: any;
   handleChange: (key: string, value?: any) => void;
+  handleUi?: (value?: any) => void;
 }) {
   const [search, setSearch] = useState<string>("");
-  const [inputValue, setInputValue] = useState<string>(""); // Add this
+  const [inputValue, setInputValue] = useState<string>(
+    String(field?.prev ? formState?.[field?.prev] ?? "" : "")
+  );
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -80,6 +85,7 @@ export default function DynamicSearchField({
     setSearch("");
     setIsOpen(false);
     handleChange(field.key, item.id);
+    if (handleUi) handleUi(item);
   };
 
   const handleClear = () => {
@@ -96,9 +102,9 @@ export default function DynamicSearchField({
 
   const choices = data?.data?.data || [];
 
-  useEffect(()=>{
-    if(formState[field.key] === "") setSelectedItem("")
-  }, [formState[field.key]])
+  useEffect(() => {
+    if (formState?.[field?.key] === "") setSelectedItem("");
+  }, [formState?.[field?.key]]);
   return (
     <div className="w-fit relative">
       <div className="relative">
@@ -111,35 +117,35 @@ export default function DynamicSearchField({
           onChange={handleDebouncedChange}
           placeholder="Search..."
           onFocus={() =>
-            !selectedItem && inputValue.length > 0 && setIsOpen(true)
+            !selectedItem && inputValue?.length > 0 && setIsOpen(true)
           }
           required={field.required && !selectedItem}
         />
 
-        {selectedItem&& selectedItem?.logo ? (
+        {selectedItem && selectedItem?.logo ? (
           <img
             className="h-6 w-6 rounded-full absolute inset-y-2 end-15 flex items-center z-20"
             src={selectedItem.logo}
             alt={selectedItem.name || "logo"}
           />
-        ): selectedItem && selectedItem?.id ? (
+        ) : (selectedItem && selectedItem?.id) || formState?.[field?.key] ? (
           <span>
-                <svg
-                  className="shrink-0 size-3.5 absolute inset-y-4 end-15 text-blue-600 dark:text-blue-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 6 9 17l-5-5"></path>
-                </svg>
-              </span>
-        ): null}
+            <svg
+              className="shrink-0 size-3.5 absolute inset-y-4 end-15 text-blue-600 dark:text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+          </span>
+        ) : null}
 
         {(inputValue || selectedItem) && ( // Check inputValue instead of search
           <div className="absolute inset-y-0 end-8 flex items-center z-20">
@@ -192,58 +198,58 @@ export default function DynamicSearchField({
         </div>
       </div>
 
-     {isOpen && (
-  <div className="absolute z-50 w-full max-h-72 p-1 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 dark:bg-neutral-900 dark:border-neutral-700 mt-1">
-    {isTyping || isLoading ? (
-      <div className="py-2 px-4 w-full text-sm text-gray-800 dark:text-neutral-200 text-center">
-        Loading...
-      </div>
-    ) : choices.length > 0 ? (
-      choices.map((item: any, index: number) => (
-        <div
-          key={item.id || index}
-          className="cursor-pointer py-2 px-4 w-full text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800"
-          role="option"
-          tabIndex={index}
-          onClick={() => handleSelectItem(item)}
-        >
-          <div className="flex gap-x-2 items-center w-full">
-            {item.logo && (
-              <img
-                src={item.logo}
-                alt={item.name}
-                className="w-6 h-6 rounded-full"
-              />
-            )}
-            <span>{item.name}</span>
-            {formState?.[field.key] === item.id && (
-              <span>
-                <svg
-                  className="shrink-0 size-3.5 text-blue-600 dark:text-blue-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 6 9 17l-5-5"></path>
-                </svg>
-              </span>
-            )}
-          </div>
+      {isOpen && (
+        <div className="absolute z-50 w-full max-h-72 p-1 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 dark:bg-neutral-900 dark:border-neutral-700 mt-1">
+          {isTyping || isLoading ? (
+            <div className="py-2 px-4 w-full text-sm text-gray-800 dark:text-neutral-200 text-center">
+              Loading...
+            </div>
+          ) : choices.length > 0 ? (
+            choices.map((item: any, index: number) => (
+              <div
+                key={item.id || index}
+                className="cursor-pointer py-2 px-4 w-full text-sm text-gray-800 hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800"
+                role="option"
+                tabIndex={index}
+                onClick={() => handleSelectItem(item)}
+              >
+                <div className="flex gap-x-2 items-center w-full">
+                  {item.logo && (
+                    <img
+                      src={item.logo}
+                      alt={item.name}
+                      className="w-6 h-6 rounded-full"
+                    />
+                  )}
+                  <span>{item.name}</span>
+                  {formState?.[field.key] === item.id && (
+                    <span>
+                      <svg
+                        className="shrink-0 size-3.5 text-blue-600 dark:text-blue-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 6 9 17l-5-5"></path>
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-2 px-4 w-full text-sm text-gray-800 dark:text-neutral-200 text-center">
+              No results found
+            </div>
+          )}
         </div>
-      ))
-    ) : (
-      <div className="py-2 px-4 w-full text-sm text-gray-800 dark:text-neutral-200 text-center">
-        No results found
-      </div>
-    )}
-  </div>
-)}
+      )}
     </div>
   );
 }

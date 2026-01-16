@@ -5,7 +5,12 @@ import { File, Plus, Trash2, Upload } from "lucide-react";
 import { HealthPricings } from "@/app/(frontend)/_dto/policy";
 
 import * as XLSX from "xlsx";
-import { showErrorToast, showLoadingError, showLoadingSuccess, showLoadingToast } from "../../utils/toaster/toaster";
+import {
+  showErrorToast,
+  showLoadingError,
+  showLoadingSuccess,
+  showLoadingToast,
+} from "../../utils/toaster/toaster";
 import { PopupContext } from "../../utils/context/popup_provider";
 
 // interface HealthPricingData {
@@ -33,6 +38,7 @@ export default function HealthPricing({
   const [dependentPriceText, setDependentPriceText] = useState("");
   const [importError, setImportError] = useState("");
   const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [isNoAge, setIsNoAge] = useState(false);
   const { setComponent } = useContext(PopupContext);
 
   // Convert object to sorted array for display
@@ -44,13 +50,14 @@ export default function HealthPricing({
     .sort((a, b) => a.age - b.age);
 
   const handleAddPricing = () => {
-    const newAge = sortedPricings.length > 0 
-      ? Math.max(...sortedPricings.map(p => p.age)) + 1 
-      : 0;
-    
+    const newAge =
+      sortedPricings.length > 0
+        ? Math.max(...sortedPricings.map((p) => p.age)) + 1
+        : 0;
+
     onPricingsChange({
       ...pricings,
-      [newAge.toString()]: { mainPrice: 0, dependentPrice: 0 }
+      [newAge.toString()]: { mainPrice: 0, dependentPrice: 0 },
     });
   };
 
@@ -62,7 +69,7 @@ export default function HealthPricing({
 
   const handleUpdateAge = (oldAge: number, newAge: number) => {
     if (oldAge === newAge) return;
-    
+
     const newPricings = { ...pricings };
     const data = newPricings[oldAge.toString()];
     delete newPricings[oldAge.toString()];
@@ -70,27 +77,31 @@ export default function HealthPricing({
     onPricingsChange(newPricings);
   };
 
-  const handleUpdatePrice = (age: number, field: 'mainPrice' | 'dependentPrice', value: number | null) => {
+  const handleUpdatePrice = (
+    age: number,
+    field: "mainPrice" | "dependentPrice",
+    value: number | null
+  ) => {
     onPricingsChange({
       ...pricings,
       [age.toString()]: {
         ...pricings[age.toString()],
         [field]: value,
-      }
+      },
     });
   };
 
   const parseBulkText = (text: string): Map<number, number> => {
     const priceMap = new Map<number, number>();
-    const lines = text.trim().split('\n');
-    
+    const lines = text.trim().split("\n");
+
     for (const line of lines) {
       const parts = line.trim().split(/\s+/);
       if (parts.length >= 2) {
         const age = parseInt(parts[0]);
-        const priceStr = parts[1].replace(/[,\s]/g, '');
-        
-        if (!isNaN(age) && priceStr && priceStr !== '-') {
+        const priceStr = parts[1].replace(/[,\s]/g, "");
+
+        if (!isNaN(age) && priceStr && priceStr !== "-") {
           const price = parseFloat(priceStr);
           if (!isNaN(price)) {
             priceMap.set(age, price);
@@ -98,37 +109,75 @@ export default function HealthPricing({
         }
       }
     }
-    
+
     return priceMap;
   };
 
   const handleBulkImport = () => {
     try {
       setImportError("");
-      
-      const mainPrices = parseBulkText(mainPriceText);
-      const dependentPrices = parseBulkText(dependentPriceText);
-      
-      if (mainPrices.size === 0 && dependentPrices.size === 0) {
-        setImportError("No valid pricing data found. Please check the format.");
+
+      if (!mainPriceText && !dependentPriceText) {
+        setImportError("Please enter main or dependent pricing data.");
         return;
       }
 
-      const allAges = new Set([...mainPrices.keys(), ...dependentPrices.keys()]);
       const newPricings: HealthPricings = {};
-      
-      allAges.forEach(age => {
-        const mainPrice = mainPrices.get(age);
-        const dependentPrice = dependentPrices.get(age);
-        
-        // Only add if at least one price exists
-        if (mainPrice !== undefined || dependentPrice !== undefined) {
-          newPricings[age.toString()] = {
-            mainPrice: mainPrice ?? null,
-            dependentPrice: dependentPrice ?? null,
+      if (isNoAge) {
+        const mainLines = mainPriceText.trim().split("\n");
+        const dependentLines = dependentPriceText.trim().split("\n");
+
+        const loopLength = Math.min(
+          Math.max(mainLines.length, dependentLines.length),
+          100
+        );
+
+        const parsePrice = (line: string) => {
+          if (!line) return null;
+          const value = parseFloat(line.replace(/[,\s]/g, ""));
+          return Number.isNaN(value) ? null : value;
+        };
+
+        for (let i = 0; i < loopLength; i++) {
+          const mainPrice = parsePrice(mainLines[i]);
+          const dependentPrice = parsePrice(dependentLines[i]);
+
+          if (mainPrice === null && dependentPrice === null) continue;
+
+          newPricings[i] = {
+            mainPrice,
+            dependentPrice,
           };
         }
-      });
+      } else {
+        const mainPrices = parseBulkText(mainPriceText);
+        const dependentPrices = parseBulkText(dependentPriceText);
+
+        if (mainPrices.size === 0 && dependentPrices.size === 0) {
+          setImportError(
+            "No valid pricing data found. Please check the format."
+          );
+          return;
+        }
+
+        const allAges = new Set([
+          ...mainPrices.keys(),
+          ...dependentPrices.keys(),
+        ]);
+
+        allAges.forEach((age) => {
+          const mainPrice = mainPrices.get(age);
+          const dependentPrice = dependentPrices.get(age);
+
+          // Only add if at least one price exists
+          if (mainPrice !== undefined || dependentPrice !== undefined) {
+            newPricings[age.toString()] = {
+              mainPrice: mainPrice ?? null,
+              dependentPrice: dependentPrice ?? null,
+            };
+          }
+        });
+      }
 
       onPricingsChange(newPricings);
       setShowBulkImport(false);
@@ -156,7 +205,11 @@ export default function HealthPricing({
         >
           Fill this template then upload it
         </a>
-        {Object.keys(pricings ?? {}).length > 0 ?  <span className="text-red-700 font-bold">This will remove old pricings*</span> : null}
+        {Object.keys(pricings ?? {}).length > 0 ? (
+          <span className="text-red-700 font-bold">
+            This will remove old pricings*
+          </span>
+        ) : null}
         <button
           onClick={handleExcel}
           disabled={!excelFile}
@@ -175,51 +228,64 @@ export default function HealthPricing({
     try {
       const arrayBuffer = await excelFile.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
-  
+
       // Use the first sheet
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-  
+
       // Convert sheet to JSON
       const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-  
+
       const newPricings: HealthPricings = {};
-  
+
       for (const row of rows) {
         const ageStr = row["Age"];
         const mainStr = row["Employee Pricing"];
         const dependentStr = row["Dependent Pricing"];
-  
-        if (ageStr === undefined || ageStr === "" || (!mainStr && !dependentStr)) continue;
-  
+
+        if (
+          ageStr === undefined ||
+          ageStr === "" ||
+          (!mainStr && !dependentStr)
+        )
+          continue;
+
         const age = Number(ageStr);
         if (isNaN(age)) continue;
-  
-        const mainPrice = mainStr !== "" ? parseFloat(String(mainStr).replace(/,/g, "")) : null;
-        const dependentPrice = dependentStr !== "" ? parseFloat(String(dependentStr).replace(/,/g, "")) : null;
-  
+
+        const mainPrice =
+          mainStr !== "" ? parseFloat(String(mainStr).replace(/,/g, "")) : null;
+        const dependentPrice =
+          dependentStr !== ""
+            ? parseFloat(String(dependentStr).replace(/,/g, ""))
+            : null;
+
         newPricings[age.toString()] = {
           mainPrice,
           dependentPrice,
         };
       }
-  
+
       if (Object.keys(newPricings).length === 0) {
         showErrorToast("No valid rows found in Excel file.");
         return;
       }
-  
+
       onPricingsChange(newPricings);
-  
-      showLoadingSuccess(toastId, `File parsed successfully: ${Object.keys(newPricings).length} records added.`);
+
+      showLoadingSuccess(
+        toastId,
+        `File parsed successfully: ${
+          Object.keys(newPricings).length
+        } records added.`
+      );
       setComponent(null); // close popup
     } catch (err) {
       console.error(err);
       showLoadingError(toastId, "Failed to parse Excel file.");
     }
   };
-  
-  
+
   if (!isEditing && sortedPricings.length === 0) {
     return null;
   }
@@ -262,11 +328,15 @@ export default function HealthPricing({
         <div className="p-4 border rounded-md space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Main Prices (Format: AGE PRICE per line)
+              {isNoAge
+                ? "Main Prices (Format: PRICE) age will itterate from 0"
+                : "Main Prices (Format: AGE PRICE)"}
             </label>
             <textarea
               className="w-full border rounded p-2 font-mono text-sm h-32"
-              placeholder="18 5186.00&#10;19 5186.00&#10;20 5186.00"
+              placeholder={`Example:\n${
+                isNoAge ? "5000\n4000\n-\n8000" : "0 5000\n1 4000\n2 -\n3 8000"
+              }`}
               value={mainPriceText}
               onChange={(e) => setMainPriceText(e.target.value)}
             />
@@ -274,21 +344,23 @@ export default function HealthPricing({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Dependent Prices (Format: AGE PRICE per line, use '-' for no price)
+              {isNoAge
+                ? "Dependent Prices (Format: PRICE) age will itterate from 0"
+                : "Dependent Prices (Format: AGE PRICE)"}
             </label>
             <textarea
               className="w-full border rounded p-2 font-mono text-sm h-32"
-              placeholder="0 4722.00&#10;1 4722.00&#10;16 -"
+              placeholder={`Example:\n${
+                isNoAge ? "5000\n4000\n-\n8000" : "0 5000\n1 4000\n2 -\n3 8000"
+              }`}
               value={dependentPriceText}
               onChange={(e) => setDependentPriceText(e.target.value)}
             />
           </div>
 
-          {importError && (
-            <p className="text-sm text-red-600">{importError}</p>
-          )}
+          {importError && <p className="text-sm text-red-600">{importError}</p>}
 
-          <div className="flex gap-2">
+          <div className="flex gap-5">
             <button
               type="button"
               onClick={handleBulkImport}
@@ -304,20 +376,26 @@ export default function HealthPricing({
                 setDependentPriceText("");
                 setImportError("");
               }}
-              className="px-4 py-2 border rounded hover:bg-gray-100"
+              className="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isNoAge}
+                onChange={(e) => setIsNoAge(e.target.checked)}
+                className="cursor-pointer"
+              />
+              <label>No Age</label>
+            </div>
           </div>
         </div>
       )}
 
       <div className="space-y-3">
         {sortedPricings.map((pricing) => (
-          <div
-            key={pricing.age}
-            className="p-4 border rounded-md space-y-2"
-          >
+          <div key={pricing.age} className="p-4 border rounded-md space-y-2">
             {isEditing ? (
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="flex flex-col">
@@ -326,7 +404,9 @@ export default function HealthPricing({
                     type="number"
                     className="border rounded p-2 w-20"
                     value={pricing.age}
-                    onChange={(e) => handleUpdateAge(pricing.age, Number(e.target.value))}
+                    onChange={(e) =>
+                      handleUpdateAge(pricing.age, Number(e.target.value))
+                    }
                   />
                 </div>
                 <div className="flex flex-col">
@@ -347,7 +427,9 @@ export default function HealthPricing({
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-xs font-medium mb-1">Dependent Price</label>
+                  <label className="text-xs font-medium mb-1">
+                    Dependent Price
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -380,7 +462,8 @@ export default function HealthPricing({
                     : "Employee: N/A"}
                 </p>
                 <p className="text-sm">
-                  {pricing.dependentPrice !== null && pricing.dependentPrice !== undefined
+                  {pricing.dependentPrice !== null &&
+                  pricing.dependentPrice !== undefined
                     ? `Dependent: ${pricing.dependentPrice.toFixed(2)}`
                     : "Dependent: N/A"}
                 </p>

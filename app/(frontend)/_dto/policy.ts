@@ -27,11 +27,11 @@ export const policyColumns: TableColumn[] = [
     key: "tax",
     type: "text",
   },
-  // {
-  //   name: "Broker",
-  //   key: "broker",
-  //   type: "text",
-  // },
+  {
+    name: "Broker",
+    key: "broker.name",
+    type: "text",
+  },
   // {
   //   name: "Actions",
   //   key: "actions",
@@ -125,7 +125,7 @@ export const editablePolicyColumns: DynamicFormField[] = [
     key: "type",
     label: "Type",
     type: "select",
-    choices: ["CAR", "HEALTH", "SME"],
+    choices: ["CAR", "Individual_Medical", "SME"],
     required: true,
   },
   {

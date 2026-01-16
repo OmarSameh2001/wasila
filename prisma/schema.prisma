@@ -79,6 +79,7 @@ model Record {
   //totalAmount  Decimal  @db.Decimal(20, 2)  
   //totalTaxed   Decimal  @db.Decimal(20, 2)
   state        CrmState
+  type PolicyType
   
   // The person who OWNS the policy (The Client)
   clientId     Int
@@ -103,7 +104,10 @@ model Record {
 
 enum CrmState {
   DRAFT
-  CONTACTED
+  KYC
+  QUOTATION
+  REQUEST
+  PROPOSITION
   WON
   LOST
 }
@@ -151,7 +155,7 @@ model Policy {
 
 enum PolicyType {
   CAR
-  HEALTH
+  Individual_Medical
   SME
 }
 

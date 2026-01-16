@@ -41,6 +41,7 @@ export interface TableProps {
   loading: boolean;
   query: string;
   addNew?: () => void;
+  buttonName?: string;
   pagination: PaginationProps;
 }
 
@@ -62,12 +63,12 @@ export const filterableCompanyColumns: FilterableField[] = [
 
 // Policy Filterable Columns
 export const filterablePolicyColumns: FilterableField[] = [
-  {
-    key: "type",
-    label: "Type",
-    type: "select",
-    choices: ["CAR", "HEALTH", "SME"],
-  },
+  // {
+  //   key: "type",
+  //   label: "Type",
+  //   type: "select",
+  //   choices: ["CAR", "Individual_Medical", "SME"],
+  // },
   {
     key: "name",
     label: "Name",

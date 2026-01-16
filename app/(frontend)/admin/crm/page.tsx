@@ -7,14 +7,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { filterableRecordColumns } from "../../_dto/general";
 import DynamicFilter from "../../_components/fliter/filter_bar";
-export default function AdminRecords() {
+export default function AdminQoutes() {
   const router = useRouter();
   const [searchParams, setSearchParams] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { isLoading, isError, data, error } = useQuery({
-    queryKey: ["adminRecords", searchParams, currentPage, itemsPerPage],
+    queryKey: ["qoutes", searchParams, currentPage, itemsPerPage],
     queryFn: () => getRecords(currentPage, itemsPerPage, searchParams),
   });
 
@@ -30,13 +30,12 @@ export default function AdminRecords() {
           fields={filterableRecordColumns}
         />
         <Table
-          name="Records"
+          name="Qoutes"
           columns={recordsColumns}
           data={data?.data?.data ?? []}
           actions={[{name: "PDF"}]}
           loading={isLoading}
-          addNew={handleAddNew}
-          query="adminRecords"
+          query="qoutes"
           pagination={{
             currentPage,
             setCurrentPage,

@@ -12,18 +12,13 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { queryInvalidator } from "../../utils/query/query";
 import LoadingPage from "../../utils/promise_handler/loading/loading";
 import { RecordData } from "@/app/(frontend)/_dto/record";
 
-
-
-
-
-export default function SingleRecordView({ id }: { id: string }) {
+export default function SingleQouteView({ id }: { id: string }) {
   let { isLoading, isError, data, error } = useQuery({
-    queryKey: ["adminRecord", id],
+    queryKey: ["qoute", id],
     queryFn: () => getRecord(Number(id)),
   });
   const record = (data?.data as RecordData) || null;
@@ -46,16 +41,22 @@ export default function SingleRecordView({ id }: { id: string }) {
 
   const getStateColor = (state: string) => {
     switch (state) {
-      case "DRAFT":
-        return "bg-gray-100 text-gray-800 border-gray-300";
-      case "CONTACTED":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "WON":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "LOST":
-        return "bg-red-100 text-red-800 border-red-300";
+      // case "DRAFT":
+      //   return "bg-gray-100 text-gray-800 border-gray-300";
+      // case "KYC":
+      //   return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      // case "QUOTATION":
+      //   return "bg-yellow-200 text-yellow-700 border-yellow-200";
+      // case "REQUEST":
+      //   return "bg-blue-200 text-blue-700 border-blue-200";
+      // case "PROPOSITION":
+      //   return "bg-blue-100 text-blue-800 border-blue-300";
+      // case "WON":
+      //   return "bg-green-100 text-green-800 border-green-300";
+      // case "LOST":
+      //   return "bg-red-100 text-red-800 border-red-300";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-300";
     }
   };
 
@@ -85,9 +86,13 @@ export default function SingleRecordView({ id }: { id: string }) {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-                  Record #{record.id}
+                  {record.type} Qoute
                 </h1>
-                <a className="text-gray-600 mt-1 dark:text-gray-300 underline" href={`/admin/record/${id}/pdf`} target="_blank">
+                <a
+                  className="text-gray-600 mt-1 dark:text-gray-300 underline"
+                  href={`/admin/crm/${id}/pdf`}
+                  target="_blank"
+                >
                   Get Pdf
                 </a>
                 <p className="text-gray-600 mt-1 dark:text-gray-300">
@@ -96,9 +101,9 @@ export default function SingleRecordView({ id }: { id: string }) {
               </div>
             </div>
             <select
-              className={`px-4 py-2 rounded-lg border-2 font-semibold ${getStateColor(
+              className={`px-3 py-2 rounded-lg border-2 font-semibold ${getStateColor(
                 record.state
-              )} cursor-pointer bg-white`}
+              )} cursor-pointer bg-white dark:bg-gray-700`}
               value={record.state}
               onChange={(e) => {
                 handleUpdateRecord({
@@ -106,10 +111,13 @@ export default function SingleRecordView({ id }: { id: string }) {
                 });
               }}
             >
-              <option value="DRAFT">DRAFT</option>
-              <option value="CONTACTED">CONTACTED</option>
-              <option value="WON">WON</option>
-              <option value="LOST">LOST</option>
+              <option value="DRAFT">Draft</option>
+              <option value="KYC">Kyc</option>
+              <option value="QUOTATION">Quotation</option>
+              <option value="REQUEST">Request for quotation</option>
+              <option value="PROPOSITION">Proposition</option>
+              <option value="WON">Won</option>
+              <option value="LOST">Lost</option>
             </select>
           </div>
         </div>

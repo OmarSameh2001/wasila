@@ -10,9 +10,13 @@ import DynamicInputField from "../../form/dynamic_input_field";
 import HealthPricing from "./health_pricing";
 import LoadingPage from "../../utils/promise_handler/loading/loading";
 import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
-import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../utils/toaster/toaster";
+import {
+  showLoadingError,
+  showLoadingSuccess,
+  showLoadingToast,
+} from "../../utils/toaster/toaster";
 
-export default function SinglePolicyEditable({
+export default function SingleProductEditable({
   policy,
   isLoading,
 }: {
@@ -27,7 +31,9 @@ export default function SinglePolicyEditable({
   const queryClient = useQueryClient();
 
   const isCreate = !(
-    typeof policy === "object" && Object.keys(policy).length > 0
+    typeof policy === "object" &&
+    Object.keys(policy).length > 0 &&
+    id !== "create"
   );
 
   const handleCancel = () => {
@@ -51,10 +57,10 @@ export default function SinglePolicyEditable({
         showLoadingSuccess(toastId, "Policy Updated Successfully");
       }
 
-      queryClient.invalidateQueries(["adminPolicy"] as InvalidateQueryFilters<
+      queryClient.invalidateQueries(["products"] as InvalidateQueryFilters<
         readonly unknown[]
       >);
-      router.push("/admin/policy");
+      // router.push("/admin/policy");
     } catch (e) {
       if (toastId) showLoadingError(toastId, "Something went wrong");
       console.log(e);
@@ -84,8 +90,16 @@ export default function SinglePolicyEditable({
     setEditedPolicy(policy);
   }, [policy, id]);
   useEffect(() => {
-    console.log(editedPolicy);
-  }, [editedPolicy]);
+    if (editedPolicy?.type === "Individual_Medical") {
+      setEditedPolicy({
+        ...editedPolicy,
+        healthPolicy: {
+          ...editedPolicy?.healthPolicy,
+          lifeInsurance: "Not Covered",
+        },
+      });
+    }
+  }, [editedPolicy?.type]);
 
   if (isLoading) return <LoadingPage />;
   return (
@@ -93,10 +107,10 @@ export default function SinglePolicyEditable({
       <div className="mx-auto max-w-4xl min-w-[80vw]">
         <div className="mb-8">
           <h1 className="text-balance text-4xl font-bold text-foreground mb-2">
-            {isCreate ? "Create New Policy" : "Edit Policy"}
+            {isCreate ? "Create New Plan" : "Edit Plan"}
           </h1>
           <p className="text-muted-foreground">
-            Manage health insurance policy details
+            Manage medical insurance plan details
           </p>
         </div>
 
@@ -226,27 +240,38 @@ export default function SinglePolicyEditable({
 
                 <div className="space-y-2 flex flex-col">
                   <label className="text-sm font-medium text-foreground">
-                    Policy Type
+                    Plan Type
                   </label>
                   {isEditing ? (
-                    <DynamicInputField
-                      field={{
-                        key: "type",
-                        label: "Type",
-                        type: "select",
-                        choices: ["HEALTH", "SME"],
-                        required: true,
-                      }}
-                      formState={editedPolicy}
-                      handleChange={updatePolicyField}
-                    />
+                    <select
+                      value={editedPolicy?.type ?? ""}
+                      onChange={(e) =>
+                        updatePolicyField("type", e.target.value)
+                      }
+                      required={true}
+                      className="border border-dark dark:border-gray-300 rounded px-2 py-1 w-fit"
+                      disabled={!isCreate}
+                    >
+                      <option value="" className="dark:bg-black">
+                        *None*
+                      </option>
+                      <option
+                        value={"Individual_Medical"}
+                        className="dark:bg-black"
+                      >
+                        Individual Medical
+                      </option>
+                      <option value={"SME"} className="dark:bg-black">
+                        SME
+                      </option>
+                    </select>
                   ) : (
                     <p className="text-lg text-foreground p-3 bg-muted rounded-md">
                       {policy?.type === "CAR"
                         ? "Car Policy"
-                        : policy?.type === "HEALTH"
-                        ? "Health Policy"
-                        : policy?.type === "SME" && "SME Policy"}
+                        : policy?.type === "Individual_Medical"
+                        ? "Individual Medical"
+                        : policy?.type === "SME" && "SME Medical"}
                     </p>
                   )}
                 </div>
@@ -287,6 +312,7 @@ export default function SinglePolicyEditable({
                 value={editedPolicy?.healthPolicy?.lifeInsurance}
                 isEditing={isEditing}
                 onChange={(val) => updateHealthPolicy("lifeInsurance", val)}
+                disabled={editedPolicy?.type === "Individual_Medical"}
               />
               <PolicyField
                 label="Total Permanent Disability"
@@ -522,22 +548,25 @@ function PolicyField({
   value,
   isEditing,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: any;
   isEditing: boolean;
   onChange: (val: any) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-foreground">{label}</label>
       {isEditing ? (
         <input
-          className="w-full px-3 py-2 border border-border bg-background rounded-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+          className="w-full px-3 py-2 border border-border bg-background rounded-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:cursor-not-allowed"
           required
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Enter value"
+          disabled={disabled}
         />
       ) : (
         <p className="text-lg text-foreground p-1 bg-muted rounded-md">
