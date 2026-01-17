@@ -24,10 +24,11 @@ const navigation = {
     { name: "Auth", href: "/login" },
   ],
   broker: [
-    // { name: "My Policies", href: "/broker" },
-    // { name: "Health Policies", href: "/broker/health" },
-    // { name: "My Clients", href: "/broker/clients" },
-    // { name: "My Records", href: "/broker/records" },
+    { name: "My Clients", href: "/broker/client" },
+    { name: "My Products", href: "/broker/product" },
+    { name: "Wasila Products", href: "/broker/wasila-products" },
+    { name: "CRM", href: "/broker/crm" },
+    { name: "Insurers", href: "/broker/insurer" },
     // { name: "Settings", href: "/broker/settings" },
   ],
   admin: [

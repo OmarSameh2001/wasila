@@ -69,13 +69,13 @@ export function castParam(modelName: string, key: string, value: string) {
   let casted: any;
   switch (type) {
     case "number":
-      casted = parseFloat(value);
+      casted = value === "null" ? null : parseFloat(value);
       break;
     case "boolean":
       casted = value === "true" || value === "1";
       break;
     case "string":
-      casted = value;
+      casted = value === "null" ? null : value;
       break;
     case "date":
       casted = new Date(value);

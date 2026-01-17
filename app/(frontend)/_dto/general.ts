@@ -15,6 +15,7 @@ export interface FilterableField {
   choices?: string[];
   searchType?: "search"; // For foreign key relations
   searchLabel?: string; // Label for search dropdown
+  adminOnly?: boolean;
 }
 
 export interface TableActionButton {
@@ -92,6 +93,7 @@ export const filterablePolicyColumns: FilterableField[] = [
     type: "id",
     searchType: "search",
     searchLabel: "Broker",
+    adminOnly: true,
   },
 ];
 
@@ -116,22 +118,23 @@ export const filterableRecordColumns: FilterableField[] = [
     type: "id",
     searchType: "search",
     searchLabel: "Broker",
+    adminOnly: true,
   },
   {
     key: "issueDate",
     label: "Issue Date",
     type: "date",
   },
-  {
-    key: "createdAt",
-    label: "Created At",
-    type: "date",
-  },
-  {
-    key: "updatedAt",
-    label: "Updated At",
-    type: "date",
-  },
+  // {
+  //   key: "createdAt",
+  //   label: "Created At",
+  //   type: "date",
+  // },
+  // {
+  //   key: "updatedAt",
+  //   label: "Updated At",
+  //   type: "date",
+  // },
 ];
 
 // User Filterable Columns
@@ -243,11 +246,14 @@ export const filterableCLientColumns: FilterableField[] = [
     label: "Type",
     type: "select",
     choices: ["USER", "CLIENT"],
+    adminOnly: true
+    
   },
   {
     key: "emailVerified",
     label: "Email Verified",
     type: "boolean",
+    adminOnly: true
   },
   {
     key: "brokerId",
@@ -255,6 +261,7 @@ export const filterableCLientColumns: FilterableField[] = [
     type: "id",
     searchType: "search",
     searchLabel: "Broker",
+    adminOnly: true
   },
   {
     key: "clientCount",

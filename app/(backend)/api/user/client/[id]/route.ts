@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { changeClient, deleteClient, getClientById } from "../controller";
-import { authMiddleware } from "../../../../_middelware/auth";
+import { authMiddleware } from "../../../../_middelware/authorize";
 import { authError } from "@/app/(backend)/_lib/errors";
 import dynamicId from "@/app/(backend)/_lib/dynamic_id";
 

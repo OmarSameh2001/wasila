@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calculateSmePolicyRecords } from "../../controller";
-import { authMiddleware } from "@/app/(backend)/_middelware/auth";
+import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 
 export async function POST(req: NextRequest, context: any) {
   try {
-    await authMiddleware(req, "BROKER");
-    const records = await calculateSmePolicyRecords(req);
+    const { id, type } = await authMiddleware(req, "BROKER");
+    const records = await calculateSmePolicyRecords(req, id, type);
     return records;
   } catch (error) {
     console.error("Error fetching records:", error);

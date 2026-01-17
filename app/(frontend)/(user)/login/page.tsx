@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { login } from "../../_services/user";
 import { useRouter } from "next/navigation";
 import Validator from "../../_helpers/validator";
 import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
+import { Eye, EyeOff } from "lucide-react";
+import { AuthContext } from "../../_components/utils/context/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +15,8 @@ export default function LoginPage() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { refetch } = useContext(AuthContext);
   const router = useRouter();
 
   const validateForm = () => {
@@ -35,6 +39,7 @@ export default function LoginPage() {
 
       toastId = showLoadingToast("Signing In...");
       await login({ email, password });
+      await refetch();
       showLoadingSuccess(toastId, "Signed In Successfully");
       setLoading(false);
       router.push("/");
@@ -109,11 +114,18 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 dark:text-white text-sm font-medium mb-2">
-              Password
+            <label className="block text-gray-700 dark:text-white text-sm font-medium mb-2 flex items-center gap-2">
+              Password{" "}
+              <span onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff className="cursor-pointer h-5 w-5" />
+                ) : (
+                  <Eye className="cursor-pointer h-5 w-5" />
+                )}
+              </span>
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"

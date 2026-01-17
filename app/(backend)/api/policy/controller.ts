@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../_lib/prisma";
-import { filterPrisma } from "../../_lib/filtering";
+import { filterPrisma, handleUrl } from "../../_lib/filtering";
 
-export async function createPolicy(req: NextRequest) {
+export async function createPolicy(
+  req: NextRequest,
+  userId: number,
+  userType: string
+) {
   try {
     const { type, name, companyId, tax, brokerId, carDetails, healthPolicy } =
       await req.json();
@@ -13,7 +17,9 @@ export async function createPolicy(req: NextRequest) {
         name,
         companyId: Number(companyId),
         tax: tax ? Number(tax) : null,
-        ...(brokerId && { brokerId: Number(brokerId) }),
+        ...(userType === "BROKER"
+          ? { brokerId: Number(userId) }
+          : { brokerId: Number(brokerId) }),
 
         // Conditionally create car policy
         ...(type === "CAR" &&
@@ -102,7 +108,11 @@ export async function createPolicy(req: NextRequest) {
   }
 }
 
-export async function getPolicies(req: NextRequest) {
+export async function getPolicies(
+  req: NextRequest,
+  userId: number,
+  userType: string
+) {
   try {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -110,18 +120,39 @@ export async function getPolicies(req: NextRequest) {
 
     const include = {
       company: true,
+      broker: true,
     };
+
+    const urlFilters = handleUrl(url, "policy");
+        
+    const { brokerId: urlBrokerId, ...otherFilters } = urlFilters;
+    
+    let whereClause: any = { ...otherFilters };
+    // console.log(urlFilters);
+    // Handle broker-specific logic
+    if (userType === "BROKER") {
+      if (urlBrokerId !== undefined) {
+        whereClause.brokerId = urlBrokerId;
+      } else {
+        whereClause.OR = [
+          { brokerId: Number(userId) },
+          { brokerId: null }
+        ];
+      }
+    } else if (urlBrokerId !== undefined) {
+      // Non-broker user specified brokerId filter
+      whereClause.brokerId = urlBrokerId;
+    }
+
     return await filterPrisma(
       prisma.policy,
       page,
       limit,
-      {},
-      url,
+      whereClause,
+      undefined,
       "policy",
       include
     );
-
-    // return NextResponse.json(policies, { status: 200 });
   } catch (error) {
     console.error("Error fetching policies:", error);
     return NextResponse.json(
@@ -198,7 +229,6 @@ export async function updatePolicy(
   userType?: string
 ) {
   const startTime = Date.now();
-  console.log("▶️ updatePolicy START", { id });
 
   try {
     const body = await req.json();
@@ -213,7 +243,6 @@ export async function updatePolicy(
       policyWhere.brokerId = Number(brokerId);
     }
 
-    console.log("⏳ Running Single Transactional Update...");
 
     // SINGLE CALL: This handles Policy + HealthPolicy + JSON in one go
     // 1. Destructure the healthPolicy to remove the problematic IDs
@@ -248,7 +277,6 @@ export async function updatePolicy(
       },
     });
 
-    console.log(`✅ updatePolicy COMPLETE in ${Date.now() - startTime}ms`);
     return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
     console.error("❌ updatePolicy FAILED:", error);

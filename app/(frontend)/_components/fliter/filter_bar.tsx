@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { FilterableField } from "../../_dto/general";
 import DynamicSearchField from "../form/search_field";
+import { AuthContext } from "../utils/context/auth";
 
 interface FilterValues {
   [key: string]: {
@@ -59,6 +60,8 @@ export default function DynamicFilter({
   });
 
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const { type } = useContext(AuthContext);
 
   const handleFilterChange = (
     fieldKey: string,
@@ -279,7 +282,13 @@ export default function DynamicFilter({
             const showOperator = operators.length > 1;
 
             return (
-              <div key={field.key} className="space-y-1">
+              <div
+                key={field.key}
+                className={
+                  "space-y-1" +
+                  (field.adminOnly && type !== "ADMIN" ? " hidden" : "")
+                }
+              >
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   {field.label}
                 </label>

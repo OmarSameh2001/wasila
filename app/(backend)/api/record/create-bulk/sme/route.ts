@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBulkRecord } from "../../controller";
-import { authMiddleware } from "@/app/(backend)/_middelware/auth";
+import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 
 export async function POST(req: NextRequest, context: any) {
   try {

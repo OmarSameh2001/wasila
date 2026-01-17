@@ -89,3 +89,12 @@ export const editableClientColumns: DynamicFormField[] = [
     type: "contact",
   },
 ];
+
+
+export type UserType = "USER" | "BROKER" | "ADMIN" | "";
+export type AuthContextType = {
+  isLoading: boolean;
+  id: number;
+  type: UserType;
+  refetch: () => Promise<void>;
+};

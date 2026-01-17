@@ -1,5 +1,5 @@
 
-import { authMiddleware } from "@/app/(backend)/_middelware/auth";
+import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 import { NextRequest } from "next/server";
 import { authError } from "@/app/(backend)/_lib/errors";
 import { searchUser } from "../../contoller";

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteRecord, getRecord, updateRecord } from "../controller";
-import { authMiddleware } from "@/app/(backend)/_middelware/auth";
+import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 import dynamicId from "@/app/(backend)/_lib/dynamic_id";
 
 export async function GET(req: NextRequest, context: any) {

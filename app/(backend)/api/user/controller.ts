@@ -6,100 +6,61 @@ import { filterPrisma } from "../../_lib/filtering";
 import crypto from "crypto";
 import sendEmail from "../../_lib/mailer";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
-const frontendUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const JWT_SECRET = process.env.JWT_SECRET;
+const frontendUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export interface JWTPayload {
   id: string;
   type: "USER" | "ADMIN" | "BROKER";
 }
 
-interface User {
-  id: number;
-  name: string;
-  username: string;
-  email: string | null;
-  password: string;
-  type: string;
-  brokerId: number | null;
-  refreshToken: string | null;
-}
+// export const refreshAccessToken = async (req: NextRequest) => {
+//   try {
+//     const refreshToken = req.cookies.get("refreshToken")?.value;
+//     if (!refreshToken) {
+//       return NextResponse.json({ error: "No refresh token" }, { status: 401 });
+//     }
 
-const generateVerificationToken = () => {
-  return crypto.randomBytes(32).toString("hex");
-};
-const hashToken = (token: string) => {
-  return crypto.createHash("sha256").update(token).digest("hex");
-};
+//     const user = await UserHelper.token.returnRefreshedUser(refreshToken);
 
-export const generateRefreshToken = (user: User) => {
-  return jwt.sign({ id: user.id.toString() }, JWT_SECRET, { expiresIn: "7d" });
-};
+//     if (!user.id || !user.refreshToken) {
+//       return NextResponse.json(
+//         { error: "Invalid refresh token" },
+//         { status: 403 }
+//       );
+//     }
 
-// Generate JWT Token
-export const generateAccessToken = (user: User): string => {
-  return jwt.sign(
-    {
-      id: user.id.toString(),
-      type: user.type,
-    },
-    JWT_SECRET,
-    { expiresIn: "1d" }
-  );
-};
-export const refreshAccessToken = async (req: NextRequest) => {
-  try {
-    const refreshToken = req.cookies.get("refreshToken")?.value;
-    if (!refreshToken) {
-      return NextResponse.json({ error: "No refresh token" }, { status: 401 });
-    }
+//     const newAccessToken = UserHelper.token.generateAccessToken(user);
 
-    const decoded = jwt.verify(refreshToken, JWT_SECRET) as { id: string };
+//     const res = NextResponse.json(
+//       {
+//         message: "Access token refreshed successfully",
+//         user: {
+//           name: user.name,
+//           email: user.email,
+//           id: user.id,
+//           type: user.type,
+//           username: user.username,
+//         },
+//       },
+//       { status: 200 }
+//     );
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: Number(decoded.id),
-      },
-    });
+//     res.cookies.set("accessToken", newAccessToken, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "strict",
+//       maxAge: 60 * 24, // 1 hour
+//     });
 
-    if (!user || user.refreshToken !== refreshToken) {
-      return NextResponse.json(
-        { error: "Invalid refresh token" },
-        { status: 403 }
-      );
-    }
-
-    const newAccessToken = generateAccessToken(user);
-
-    const res = NextResponse.json(
-      {
-        message: "Access token refreshed successfully",
-        user: {
-          name: user.name,
-          email: user.email,
-          id: user.id,
-          type: user.type,
-          username: user.username,
-        },
-      },
-      { status: 200 }
-    );
-
-    res.cookies.set("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 1 * 60 * 60 * 24, // 1 day
-    });
-
-    return res;
-  } catch (err) {
-    return NextResponse.json(
-      { error: "Refresh token expired" },
-      { status: 403 }
-    );
-  }
-};
+//     return res;
+//   } catch (err) {
+//     return NextResponse.json(
+//       { error: "Refresh token expired" },
+//       { status: 403 }
+//     );
+//   }
+// };
 
 // Register User
 export const registerUser = async (req: NextRequest) => {
@@ -120,7 +81,7 @@ export const registerUser = async (req: NextRequest) => {
         { status: 400 }
       );
     }
-    
+
     const validatePassword = UserHelper.validatePassword(password);
     if (!validatePassword.success) {
       return NextResponse.json(
@@ -148,14 +109,13 @@ export const registerUser = async (req: NextRequest) => {
     //   );
     // }
 
-
     // Hash password
     const hashedPassword = (await UserHelper.hashPassword(password))
       .hashedPassword;
 
     // Generate email verification token
-    const verificationToken = generateVerificationToken();
-    const hashedToken = hashToken(verificationToken);
+    const verificationToken = UserHelper.token.generateVerificationToken();
+    const hashedToken = UserHelper.token.hashToken(verificationToken);
     const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Send email verification link
@@ -183,7 +143,6 @@ export const registerUser = async (req: NextRequest) => {
         emailVerificationExpiry: tokenExpiry,
       },
     });
-
 
     return NextResponse.json(
       {
@@ -255,15 +214,20 @@ export const loginUser = async (req: NextRequest) => {
     }
 
     // Generate tokens
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const accessToken = UserHelper.token.generateAccessToken(user);
+    const refreshToken = UserHelper.token.generateRefreshToken(user);
+    const hashedRefreshToken = UserHelper.token.hashToken(refreshToken);
+
+    // Add new refresh token to array (keep last 5 sessions)
+    const updatedTokens = [
+      hashedRefreshToken,
+      ...(user.refreshTokens || []).slice(0, 4), // Keep max 5 sessions
+    ];
 
     await prisma.user.update({
-      where: {
-        id: user.id,
-      },
+      where: { id: user.id },
       data: {
-        refreshToken,
+        refreshTokens: updatedTokens,
       },
     });
 
@@ -277,7 +241,6 @@ export const loginUser = async (req: NextRequest) => {
           name: user.name,
           type: user.type,
         },
-        accessToken,
       },
       { status: 200 }
     );
@@ -298,7 +261,7 @@ export const loginUser = async (req: NextRequest) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/api",
-      maxAge: 1 * 24 * 60 * 60, // 1 day
+      maxAge: 60 * 60, // 1 hour
     });
 
     return res;
@@ -402,13 +365,22 @@ export const deleteUser = async (req: NextRequest, userId: number) => {
 // Get Current User
 export const getCurrentUser = async (id: number) => {
   try {
-    if (!id) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
     const user = await prisma.user.findUnique({
       where: {
         id: Number(id),
       },
+      select: {
+        id: true,
+        type: true,
+        email: true,
+        name: true,
+        username: true,
+        contactInfo: true,
+        dob: true,
+        createdAt: true,
+        managedCount: true,
+        clientCount: true,
+      }
     });
 
     if (!user) {
@@ -443,7 +415,7 @@ export const verifyEmail = async (req: NextRequest) => {
     }
 
     // Hash the token to compare with stored hash
-    const hashedToken = hashToken(token);
+    const hashedToken = UserHelper.token.hashToken(token);
 
     // Find user with this token
     const user = await prisma.user.findFirst({
@@ -505,12 +477,9 @@ export const resendVerification = async (req: NextRequest) => {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Email not found" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email not found" }, { status: 400 });
     }
-    console.log(user);
+    
     if (user) {
       if (user.emailVerified) {
         return NextResponse.json(
@@ -530,8 +499,8 @@ export const resendVerification = async (req: NextRequest) => {
     }
 
     // Generate new verification token
-    const verificationToken = generateVerificationToken();
-    const hashedToken = hashToken(verificationToken);
+    const verificationToken = UserHelper.token.generateVerificationToken();
+    const hashedToken = UserHelper.token.hashToken(verificationToken);
     const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     sendEmail(
@@ -579,9 +548,14 @@ export const forgotPassword = async (req: NextRequest) => {
     // Find user
     const user = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        emailVerified: true,
+        passwordResetExpiry: true,
+        name: true,
+      }
     });
 
-    
     if (!user) {
       return NextResponse.json(
         {
@@ -592,7 +566,7 @@ export const forgotPassword = async (req: NextRequest) => {
     }
 
     if (user) {
-      if (!user.emailVerified) {
+      if (user.emailVerified === false) {
         return NextResponse.json(
           { error: "Email is not verified yet" },
           { status: 400 }
@@ -610,8 +584,8 @@ export const forgotPassword = async (req: NextRequest) => {
     }
 
     // Generate password reset token
-    const resetToken = generateVerificationToken();
-    const hashedToken = hashToken(resetToken);
+    const resetToken = UserHelper.token.generateVerificationToken();
+    const hashedToken = UserHelper.token.hashToken(resetToken);
     const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     sendEmail(
@@ -672,7 +646,7 @@ export const resetPassword = async (req: NextRequest) => {
     }
 
     // Hash the token to compare with stored hash
-    const hashedToken = hashToken(token);
+    const hashedToken = UserHelper.token.hashToken(token);
 
     // Find user with this token
     const user = await prisma.user.findFirst({
@@ -703,7 +677,7 @@ export const resetPassword = async (req: NextRequest) => {
         password: hashedPassword,
         passwordResetToken: null,
         passwordResetExpiry: null,
-        refreshToken: null, // Invalidate all sessions
+        refreshTokens: [], // Invalidate all sessions
       },
     });
 
@@ -722,4 +696,49 @@ export const resetPassword = async (req: NextRequest) => {
       { status: 500 }
     );
   }
+};
+
+export const logoutUser = async (req: NextRequest) => {
+  const refreshToken = req.cookies.get("refreshToken")?.value;
+  const id = req.headers.get("x-user-id");
+
+  if (refreshToken) {
+    const hashedToken = UserHelper.token.hashToken(refreshToken);
+
+    // Get current tokens and update in one operation
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) },
+      select: { refreshTokens: true },
+    });
+
+    if (user?.refreshTokens) {
+      await prisma.user.update({
+        where: { id: Number(id) },
+        data: {
+          refreshTokens: user.refreshTokens.filter((t) => t !== hashedToken),
+        },
+      });
+    }
+  }
+
+  const res = NextResponse.json({ message: "Logged out successfully" });
+  res.cookies.delete("accessToken");
+  res.cookies.delete("refreshToken");
+  return res;
+};
+
+export const logoutAllDevices = async (req: NextRequest) => {
+  const userId = req.headers.get("x-user-id");
+
+  await prisma.user.update({
+    where: { id: Number(userId) },
+    data: {
+      refreshTokens: [], // Clear all tokens
+    },
+  });
+
+  const res = NextResponse.json({ message: "Logged out from all devices" });
+  res.cookies.delete("accessToken");
+  res.cookies.delete("refreshToken");
+  return res;
 };

@@ -1,10 +1,13 @@
 import { intialCLient, loginUser, registerUser } from "../_dto/user";
 import { axiosAuth, axiosInstance } from "./axios";
 
-export const getPrsonal = async () => {
+export const getSession = async () => {
   return await axiosAuth.get("/user/me");
 };
 
+export const getProfile = async () => {
+  return await axiosAuth.get("/user/profile");
+};
 export const registerBroker = async (data: registerUser) => {
   return await axiosAuth.post("/user/register", data);
 };
@@ -41,9 +44,9 @@ export const getUsers = async (page = 1, limit = 10, search = "") => {
   );
 };
 
-export const getClients = async (search = "") => {
+export const getClients = async (page = 1, limit = 10, search = "") => {
   return await axiosInstance.get(
-    "/user/client" + (search ? `?${search}` : "")
+    `/user/client=${page}&limit=${limit}` + (search ? `&${search}` : "")
   );
 };
 

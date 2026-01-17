@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -13,56 +7,34 @@ datasource db {
   provider = "postgresql"
 }
 
-model User{
-  id       Int   @id @default(autoincrement())
-  name     String
-  username String   @unique
-  email    String   @unique
-  password String
-  type     Role
-  refreshToken String?
-  contactInfo Json?
-  dob      DateTime?
-  leadSource String?
-
-  // Email verification and password reset
-  emailVerified        Boolean   @default(false)
-  emailVerificationToken String?  @unique
+model User {
+  id                      Int       @id @default(autoincrement())
+  name                    String
+  username                String    @unique
+  email                   String    @unique
+  password                String
+  type                    Role
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  brokerId                Int?
+  contactInfo             Json?
+  clientCount             Int       @default(0)
+  dob                     DateTime?
+  managedCount            Int       @default(0)
   emailVerificationExpiry DateTime?
-  passwordResetToken   String?   @unique
-  passwordResetExpiry  DateTime?
-
-
-  // Link to the Broker profile
-  brokerId Int?
-  broker   User?   @relation("CreatorBrokerRelation", fields: [brokerId], references: [id])
-  clients  User[]  @relation("CreatorBrokerRelation")
-
-  // policies created by this broker
-  managedPolicies Policy[]
-
-
-  // Records this user MANAGED as an employee/agent
-  managedRecords Record[] @relation("BrokerRelation")
-  // count of managed records as broker
-  managedCount     Int      @default(0)
-
-  // Records this user MANAGED as a client
-  records    Record[] @relation("ClientRelation")
-  // count of managed records as client
-  clientCount      Int      @default(0)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  emailVerificationToken  String?   @unique
+  emailVerified           Boolean   @default(false)
+  passwordResetExpiry     DateTime?
+  passwordResetToken      String?   @unique
+  leadSource              String?
+  refreshTokens           String[]  @default([])
+  managedPolicies         Policy[]
+  managedRecords          Record[]  @relation("BrokerRelation")
+  records                 Record[]  @relation("ClientRelation")
+  broker                  User?     @relation("CreatorBrokerRelation", fields: [brokerId], references: [id])
+  clients                 User[]    @relation("CreatorBrokerRelation")
 
   @@map("users")
-}
-
-enum Role {
-  ADMIN
-  USER
-  BROKER
-  CLIENT
 }
 
 model Company {
@@ -76,41 +48,21 @@ model Company {
 }
 
 model Record {
-  id           Int      @id @default(autoincrement())
-  //totalAmount  Decimal  @db.Decimal(20, 2)  
-  //totalTaxed   Decimal  @db.Decimal(20, 2)
-  state        CrmState
-  type PolicyType
-  
-  // The person who OWNS the policy (The Client)
-  clientId     Int
-  client       User @relation("ClientRelation", fields: [clientId], references: [id])
-  
-  // The broker who created the record
-  brokerId       Int
-  broker        User   @relation("BrokerRelation", fields: [brokerId], references: [id])
+  id        Int            @id @default(autoincrement())
+  state     CrmState
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  clientId  Int
+  brokerId  Int
+  issueDate DateTime
+  type      PolicyType
+  policies  RecordPolicy[]
+  broker    User           @relation("BrokerRelation", fields: [brokerId], references: [id])
+  client    User           @relation("ClientRelation", fields: [clientId], references: [id])
 
-  // The policies related to this record
-  policies      RecordPolicy[]
-
-  issueDate     DateTime
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("records")
   @@index([clientId])
   @@index([brokerId])
-}
-
-enum CrmState {
-  DRAFT
-  KYC
-  QUOTATION
-  REQUEST
-  PROPOSITION
-  WON
-  LOST
+  @@map("records")
 }
 
 model RecordPolicy {
@@ -122,42 +74,30 @@ model RecordPolicy {
   numberOfInsureds  Int
   numberOfPersons   Int
   averageAge        Decimal @db.Decimal(10, 2)
-  avgPricePerPerson  Decimal @db.Decimal(10, 2)
-  
-  record            Record  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  avgPricePerPerson Decimal @db.Decimal(10, 2)
   policy            Policy  @relation(fields: [policyId], references: [id])
-  
+  record            Record  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
   @@id([recordId, policyId])
   @@map("record_policies")
 }
 
 model Policy {
-  id        Int      @id @default(autoincrement())
-  type      PolicyType
-  name      String
-  //totalNetPremium Decimal  @db.Decimal(20, 2)
-  companyId Int
-  company   Company  @relation(fields: [companyId], references: [id])
-  tax       Decimal?  @db.Decimal(10, 4)
-
-  brokerId Int?
-  broker   User?     @relation(fields: [brokerId], references: [id])
-  
-  // Relations to Subtypes
+  id           Int            @id @default(autoincrement())
+  type         PolicyType
+  companyId    Int
+  tax          Decimal?       @db.Decimal(10, 4)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  brokerId     Int?
+  name         String
   carPolicy    CarPolicy?
   healthPolicy HealthPolicy?
+  broker       User?          @relation(fields: [brokerId], references: [id])
+  company      Company        @relation(fields: [companyId], references: [id])
   records      RecordPolicy[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   @@map("policies")
-}
-
-enum PolicyType {
-  CAR
-  Individual_Medical
-  SME
 }
 
 model CarPolicy {
@@ -170,76 +110,64 @@ model CarPolicy {
   model      String
   year       Int
   mileage    Int
-  
   policyId   Int    @unique
   policy     Policy @relation(fields: [policyId], references: [id])
-  
+
   @@map("car_policies")
 }
 
 model HealthPolicy {
-  id              Int             @id @default(autoincrement())
-  
-  // Life Benefits
-  lifeInsurance               String
-  totalPermanentDisability    String
-  accidentalDeath             String
-  partialPermanentDisability  String
-
-  // Medical Benefits
-  medicalTpa     String
-  network          String
-  areaOfCoverage   String
-  annualCeilingPerPerson String
-
-  // In-Patient Benefits
-  inPatientAccommodation String
-  icu                    String
-  parentAccommodation    String
-
-  // Out-Patient Benefits
-  doctorConsultation   String
+  id                         Int    @id @default(autoincrement())
+  lifeInsurance              String
+  totalPermanentDisability   String
+  accidentalDeath            String
+  partialPermanentDisability String
+  medicalTpa                 String
+  network                    String
+  areaOfCoverage             String
+  annualCeilingPerPerson     String
+  inPatientAccommodation     String
+  icu                        String
+  parentAccommodation        String
+  doctorConsultation         String
   labScan                    String
-  physiotherapy             String
+  physiotherapy              String
   medication                 String
-  
-  // Additional Benefits
-  dental           String
-  optical           String
-  maternityLimit   String
-  newbornCeiling  String
-  
-  // Other Benefits
-  preExistingCases String
-  newChronic       String
-  organTransplant     String
-  groundAmbulance     String
-  
-  // Reimbursement Rules
-  reimbursementCoverage     String
+  dental                     String
+  optical                    String
+  maternityLimit             String
+  newbornCeiling             String
+  preExistingCases           String
+  newChronic                 String
+  organTransplant            String
+  groundAmbulance            String
+  reimbursementCoverage      String
+  policyId                   Int    @unique
+  healthPricings             Json?
+  policy                     Policy @relation(fields: [policyId], references: [id])
 
-  // Enrollment & Pricing
-  //numberOfInsuredMembers    Int
-  //averagePremiumPerHead     Decimal @db.Decimal(10, 2)
-  
-  
-  policyId        Int             @unique
-  policy          Policy          @relation(fields: [policyId], references: [id])
-  healthPricings  Json?
-  
   @@map("health_policies")
 }
 
-/*type HealthPricing {
-  //id           Int    @id @default(autoincrement())
-  minAge       Int
-  maxAge       Int
-  mainPrice     Decimal @db.Decimal(10, 2)
-  dependentPrice     Decimal @db.Decimal(10, 2)
-  
-  //healthId     Int
-  //healthPolicy HealthPolicy @relation(fields: [healthId], references: [id])
-  
-  //@@map("health_pricings")
-  //@@index([healthId])
-}*/
+enum Role {
+  ADMIN
+  USER
+  BROKER
+  CLIENT
+}
+
+enum CrmState {
+  DRAFT
+  KYC
+  QUOTATION
+  REQUEST
+  PROPOSITION
+  WON
+  LOST
+}
+
+enum PolicyType {
+  CAR
+  Individual_Medical
+  SME
+}

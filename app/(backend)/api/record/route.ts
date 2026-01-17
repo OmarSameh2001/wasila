@@ -5,7 +5,7 @@ import {
   getRecords,
   updateRecord,
 } from "./controller";
-import { authMiddleware } from "../../_middelware/auth";
+import { authMiddleware } from "../../_middelware/authorize";
 import { authError } from "../../_lib/errors";
 
 export async function POST(req: NextRequest) {

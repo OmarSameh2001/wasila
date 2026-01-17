@@ -359,7 +359,7 @@ function findPriceForAge(
   return { price: Number(priceField) };
 }
 
-export async function calculateSmePolicyRecords(req: NextRequest) {
+export async function calculateSmePolicyRecords(req: NextRequest, userId: number, userType: string) {
   try {
     const { people, policyIds, issueDate } = (await req.json()) as {
       people: PersonData[];
@@ -379,6 +379,9 @@ export async function calculateSmePolicyRecords(req: NextRequest) {
       where: {
         type: "SME",
         ...(policyIds && policyIds.length > 0 && { id: { in: policyIds } }),
+        ...(userType === "BROKER" && {
+          OR: [{ brokerId: Number(userId) }, { brokerId: null }],
+        })
       },
       include: {
         company: {
@@ -701,7 +704,7 @@ function findPriceForFamilyMember(
   return { price: Number(priceField) };
 }
 
-export async function calculateIndividualPolicyRecords(req: NextRequest) {
+export async function calculateIndividualPolicyRecords(req: NextRequest, userId: number, userType: string) {
   try {
     const { family, policyIds, issueDate } = (await req.json()) as {
       family: FamilyData;
@@ -721,6 +724,9 @@ export async function calculateIndividualPolicyRecords(req: NextRequest) {
       where: {
         type: "Individual_Medical",
         ...(policyIds && policyIds.length > 0 && { id: { in: policyIds } }),
+        ...(userType === "BROKER" && {
+          OR: [{ brokerId: Number(userId) }, { brokerId: null }],
+        })
       },
       include: {
         company: {

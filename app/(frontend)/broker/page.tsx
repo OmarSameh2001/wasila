@@ -1,6 +1,27 @@
+import { Building2, ChartLine, ScrollText, Users, Users2 } from "lucide-react";
+import Link from "next/link";
 
-export default function Broker() {
-    return (
-        <div className="flex justify-center items-center min-h-[80vh] text-2xl">Broker Page coming soon</div>
-    )
+export default function AdminPage() {
+  const links = [
+    { href: "/broker/client", title: "Clients", Icon: Users },
+    { href: "/broker/product", title: "Products", Icon: ScrollText },
+    { href: "/broker/insurer", title: "Insurers", Icon: Building2 },
+    { href: "/broker/crm", title: "CRM", Icon: ChartLine },
+  ];
+  return (
+    <div className="flex flex-col min-h-[70vh] justify-center items-center">
+      <h1 className="text-2xl font-bold">Welcome Admin</h1>
+      <div className="flex gap-10 mt-5 sm:flex-row flex-col">
+        {links.map((link) => (
+          <Link key={link.title} href={link.href} className="flex flex-col items-center justify-center gap-2 hover:scale-105 duration-300">
+            <div className="bg-gray-300 dark:bg-gray-800 p-6 rounded">
+              <link.Icon className="scale-180"/>
+            </div>
+            <span>{link.title}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
+

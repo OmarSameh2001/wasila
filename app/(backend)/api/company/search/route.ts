@@ -1,4 +1,4 @@
-import { authMiddleware } from "@/app/(backend)/_middelware/auth";
+import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 import { NextRequest } from "next/server";
 import { searchCompany } from "../controller";
 import { authError } from "@/app/(backend)/_lib/errors";

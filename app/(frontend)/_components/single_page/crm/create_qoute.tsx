@@ -36,6 +36,7 @@ import DynamicSearchField from "../../form/search_field";
 import DynamicForm, { DynamicFormField } from "../../form/dynamic_form";
 import { createClient } from "@/app/(frontend)/_services/user";
 import { editableClientColumns } from "@/app/(frontend)/_dto/user";
+import { AuthContext } from "../../utils/context/auth";
 
 export default function QuoteCreate() {
   const [step, setStep] = useState(1);
@@ -72,6 +73,7 @@ export default function QuoteCreate() {
     spouse: string[];
     children: string[];
   }>({ main: "", spouse: [], children: [] });
+  const {isLoading: isLoadingAuth, type: authType, id: authId} = useContext(AuthContext);
 
   const { setComponent } = useContext(PopupContext);
 
@@ -259,13 +261,13 @@ export default function QuoteCreate() {
         selectedPolicies.has(r.policyId)
       );
 
-
+      const effectiveBrokerId = isLoadingAuth && authType === "BROKER" ? authId : null;
       const response = await fetch(type === "Individual_Medical" ? "/api/record/create-bulk/individual" : "/api/record/create-bulk/sme", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientId: 2,//parseInt(clientId)
-          brokerId: 1,
+          clientId: clientId,//parseInt(clientId)
+          brokerId: effectiveBrokerId,
           state: "DRAFT",
           selectedPolicies: selected,
           issueDate: issueDate || new Date().toISOString(),
