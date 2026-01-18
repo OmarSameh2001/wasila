@@ -2,7 +2,7 @@
 import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 import { NextRequest } from "next/server";
 import { authError } from "@/app/(backend)/_lib/errors";
-import { searchUser } from "../../contoller";
+import { searchUser } from "../../controller";
 
 
 export async function GET(

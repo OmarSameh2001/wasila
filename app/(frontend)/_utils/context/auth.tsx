@@ -6,7 +6,7 @@ import {
   useState,
   useCallback,
 } from "react";
-import { getSession } from "@/app/(frontend)/_services/user";
+import { getSession } from "@/app/(frontend)/_services/auth";
 import { AuthContextType, UserType } from "@/app/(frontend)/_dto/user";
 
 export const AuthContext = createContext<AuthContextType>({

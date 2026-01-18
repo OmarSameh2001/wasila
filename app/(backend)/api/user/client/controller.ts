@@ -4,35 +4,34 @@ import { prisma } from "@/app/(backend)/_lib/prisma";
 import UserHelper from "@/app/(backend)/_lib/user";
 import { NextRequest, NextResponse } from "next/server";
 
-
 export const addNewClient = async (
   req: NextRequest,
   userId: number,
-  userType: string
+  userType: string,
 ) => {
   try {
     const { name, email, username, leadSource, contactInfo } = await req.json();
 
-    if(!name || !username) {
-      return NextResponse.json({ error: "Please provide name and username" }, { status: 400 });
+    if (!name || !username) {
+      return NextResponse.json(
+        { error: "Please provide name and username" },
+        { status: 400 },
+      );
     }
 
     const repeatedClient = await prisma.user.findFirst({
       where: {
-        OR: [
-          { username },
-          { email },
-        ],
+        OR: [{ username }, { email }],
       },
     });
 
     if (repeatedClient) {
       return NextResponse.json(
         { error: "Username or email already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     // placeholder because client cannot login without forgeting password to updated to user
     const hashedPassword = (await UserHelper.hashPassword("12345678@Wa"))
       .hashedPassword;
@@ -55,7 +54,7 @@ export const addNewClient = async (
         message: "New client added successfully",
         client,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Add new client error:", error);
@@ -68,10 +67,17 @@ export const changeClient = async (
   req: NextRequest,
   userId: number,
   type: string,
-  clientId: number
+  clientId: number,
 ) => {
   try {
-    const { type: clientType, name, email, username, leadSource, contactInfo } = await req.json();
+    const {
+      type: clientType,
+      name,
+      email,
+      username,
+      leadSource,
+      contactInfo,
+    } = await req.json();
 
     const user = await prisma.user.update({
       where: {
@@ -98,13 +104,13 @@ export const changeClient = async (
         message: "Client type client successfully",
         user,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Change client error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -113,7 +119,7 @@ export const deleteClient = async (
   req: NextRequest,
   userId: number,
   type: string,
-  clientId: number
+  clientId: number,
 ) => {
   try {
     const user = await prisma.user.delete({
@@ -132,13 +138,13 @@ export const deleteClient = async (
       {
         message: "Client deleted successfully",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Delete client error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -147,7 +153,7 @@ export const getClientById = async (
   req: NextRequest,
   userId: number,
   type: string,
-  clientId: number
+  clientId: number,
 ) => {
   try {
     const user = await prisma.user.findUnique({
@@ -157,13 +163,15 @@ export const getClientById = async (
         ...(type === "BROKER" && { brokerId: userId }),
       },
       select: {
-        broker: { select: { id: true, name: true } },
+        ...(type === "ADMIN" && {
+          broker: { select: { id: true, name: true } },
+        }),
         createdAt: true,
         email: true,
-        id: true,
         name: true,
         username: true,
-        records: true,
+        // records: true,
+        contactInfo: true,
         clientCount: true,
       },
     });
@@ -177,29 +185,33 @@ export const getClientById = async (
         message: "User fetched successfully",
         user,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Get user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
 
-export const getAllClients = async (req: NextRequest, userId: number, type: string) => {
+export const getAllClients = async (
+  req: NextRequest,
+  userId: number,
+  type: string,
+) => {
   try {
     const url = new URL(req.url);
     const page = Math.max(parseInt(url.searchParams.get("page") || "1", 10), 1);
     const limit = Math.max(
       parseInt(url.searchParams.get("limit") || "10", 10),
-      1
+      1,
     );
 
     const params = handleUrl(url, "user") || {};
     params.type = "CLIENT";
-    if(type === "BROKER"){
+    if (type === "BROKER") {
       params.brokerId = userId;
     }
 
@@ -234,22 +246,21 @@ export const getAllClients = async (req: NextRequest, userId: number, type: stri
         totalPages,
         hasNextPage,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Get users error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
 
-
 export async function searchClient(
   req: NextRequest,
   userId: number,
-  type: string
+  type: string,
 ) {
   try {
     const url = new URL(req.url);
@@ -257,11 +268,14 @@ export async function searchClient(
       prisma.user,
       1,
       10,
-      {...(type === "BROKER" && { brokerId: userId }), type: { in: ["USER", "CLIENT"] }},
+      {
+        ...(type === "BROKER" && { brokerId: userId }),
+        type: { in: ["USER", "CLIENT"] },
+      },
       url,
       "user",
       {},
-      { name: true, id: true, username: true }
+      { name: true, id: true, username: true },
     );
   } catch (error) {}
 }

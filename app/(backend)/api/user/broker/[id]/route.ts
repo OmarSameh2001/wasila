@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authMiddleware } from "../../../../../_middelware/authorize";
+import { authMiddleware } from "../../../../_middelware/authorize";
 import { authError } from "@/app/(backend)/_lib/errors";
-import { getBrokerById } from "../../contoller";
+import { getBrokerById } from "../controller";
 import dynamicId from "@/app/(backend)/_lib/dynamic_id";
 
-export async function GET(
-  req: NextRequest,
-  context: any
-) {
+export async function GET(req: NextRequest, context: any) {
   try {
-    await authMiddleware(req, "ADMIN");
-    // const { id } = context.params;
+    const { id: userId, type } = await authMiddleware(req, "USER");
     const id = dynamicId(req.url);
 
-    return await getBrokerById(req, Number(id));
+    return await getBrokerById(req, Number(userId), type, Number(id));
   } catch (error) {
     console.error("Error getting user:", error);
     return authError((error as Error).message);

@@ -1,6 +1,6 @@
 "use client";
 import { useContext, useState } from "react";
-import { login } from "../../_services/user";
+import { login } from "../../_services/auth";
 import { useRouter } from "next/navigation";
 import Validator from "../../_utils/validator/validator";
 import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";

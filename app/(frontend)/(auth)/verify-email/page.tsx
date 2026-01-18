@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { verifyEmail } from "../../_services/user";
+import { verifyEmail } from "../../_services/auth";
 import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
 
 const VerifyEmailPage = () => {

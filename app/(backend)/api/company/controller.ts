@@ -24,7 +24,6 @@ export async function getCompanyById(id: number) {
   try {
     const company = await prisma.company.findUnique({
       where: { id },
-      include: { policies: true },
     });
     if (!company) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });

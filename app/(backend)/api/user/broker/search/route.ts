@@ -1,15 +1,14 @@
 import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 import { NextRequest } from "next/server";
-import { getAllBrokers } from "../contoller";
 import { authError } from "@/app/(backend)/_lib/errors";
+import { searchUser } from "../../admin/controller";
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, context: any) {
   try {
-    await authMiddleware(req, "ADMIN");
-    const brokers = await getAllBrokers(req);
-    return brokers;
+    await authMiddleware(req, "USER");
+    const company = await searchUser(req, "BROKER");
+    return company;
   } catch (error) {
-    console.error("Error fetching brokers:", error);
     return authError((error as Error).message);
   }
 }

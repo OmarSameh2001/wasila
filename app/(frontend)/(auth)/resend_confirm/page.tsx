@@ -1,38 +1,37 @@
 "use client";
 import { useState } from "react";
-import { forgetPassword } from "../../_services/user";
+import { resendVerification } from "../../_services/auth";
 import Validator from "../../_utils/validator/validator";
 import { useRouter } from "next/navigation";
 import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
-import { AxiosError } from "axios";
 
-// Forgot Password Page Component
-const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+const ResendConfirmationPage = () => {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
   const router = useRouter();
 
-  const handleSubmit = async () => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     let toastId;
-    try{
-    const valid = Validator.validateEmail(email);
-    if (valid.message) {
-      setError(valid.message);
-      return;
-    }
-    setLoading(true);
-    toastId = showLoadingToast("Creating Password Reset Link...");
-    await forgetPassword(email);
-    showLoadingSuccess(toastId, "Password Reset Link Sent Successfully");
-    setSubmitted(true);
-    setLoading(false);
-    } catch (err: AxiosError  | any) {
+    try {
+      e.preventDefault();
+      const valid = Validator.validateEmail(email);
+      if (valid.message) {
+        setError(valid.message);
+        return;
+      }
+      setLoading(true);
+      toastId = showLoadingToast("Sending Confirmation Code...");
+      const res = await resendVerification({ email });
+      showLoadingSuccess(toastId, "Confirmation Code Sent Successfully, Please Check Your Inbox.");
+      setSubmitted(true);
+      setLoading(false);
+    } catch (err: any) {
+      if (toastId) showLoadingError(toastId, err.response.data.error);
       console.log(err);
       setLoading(false);
-      if (toastId) showLoadingError(toastId, err.response.data.error);
     }
   };
 
@@ -40,13 +39,16 @@ const ForgotPasswordPage = () => {
     return (
       <div className="min-h-[80vh] flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
-          <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-6">Check Your Email</h1>
+          <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-6">
+            Confirmation Code Sent
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            We've sent password reset instructions to <strong>{email}</strong>. Please check your inbox and follow the link to reset your password.
+            We've sent a new activation code to <strong>{email}</strong>. Please
+            check your inbox and use the code to activate your account.
           </p>
           <button
-            onClick={() => router.push('/login')}
-            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => router.push("/login")}
+            className="text-blue-600 hover:underline"
           >
             ← Back to Sign In
           </button>
@@ -58,12 +60,15 @@ const ForgotPasswordPage = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-2xl">
-        <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-4">Forgot Password?</h1>
+        <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-4">
+          Resend Activation Code
+        </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Enter your email address and we'll send you instructions to reset your password.
+          Enter your email address and we'll send you a new activation code to
+          confirm your account.
         </p>
 
-        <div>
+        <form onSubmit={(e) => handleSubmit(e)}>
           <div className="mb-6">
             <label className="block text-gray-700 dark:text-white text-sm font-medium mb-2">
               Email Address
@@ -71,6 +76,7 @@ const ForgotPasswordPage = () => {
             <input
               type="email"
               value={email}
+              required
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
               className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -79,17 +85,17 @@ const ForgotPasswordPage = () => {
           </div>
 
           <button
-            onClick={handleSubmit}
-            disabled={loading || !email}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded transition disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            type="submit"
+            disabled={loading}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded transition disabled:opacity-50 cursor-pointer"
           >
-            {loading ? 'Sending...' : 'Send Reset Instructions'}
+            {loading ? "Sending..." : "Send Activation Code"}
           </button>
-        </div>
+        </form>
 
         <div className="mt-8">
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push("/login")}
             className="text-blue-600 hover:underline cursor-pointer"
           >
             ← Back to Sign In
@@ -100,4 +106,4 @@ const ForgotPasswordPage = () => {
   );
 };
 
-export default ForgotPasswordPage;
+export default ResendConfirmationPage;

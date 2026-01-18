@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { resetPassword } from "../../_services/user";
+import { resetPassword } from "../../_services/auth";
 import Validator from "../../_utils/validator/validator";
 import { Eye, EyeOff } from "lucide-react";
 

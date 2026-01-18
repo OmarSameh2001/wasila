@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authMiddleware } from "../../../../../_middelware/authorize";
 import { authError } from "@/app/(backend)/_lib/errors";
-import { getUserById } from "../../contoller";
+import { getUserById } from "../../controller";
 import dynamicId from "@/app/(backend)/_lib/dynamic_id";
 
 export async function GET(

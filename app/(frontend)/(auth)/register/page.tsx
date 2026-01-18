@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Validator from "../../_utils/validator/validator";
-import { registerBroker } from "../../_services/user";
+import { registerBroker } from "../../_services/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
 
