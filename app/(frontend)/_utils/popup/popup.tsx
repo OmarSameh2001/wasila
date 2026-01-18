@@ -1,6 +1,6 @@
 "use client";
 import { useContext } from "react";
-import { PopupContext } from "../utils/context/popup_provider";
+import { PopupContext } from "../context/popup_provider";
 
 export default function PopupComponent() {
   const { isOpen, component, setComponent } = useContext(PopupContext);

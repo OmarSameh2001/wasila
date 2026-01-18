@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import { resendVerification } from "../../_services/user";
-import Validator from "../../_helpers/validator";
+import Validator from "../../_utils/validator/validator";
 import { useRouter } from "next/navigation";
-import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
 
 const ResendConfirmationPage = () => {
   const [email, setEmail] = useState("");

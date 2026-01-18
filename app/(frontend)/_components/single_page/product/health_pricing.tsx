@@ -10,8 +10,8 @@ import {
   showLoadingError,
   showLoadingSuccess,
   showLoadingToast,
-} from "../../utils/toaster/toaster";
-import { PopupContext } from "../../utils/context/popup_provider";
+} from "../../../_utils/toaster/toaster";
+import { PopupContext } from "../../../_utils/context/popup_provider";
 
 // interface HealthPricingData {
 //   mainPrice?: number | null;

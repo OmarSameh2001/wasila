@@ -41,7 +41,7 @@ const navigation = {
   auth: [
     { name: "Login", href: "/login" },
     { name: "Register", href: "/register" },
-  ]
+  ],
 };
 
 function classNames(...classes: string[]) {
@@ -54,8 +54,10 @@ export default function Navbar() {
   const nav = pathname.startsWith("/admin")
     ? navigation.admin
     : pathname.startsWith("/broker")
-    ? navigation.broker
-    : pathname.startsWith("/login") || pathname.startsWith("/register") ? navigation.auth : navigation.main;
+      ? navigation.broker
+      : pathname.startsWith("/login") || pathname.startsWith("/register")
+        ? navigation.auth
+        : navigation.main;
 
   return (
     <Disclosure
@@ -74,17 +76,17 @@ export default function Navbar() {
 
           {/* Logo + Desktop Nav */}
           <div className="flex flex-1 items-center justify-center sm:justify-start">
-            <Link href="/" className="flex items-center gap-x-2">
+            <Link href="/" className="flex items-center xs:gap-x-2">
               {/* <div className="w-11 h-11 bg-blue-500 rounded flex items-center justify-center">
                 <div className="rounded-full text-2xl font-bold">W</div>
               </div> */}
               <img src="/wasila_logo.png" alt="logo" className="w-11 h-9" />
-              <span className="text-xl font-bold">Wasila</span>
+              <span className="text-xl font-bold hidden xs:block">Wasila</span>
             </Link>
             {/* <DarkToggle /> */}
 
             <div className="hidden sm:ml-6 sm:block">
-              <div className="flex space-x-4">
+              <div className="flex md:space-x-4">
                 {nav.map((item) => {
                   const isActive = useActiveNav(item.href);
 
@@ -97,7 +99,7 @@ export default function Navbar() {
                         isActive
                           ? "bg-gray-400 dark:bg-gray-950/50 text-white"
                           : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:text-dark dark:hover:bg-white/5 dark:hover:text-white",
-                        "rounded-md px-3 py-2 text-sm font-medium"
+                        "rounded-md px-3 py-2 text-sm font-medium flex items-center",
                       )}
                     >
                       {item.name}
@@ -125,7 +127,7 @@ export default function Navbar() {
                   isActive
                     ? "bg-gray-950/50 text-white"
                     : "text-gray-300 hover:bg-white/5 hover:text-white",
-                  "block rounded-md px-3 py-2 text-base font-medium"
+                  "block rounded-md px-3 py-2 text-base font-medium",
                 )}
               >
                 {item.name}

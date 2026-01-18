@@ -2,7 +2,7 @@
 import { useContext, useState } from "react";
 import Table from "../../_components/table/table";
 import { companiesColumns, editableCompanyColumns } from "../../_dto/company";
-import { PopupContext } from "../../_components/utils/context/popup_provider";
+import { PopupContext } from "../../_utils/context/popup_provider";
 import { useQuery } from "@tanstack/react-query";
 import {
   createCompany,

@@ -3,9 +3,9 @@ import { useRef, useState } from "react";
 import { getRecord } from "../../_services/record";
 import { useQuery } from "@tanstack/react-query";
 import { RecordData, RecordPolicy } from "../../_dto/record";
-import PromiseHandler from "../utils/promise_handler/handler";
-import LoadingPage from "../utils/promise_handler/loading/loading";
-import { showErrorToast, showSuccessToast } from "../utils/toaster/toaster";
+import PromiseHandler from "../../_utils/promise_handler/handler";
+import LoadingPage from "../../_utils/promise_handler/loading/loading";
+import { showErrorToast, showSuccessToast } from "../../_utils/toaster/toaster";
 
 function InsuranceReportPDF({ id }: { id: string }) {
   const [pdfLoading, setPdfLoading] = useState(false);

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { verifyEmail } from "../../_services/user";
-import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
 
 const VerifyEmailPage = () => {
   const searchParams = useSearchParams();

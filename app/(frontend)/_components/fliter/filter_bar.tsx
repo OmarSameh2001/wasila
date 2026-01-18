@@ -2,7 +2,7 @@
 import { useContext, useState } from "react";
 import { FilterableField } from "../../_dto/general";
 import DynamicSearchField from "../form/search_field";
-import { AuthContext } from "../utils/context/auth";
+import { AuthContext } from "../../_utils/context/auth";
 
 interface FilterValues {
   [key: string]: {
@@ -212,7 +212,7 @@ export default function DynamicFilter({
       {/* Header */}
       <div
         className={
-          "flex items-center justify-between p-3" +
+          "flex items-center justify-between p-3 flex-col xs:flex-row gap-2" +
           (isExpanded
             ? " border-b border-gray-200 dark:border-neutral-700"
             : "")
@@ -248,7 +248,7 @@ export default function DynamicFilter({
           </button>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 xs:flex-row flex-col">
           <button
             type="button"
             onClick={handleSearch}

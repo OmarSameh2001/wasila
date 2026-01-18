@@ -46,7 +46,7 @@ export const getUsers = async (page = 1, limit = 10, search = "") => {
 
 export const getClients = async (page = 1, limit = 10, search = "") => {
   return await axiosInstance.get(
-    `/user/client=${page}&limit=${limit}` + (search ? `&${search}` : "")
+    `/user/client?page=${page}&limit=${limit}` + (search ? `&${search}` : "")
   );
 };
 

@@ -6,7 +6,7 @@ import { getClients, getUsers } from "../../_services/user";
 import { useContext, useState } from "react";
 import DynamicFilter from "../../_components/fliter/filter_bar";
 import { filterableCLientColumns } from "../../_dto/general";
-import { PopupContext } from "../../_components/utils/context/popup_provider";
+import { PopupContext } from "../../_utils/context/popup_provider";
 import DynamicForm from "../../_components/form/dynamic_form";
 import { createClient } from "@/app/(frontend)/_services/user";
 
@@ -40,6 +40,7 @@ export default function AdminClients() {
                 title="Add New Client"
                 type="create"
                 onSubmit={createClient}
+                query="clients"
               />
             )
           }

@@ -7,15 +7,15 @@ import React, {
   Dispatch,
   SetStateAction,
 } from "react";
-import { PopupContext } from "../utils/context/popup_provider";
+import { PopupContext } from "../../_utils/context/popup_provider";
 import { AxiosResponse } from "axios";
 import DynamicInputField from "./dynamic_input_field";
 import {
   showLoadingError,
   showLoadingSuccess,
   showLoadingToast,
-} from "../utils/toaster/toaster";
-import { queryInvalidator } from "../utils/query/query";
+} from "../../_utils/toaster/toaster";
+import { queryInvalidator } from "../../_utils/query/query";
 
 export type DynamicFormField<T = any> = {
   label: string;

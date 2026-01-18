@@ -8,13 +8,13 @@ import { useParams, useRouter } from "next/navigation";
 import DynamicSearchField from "../../form/search_field";
 import DynamicInputField from "../../form/dynamic_input_field";
 import HealthPricing from "./health_pricing";
-import LoadingPage from "../../utils/promise_handler/loading/loading";
+import LoadingPage from "../../../_utils/promise_handler/loading/loading";
 import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 import {
   showLoadingError,
   showLoadingSuccess,
   showLoadingToast,
-} from "../../utils/toaster/toaster";
+} from "../../../_utils/toaster/toaster";
 
 export default function SingleProductEditable({
   policy,

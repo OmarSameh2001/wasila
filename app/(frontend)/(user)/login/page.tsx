@@ -2,10 +2,10 @@
 import { useContext, useState } from "react";
 import { login } from "../../_services/user";
 import { useRouter } from "next/navigation";
-import Validator from "../../_helpers/validator";
-import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
+import Validator from "../../_utils/validator/validator";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
 import { Eye, EyeOff } from "lucide-react";
-import { AuthContext } from "../../_components/utils/context/auth";
+import { AuthContext } from "../../_utils/context/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

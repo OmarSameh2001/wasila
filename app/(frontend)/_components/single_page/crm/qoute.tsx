@@ -12,8 +12,8 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
-import { queryInvalidator } from "../../utils/query/query";
-import LoadingPage from "../../utils/promise_handler/loading/loading";
+import { queryInvalidator } from "../../../_utils/query/query";
+import LoadingPage from "../../../_utils/promise_handler/loading/loading";
 import { RecordData } from "@/app/(frontend)/_dto/record";
 
 export default function SingleQouteView({ id }: { id: string }) {

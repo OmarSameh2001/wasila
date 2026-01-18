@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { resetPassword } from "../../_services/user";
-import Validator from "../../_helpers/validator";
+import Validator from "../../_utils/validator/validator";
 import { Eye, EyeOff } from "lucide-react";
 
 const ResetPasswordPage = () => {

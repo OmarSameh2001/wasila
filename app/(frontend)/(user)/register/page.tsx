@@ -1,10 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Validator from "../../_helpers/validator";
+import Validator from "../../_utils/validator/validator";
 import { registerBroker } from "../../_services/user";
 import { Eye, EyeOff } from "lucide-react";
-import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_components/utils/toaster/toaster";
+import { showLoadingError, showLoadingSuccess, showLoadingToast } from "../../_utils/toaster/toaster";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({

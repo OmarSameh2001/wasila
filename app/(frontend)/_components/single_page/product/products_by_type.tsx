@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { filterablePolicyColumns } from "../../../_dto/general";
 import DynamicFilter from "../../fliter/filter_bar";
 import Table from "../../table/table";
-import { AuthContext } from "../../utils/context/auth";
+import { AuthContext } from "../../../_utils/context/auth";
 
 export default function ProductsByType({ type }: { type: string }) {
   const router = useRouter();

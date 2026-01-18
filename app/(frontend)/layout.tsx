@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./_components/navbar/navbar";
-import { AuthProvider } from "./_components/utils/context/auth";
-import { PopupProvider } from "./_components/utils/context/popup_provider";
-import QueryProvider from "./_components/utils/query/query";
-import PopupComponent from "./_components/popup/popup";
-import { ThemeProvider } from "./_components/utils/theme/provider";
+import { AuthProvider } from "./_utils/context/auth";
+import { PopupProvider } from "./_utils/context/popup_provider";
+import QueryProvider from "./_utils/query/query";
+import PopupComponent from "./_utils/popup/popup";
+import { ThemeProvider } from "./_utils/theme/provider";
 import { Toaster } from "react-hot-toast";
 
 // const geistSans = Geist({
