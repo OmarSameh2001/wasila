@@ -174,8 +174,8 @@ export default function BrokerDetailPage() {
           />
 
           <Table
-            name="Policies"
-            base="policy"
+            name="Products"
+            base="product"
             columns={policyColumns}
             data={policiesData?.data?.data}
             actions={[]}

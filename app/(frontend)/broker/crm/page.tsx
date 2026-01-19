@@ -19,7 +19,7 @@ export default function AdminQoutes() {
   });
 
   function handleAddNew() {
-    router.push("/admin/crm/create");
+    router.push("/broker/crm/create");
   }
   console.log(data);
   return (

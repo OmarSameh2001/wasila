@@ -108,8 +108,8 @@ export default function InsurerDetailPage() {
           />
 
           <Table
-            name="Policies"
-            base="policy"
+            name="Products"
+            base="product"
             columns={policyColumns.filter((col) => col.key !== "company")}
             data={policiesData?.data?.data}
             actions={[]}
