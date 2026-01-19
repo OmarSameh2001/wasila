@@ -70,6 +70,7 @@ export const config = {
     "/api/policy/:path*",
     "/api/user/admin/:path*",
     "/api/user/client/:path*",
+    "/api/user/broker/:path*",
     "/api/user/me/:path*",
     "/api/user/profile/:path*",
     "/api/user/logout/:path*",

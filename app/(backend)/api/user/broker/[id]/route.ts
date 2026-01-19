@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, context: any) {
   try {
     const { id: userId, type } = await authMiddleware(req, "USER");
     const id = dynamicId(req.url);
-
+    
     return await getBrokerById(req, Number(userId), type, Number(id));
   } catch (error) {
     console.error("Error getting user:", error);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { castParam } from "./fields";
+import modelFields, { castParam } from "./fields";
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -8,15 +8,14 @@ export interface PaginatedResult<T> {
 }
 
 export function handleUrl(url: URL, modelName: string) {
-  
   const orMode = url.searchParams.get("orMode") === "true";
-  
+
   return [...url.searchParams].reduce<Record<string, any>>(
     (acc, [key, value]) => {
       if (["page", "limit", "sort", "order"].includes(key)) return acc;
 
       const parsed = castParam(modelName, key, value);
-      
+
       if (!parsed) return acc;
 
       if (!orMode) return { ...acc, ...parsed };
@@ -26,11 +25,11 @@ export function handleUrl(url: URL, modelName: string) {
         OR: [...(acc.OR ?? []), parsed],
       };
     },
-    {}
+    {},
   );
 }
 
-export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
+export const filterPrisma = async <T, TWhereInput, TInclude, TSelect, TOrderBy>(
   model: {
     findMany: (args: {
       where?: TWhereInput;
@@ -38,6 +37,7 @@ export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
       take?: number;
       include?: TInclude;
       select?: TSelect;
+      orderBy?: any;
     }) => Promise<T[]>;
     count: (args: { where?: TWhereInput }) => Promise<number>;
   },
@@ -47,30 +47,41 @@ export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
   url?: URL,
   modelName?: string,
   include?: TInclude,
-  select?: TSelect
+  select?: TSelect,
+  orderBy?: TOrderBy,
 ): Promise<NextResponse> => {
   //: Promise<PaginatedResult<T>>
   try {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.max(limit, 1);
     // console.log("url", url)
+
+    const sortField = url?.searchParams.get("sort");
+    const sortOrder = url?.searchParams.get("order") || "asc";
+
+    // Build orderBy object
+    let newOrderBy: any = orderBy;
+    if (sortField && modelName && modelFields[modelName]?.[sortField]) {
+      newOrderBy = { [sortField]: sortOrder === "desc" ? "desc" : "asc" };
+    }
+    console.log("newOrderBy", newOrderBy, "sortField", sortField, "sortOrder", sortOrder);
     if (url && modelName) {
       params = { ...params, ...handleUrl(url, modelName) } as TWhereInput;
     }
 
     const skip = (safePage - 1) * safeLimit;
-    console.log(
-      "safePage",
-      safePage,
-      "safeLimit",
-      safeLimit,
-      "skip",
-      skip,
-      "params",
-      params,
-      "model",
-      modelName
-    );
+    // console.log(
+    //   "safePage",
+    //   safePage,
+    //   "safeLimit",
+    //   safeLimit,
+    //   "skip",
+    //   skip,
+    //   "params",
+    //   params,
+    //   "model",
+    //   modelName
+    // );
     const [items, total] = await Promise.all([
       model.findMany({
         ...(params && { where: params }),
@@ -81,6 +92,7 @@ export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
         Object.keys(select || {}).length
           ? { select }
           : {}),
+        ...(newOrderBy && { orderBy: newOrderBy }),
       }),
       model.count({
         ...(params && { where: params }),
@@ -90,7 +102,7 @@ export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
     if (!items.length)
       return NextResponse.json(
         { error: "No items found" + (params && ", try changing your filters") },
-        { status: 404 }
+        { status: 404 },
       );
 
     const totalPages = Math.ceil(total / safeLimit);
@@ -104,13 +116,13 @@ export const filterPrisma = async <T, TWhereInput, TInclude, TSelect>(
 
     return NextResponse.json(
       { data: items, totalPages, hasNextPage },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error filtering data:", error);
     return NextResponse.json(
       { error: "Error querying " + modelName || "data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

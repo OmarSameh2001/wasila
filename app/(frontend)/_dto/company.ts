@@ -4,8 +4,8 @@ import { TableColumn } from "./general";
 export const companiesColumns: TableColumn[] = [
   { name: "Id", key: "id", type: "text" },
   { name: "Name", key: "name", type: "text" },
-  { name: "Address", key: "address", type: "text" },
   { name: "Logo", key: "logo", type: "logo" },
+  { name: "Address", key: "address", type: "text" },
 ];
 
 export interface Company {

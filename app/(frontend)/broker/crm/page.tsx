@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Table from "../../_components/table/table";
 import { recordsColumns } from "../../_dto/record";
-import { getRecords } from "../../_services/record";
+import { deleteRecord, getRecords } from "../../_services/record";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { filterableRecordColumns } from "../../_dto/general";
@@ -23,7 +23,7 @@ export default function AdminQoutes() {
   }
   console.log(data);
   return (
-    <div className="">
+    <div className="min-h-[90vh] bg-gray-200 dark:bg-black">
       <div className="p-5">
         <DynamicFilter
           onSearch={setSearchParams}
@@ -34,7 +34,7 @@ export default function AdminQoutes() {
           base="crm"
           columns={recordsColumns.filter((col) => col.key !== "broker")}
           data={data?.data?.data ?? []}
-          actions={[{name: "PDF"}]}
+          actions={[{name: "PDF"},{name: "Delete", onClick: deleteRecord}]}
           addNew={handleAddNew}
           buttonName="Get Qoute"
           loading={isLoading}

@@ -5,42 +5,63 @@ import {
   DocumentIcon,
 } from "@heroicons/react/20/solid";
 import { TableActionButton } from "../../../_dto/general";
-import { showConfirmToast } from "../../../_utils/toaster/toaster";
+import {
+  showConfirmToast,
+  showErrorToast,
+  showSuccessToast,
+} from "../../../_utils/toaster/toaster";
 import { queryInvalidator } from "../../../_utils/query/query";
 import { useRouter } from "next/navigation";
+import { useContext } from "react";
+import { AuthContext } from "@/app/(frontend)/_utils/context/auth";
+import { Trash2 } from "lucide-react";
 
 export function TableActionIcon({
   action,
   row,
   query,
-  tabelName
+  tabelName,
 }: {
   action: TableActionButton;
   row: any;
   query?: string;
-  tabelName?: string
+  tabelName?: string;
 }) {
-  const router = useRouter();
-  console.log(row);
-  const name = row.name;
+  const { type } = useContext(AuthContext);
+  const name = row?.name;
   async function handleDelete() {
     showConfirmToast({
       message: `Are you sure you want to delete ${name || "this"}?`,
       tableName: tabelName,
-      onConfirm: () => {action?.onClick?.(row.id)
-        if(query) queryInvalidator(query)
+      onConfirm: async () => {
+        try {
+          await action?.onClick?.(row?.id);
+          if (query) queryInvalidator(query);
+          showSuccessToast("Successfully deleted!");
+        } catch (e) {
+          showErrorToast("Failed to delete");
+        }
       },
-    })
+    });
   }
 
   switch (action.name.toLowerCase()) {
     case "delete":
       return (
-        <TrashIcon
-          className="text-red-500 size-7 cursor-pointer p-1"
-          onClick={handleDelete}
+        <div
+          className="cursor-pointer"
           title={name ? action.name + " " + name : action.name}
-        />
+        >
+          <Trash2
+            className={
+              "text-red-500 size-7 cursor-pointer p-1" + type === "ADMIN" &&
+              (row?.brokerId || "")
+                ? " hidden"
+                : ""
+            }
+            onClick={handleDelete}
+          />
+        </div>
       );
     case "edit":
       return (
@@ -53,8 +74,10 @@ export function TableActionIcon({
     case "pdf":
       return (
         <DocumentIcon
-          className="text-blue-500 size-7 cursor-pointer p-1"
-          onClick={() => window.open(`/admin/crm/${row.id}/pdf`, "_blank")}
+          className="text-blue-500 size-10 cursor-pointer p-1 hover:animate-pulse"
+          onClick={() =>
+            window.open(`/${type.toLowerCase()}/crm/${row.id}/pdf`, "_blank")
+          }
           title={name ? action.name + " " + name : action.name}
         />
       );

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../_lib/prisma";
 import { filterPrisma, handleUrl } from "../../_lib/filtering";
+import modelFields from "../../_lib/fields";
 
 export async function createPolicy(
   req: NextRequest,
@@ -143,6 +144,14 @@ export async function getPolicies(
       // Non-broker user specified brokerId filter
       whereClause.brokerId = urlBrokerId;
     }
+    const sortField = url?.searchParams.get("sort");
+    const sortOrder = url?.searchParams.get("order") || "asc";
+
+    // Build orderBy object
+    let newOrderBy: any = undefined;
+    if (sortField && modelFields["policy"]?.[sortField]) {
+      newOrderBy = { [sortField]: sortOrder === "desc" ? "desc" : "asc" };
+    }
 
     return await filterPrisma(
       prisma.policy,
@@ -151,7 +160,9 @@ export async function getPolicies(
       whereClause,
       undefined,
       "policy",
-      include
+      include,
+      {},
+      newOrderBy
     );
   } catch (error) {
     console.error("Error fetching policies:", error);
@@ -255,6 +266,7 @@ export async function updatePolicy(
         name: body.name,
         companyId: companyId,
         tax: taxValue,
+        updatedAt: new Date(),
         healthPolicy: {
           upsert: {
             create: {

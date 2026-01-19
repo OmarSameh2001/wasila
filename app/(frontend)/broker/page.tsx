@@ -17,7 +17,7 @@ export default function BrokerHomePage() {
     { href: "/broker/insurer", title: "Insurers", Icon: Building2 },
   ];
   return (
-    <div className="flex flex-col flex-1 justify-center items-center">
+    <div className="flex flex-col flex-1 justify-center items-center my-15 sm:my-0">
       <h1 className="text-2xl font-bold">Welcome Broker</h1>
       <div className="flex gap-10 mt-5 sm:flex-row flex-col">
         {links.map((link) => (

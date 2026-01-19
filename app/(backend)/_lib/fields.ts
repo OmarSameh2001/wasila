@@ -18,6 +18,11 @@ const modelFields: Record<string, Record<string, string>> = {
     clientId: "number",
     userId: "number",
     policyId: "number",
+    type: "string",
+    brokerId: "number",
+    issueDate: "string",
+    createdAt: "string",
+    updatedAt: "string",
   },
   company: {
     id: "number",

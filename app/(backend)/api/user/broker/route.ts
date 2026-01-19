@@ -6,8 +6,7 @@ import { authError } from "@/app/(backend)/_lib/errors";
 export async function GET(req: NextRequest) {
   try {
     const { id, type } = await authMiddleware(req, "USER");
-    const brokers = await getAllBrokers(req, Number(id), type);
-    return brokers;
+    return await getAllBrokers(req, Number(id), type);
   } catch (error) {
     console.error("Error fetching brokers:", error);
     return authError((error as Error).message);

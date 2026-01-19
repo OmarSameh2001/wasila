@@ -37,7 +37,7 @@ export default function DynamicSearchField({
 }) {
   const [search, setSearch] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>(
-    String(field?.prev ? formState?.[field?.prev] ?? "" : "")
+    String(field?.prev ? (formState?.[field?.prev] ?? "") : ""),
   );
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -45,13 +45,17 @@ export default function DynamicSearchField({
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const delay = 1000;
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isUserField = ["Client", "Broker", "User"].includes(field.label)
+  const isUserField = ["Client", "Broker", "User"].includes(field.label);
   const { data, isLoading } = useQuery({
     queryKey: ["search" + field.label, search, field.label],
     queryFn: async () => {
       const fn = await getFunction(field.label);
       if (fn && search) {
-        return fn(isUserField ? `username_contains=${search}&name_contains=${search}&orMode=true` : `name_contains=${search}`);
+        return fn(
+          isUserField
+            ? `username_contains=${search}&name_contains=${search}&orMode=true`
+            : `name_contains=${search}`,
+        );
       }
       return null;
     },
@@ -76,7 +80,7 @@ export default function DynamicSearchField({
       debouncedSetSearch(value); // Debounce the search
       setIsOpen(value.length > 0);
     },
-    [debouncedSetSearch]
+    [debouncedSetSearch],
   );
 
   const handleSelectItem = (item: any) => {
@@ -201,8 +205,15 @@ export default function DynamicSearchField({
       {isOpen && (
         <div className="absolute z-50 w-full max-h-72 p-1 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 dark:bg-neutral-900 dark:border-neutral-700 mt-1">
           {isTyping || isLoading ? (
-            <div className="py-2 px-4 w-full text-sm text-gray-800 dark:text-neutral-200 text-center">
-              Loading...
+            <div className="py-2 px-4 w-full text-sm text-gray-800 dark:text-neutral-200 text-center cursor-progress">
+              Loading
+              <span className="inline-flex ml-1">
+                <span className="animate-bounce">.</span>
+                <span className="animate-bounce [animation-delay:0.15s]">
+                  .
+                </span>
+                <span className="animate-bounce [animation-delay:0.3s]">.</span>
+              </span>
             </div>
           ) : choices.length > 0 ? (
             choices.map((item: any, index: number) => (
@@ -222,10 +233,14 @@ export default function DynamicSearchField({
                     />
                   )}
                   <div className="flex items-center">
-                  <span>{item.name}</span>
-                  
-                  {isUserField &&
-                    item.username && <><span className="mx-1">|</span><span className="">@{item.username}</span></>}
+                    <span>{item.name}</span>
+
+                    {isUserField && item.username && (
+                      <>
+                        <span className="mx-1">|</span>
+                        <span className="">@{item.username}</span>
+                      </>
+                    )}
                   </div>
                   {formState?.[field.key] === item.id && (
                     <span>

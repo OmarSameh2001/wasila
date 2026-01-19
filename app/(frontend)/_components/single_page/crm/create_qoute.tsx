@@ -37,9 +37,10 @@ import DynamicForm, { DynamicFormField } from "../../form/dynamic_form";
 import { createClient } from "@/app/(frontend)/_services/user";
 import { editableClientColumns } from "@/app/(frontend)/_dto/user";
 import { AuthContext } from "../../../_utils/context/auth";
+import Link from "next/link";
 
 export default function QuoteCreate() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(5);
   const [csvText, setCsvText] = useState("");
   const [people, setPeople] = useState<InsuredPersonData[]>([]);
   const [calculatedRecords, setCalculatedRecords] = useState<
@@ -462,7 +463,7 @@ export default function QuoteCreate() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 p-4 sm:p-8">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Progress Steps */}
         <div className="mb-8 flex items-center justify-between hidden sm:flex">
@@ -1391,12 +1392,16 @@ export default function QuoteCreate() {
               <Check className="w-10 h-10 text-green-600" />
             </div>
             <h2 className="text-3xl font-bold mb-2">
-              Record Created Successfully!
+              Qoute Created Successfully!
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Your policy record with {selectedPolicies.size} policies has been
+            <p className="text-gray-600 dark:text-gray-400">
+              Your products qoute with {selectedPolicies.size} products (plans) has been
               created.
             </p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              View it in the CRM page
+            </p>
+            <div className="flex justify-center gap-4 flex-wrap">
             <button
               onClick={() => {
                 setStep(1);
@@ -1412,8 +1417,15 @@ export default function QuoteCreate() {
               }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Create Another Record
+              Create Another Qoute
             </button>
+            <Link
+              href={'/broker/crm'}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              View My Qoutes
+            </Link>
+            </div>
           </div>
         )}
       </div>

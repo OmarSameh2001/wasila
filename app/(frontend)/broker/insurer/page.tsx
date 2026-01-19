@@ -25,7 +25,7 @@ export default function AdminInsurers() {
   });
 
   return (
-    <div className="">
+    <div className="min-h-[90vh] bg-gray-200 dark:bg-black">
       <div className="p-5">
         <DynamicFilter
           onSearch={setSearchParams}

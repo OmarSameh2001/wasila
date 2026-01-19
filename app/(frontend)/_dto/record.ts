@@ -11,6 +11,7 @@ export const recordsColumns: TableColumn[] = [
   { name: "Broker", key: "broker", type: "text" },
   { name: "Issued At", key: "issueDate", type: "date" },
   { name: "Created At", key: "createdAt", type: "date" },
+  { name: "Updated At", key: "updatedAt", type: "date" },
 ]
 
 

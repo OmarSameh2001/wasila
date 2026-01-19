@@ -15,7 +15,7 @@ export async function authMiddleware(
     | "USER"
     | "ADMIN"
     | "BROKER";
-
+    
   if (type !== "ALL" && userType !== type && userType !== "ADMIN") {
     throw new Error("Unauthorized access");
   }

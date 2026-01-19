@@ -11,7 +11,7 @@ export interface TableColumn {
 export interface FilterableField {
   key: string;
   label: string;
-  type: "text" | "number" | "date" | "select" | "boolean" | "id";
+  type: "text" | "number" | "date" | "select" | "boolean" | "id" | "sort";
   choices?: string[];
   searchType?: "search"; // For foreign key relations
   searchLabel?: string; // Label for search dropdown
@@ -94,7 +94,13 @@ export const filterablePolicyColumns: FilterableField[] = [
     type: "id",
     searchType: "search",
     searchLabel: "Broker",
-    // adminOnly: true,
+    adminOnly: true,
+  },
+  {
+    key: "sort",
+    label: "Sort By",
+    type: "sort",
+    choices: ["tax"],
   },
 ];
 
@@ -104,7 +110,7 @@ export const filterableRecordColumns: FilterableField[] = [
     key: "state",
     label: "State",
     type: "select",
-    choices: ["DRAFT", "CONTACTED", "WON", "LOST"],
+    choices: ["DRAFT", "KYC", "QUOTATION", "REQUEST", "PROPOSITION", "WON", "LOST"],
   },
   {
     key: "clientId",
@@ -131,74 +137,25 @@ export const filterableRecordColumns: FilterableField[] = [
     label: "Created At",
     type: "date",
   },
-  // {
-  //   key: "updatedAt",
-  //   label: "Updated At",
-  //   type: "date",
-  // },
-];
-
-// User Filterable Columns
-const filterableUserColumns: FilterableField[] = [
-  {
-    key: "name",
-    label: "Name",
-    type: "text",
-  },
-  {
-    key: "username",
-    label: "Username",
-    type: "text",
-  },
-  {
-    key: "email",
-    label: "Email",
-    type: "text",
-  },
   {
     key: "type",
-    label: "Type",
+    label: "Insurance Type",
     type: "select",
-    choices: ["ADMIN", "USER", "BROKER", "CLIENT"],
-  },
-  {
-    key: "emailVerified",
-    label: "Email Verified",
-    type: "boolean",
-  },
-  {
-    key: "brokerId",
-    label: "Broker",
-    type: "number",
-    searchType: "search",
-    searchLabel: "Broker",
-  },
-  {
-    key: "managedCount",
-    label: "Managed Count",
-    type: "number",
-  },
-  {
-    key: "clientCount",
-    label: "Client Count",
-    type: "number",
-  },
-  {
-    key: "dob",
-    label: "Date of Birth",
-    type: "date",
-  },
-  {
-    key: "createdAt",
-    label: "Created At",
-    type: "date",
+    choices: ["Individual_Medical", "SME"],
   },
   {
     key: "updatedAt",
     label: "Updated At",
     type: "date",
   },
+  {
+    key: "sort",
+    label: "Sort By",
+    type: "sort",
+    choices: ["createdAt", "updatedAt", "issueDate",],
+  },
 ];
+
 export const filterableBrokerColumns: FilterableField[] = [
   {
     key: "name",
@@ -225,6 +182,19 @@ export const filterableBrokerColumns: FilterableField[] = [
   //   label: "Date of Birth",
   //   type: "date",
   // },
+  
+  {
+    key: "emailVerified",
+    label: "Email Verified",
+    type: "boolean",
+    adminOnly: true
+  },
+  {
+    key: "sort",
+    label: "Sort By",
+    type: "sort",
+    choices: ["managedCount"],
+  },
 ];
 export const filterableCLientColumns: FilterableField[] = [
   {
@@ -274,6 +244,12 @@ export const filterableCLientColumns: FilterableField[] = [
   //   label: "Date of Birth",
   //   type: "date",
   // },
+  {
+    key: "sort",
+    label: "Sort By",
+    type: "sort",
+    choices: ["clientCount"],
+  },
 ];
 // RecordPolicy Filterable Columns
 // export const filterableRecordPolicyColumns: FilterableField[] = [

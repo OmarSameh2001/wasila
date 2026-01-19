@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Table from "../../_components/table/table";
 import { clientsColumns, editableClientColumns } from "../../_dto/user";
-import { getClients, getUsers } from "../../_services/user";
+import { deleteClient, getClients, getUsers } from "../../_services/user";
 import { useContext, useState } from "react";
 import DynamicFilter from "../../_components/fliter/filter_bar";
 import { filterableCLientColumns } from "../../_dto/general";
@@ -20,8 +20,9 @@ export default function AdminClients() {
     queryKey: ["clients", searchParams, currentPage, itemsPerPage],
     queryFn: () => getClients(currentPage, itemsPerPage, searchParams),
   });
+  console.log(data);
   return (
-    <div className="">
+    <div className="min-h-[90vh] bg-gray-200 dark:bg-black">
       <div className="p-5">
         <DynamicFilter
           onSearch={setSearchParams}
@@ -31,9 +32,9 @@ export default function AdminClients() {
         <Table
           name="Clients"
           base="client"
-          columns={clientsColumns}
-          data={data?.data.users ?? []}
-          actions={[]}
+          columns={clientsColumns.filter((col) => col.name !== "Type" && col.name !== "Broker")}
+          data={data?.data?.data ?? []}
+          actions={[{name: "Delete", onClick:deleteClient}]}
           addNew={() =>
             setComponent(
               <DynamicForm

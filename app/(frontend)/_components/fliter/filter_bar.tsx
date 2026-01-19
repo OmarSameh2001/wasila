@@ -31,7 +31,7 @@ const getOperatorsForType = (type: string) => {
       ];
     case "date":
       return [
-        { value: "eq", label: "On" },
+        // { value: "eq", label: "On" },
         { value: "gt", label: "After" },
         { value: "gte", label: "On or after" },
         { value: "lt", label: "Before" },
@@ -41,9 +41,38 @@ const getOperatorsForType = (type: string) => {
     case "boolean":
     case "search":
       return [{ value: "eq", label: "=" }];
+    case "sort":
+      return [{ value: "asc", label: "Ascending" }, { value: "desc", label: "Descending" }];
     default:
       return [{ value: "eq", label: "=" }];
   }
+};
+
+// Convert date to ISO-8601 DateTime format for Prisma
+const formatDateForPrisma = (date: string, operator: string): string => {
+  if (!date) return "";
+  
+  // For 'before' operators (lt, lte), use start of day
+  // For 'after' operators (gt, gte), use end of day for inclusive behavior
+  // For 'eq', we'll handle it specially in the backend or use a range
+  
+  const dateObj = new Date(date);
+  
+  if (operator === "lt" || operator === "eq") {
+    // Start of day: 00:00:00.000Z
+    dateObj.setHours(0, 0, 0, 0);
+  } else if (operator === "gt") {
+    // End of day: 23:59:59.999Z
+    dateObj.setHours(23, 59, 59, 999);
+  } else if (operator === "lte") {
+    // End of day for "on or before"
+    dateObj.setHours(23, 59, 59, 999);
+  } else if (operator === "gte") {
+    // Start of day for "on or after"
+    dateObj.setHours(0, 0, 0, 0);
+  }
+  
+  return dateObj.toISOString();
 };
 
 export default function DynamicFilter({
@@ -82,8 +111,30 @@ export default function DynamicFilter({
 
     Object.entries(filters).forEach(([fieldKey, { operator, value }]) => {
       if (value) {
+        // Find the field to check its type
+        const field = fields.find(f => f.key === fieldKey);
+
+        // Handle sort fields specially
+        if (field?.type === "sort") {
+          params.append("sort", value);
+          params.append("order", operator);
+          return;
+        }
+
+        let paramValue = value;
+        
+        // Convert date values to ISO-8601 DateTime
+        if (field?.type === "date") {
+          paramValue = formatDateForPrisma(value, operator);
+        }
+
+        if (field?.type === "boolean") {
+        params.append(fieldKey, paramValue);
+        return;
+      }
+        
         const key = operator === "eq" ? fieldKey : `${fieldKey}_${operator}`;
-        params.append(key, value);
+        params.append(key, paramValue);
       }
     });
 
@@ -192,6 +243,24 @@ export default function DynamicFilter({
           placeholder="Value"
           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
         />
+      );
+    }
+    if (field.type === "sort") {
+      return (
+        <select
+          value={filter.value}
+          onChange={(e) =>
+            handleFilterChange(field.key, "value", e.target.value)
+          }
+          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-600 dark:text-white"
+        >
+          <option value="">None</option>
+          {field.choices?.map((choice) => (
+            <option key={choice} value={choice}>
+              {choice}
+            </option>
+          ))}
+        </select>
       );
     }
 

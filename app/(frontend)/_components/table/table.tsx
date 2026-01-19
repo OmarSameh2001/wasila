@@ -5,6 +5,7 @@ import { TableProps } from "../../_dto/general";
 import CustomPagination from "./parts/pagination";
 import LoadingPage from "../../_utils/promise_handler/loading/loading";
 import { TableActionIcon } from "./parts/action";
+import getPathName from "../../_utils/nav_path/pathname";
 
 function ColumnHeader({ columns }: { columns: any[] }) {
   return (columns ?? []).map((column: any) => (
@@ -27,14 +28,7 @@ function Table({
   base,
 }: TableProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const customPath = pathname
-    .split("/")
-    .filter((path) => !["sme", "individual_medical", 'car'].includes(path) &&
-      isNaN(Number(path)) &&
-      path !== "")
-    .fill(base, 1, 2)
-    .join("/");
+  const customPath = getPathName(base);
   console.log(customPath);
   return (
     <div className="col-span-full xl:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl border border-gray-400 dark:border-gray-200 overflow-hidden">

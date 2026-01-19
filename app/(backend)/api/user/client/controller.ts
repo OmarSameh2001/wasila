@@ -173,6 +173,7 @@ export const getClientById = async (
         // records: true,
         contactInfo: true,
         clientCount: true,
+        leadSource: true,
       },
     });
 
@@ -215,39 +216,50 @@ export const getAllClients = async (
       params.brokerId = userId;
     }
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where: { ...params },
-        select: {
-          email: true,
-          id: true,
-          name: true,
-          username: true,
-          clientCount: true,
-          leadSource: true,
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
+    // const [users, total] = await Promise.all([
+    //   prisma.user.findMany({
+    //     where: { ...params },
+    //     select: {
+    //       email: true,
+    //       id: true,
+    //       name: true,
+    //       username: true,
+    //       clientCount: true,
+    //       leadSource: true,
+    //     },
+    //     skip: (page - 1) * limit,
+    //     take: limit,
+    //   }),
 
-      prisma.user.count({
-        where: { ...params },
-      }),
-    ]);
-    if (!users) {
-      return NextResponse.json({ error: "Users not found" }, { status: 404 });
-    }
-    const totalPages = Math.ceil(total / limit);
-    const hasNextPage = page < totalPages;
-    return NextResponse.json(
-      {
-        message: "Users fetched successfully",
-        users,
-        totalPages,
-        hasNextPage,
-      },
-      { status: 200 },
-    );
+    //   prisma.user.count({
+    //     where: { ...params },
+    //   }),
+    // ]);
+    // if (!users) {
+    //   return NextResponse.json({ error: "Users not found" }, { status: 404 });
+    // }
+    // const totalPages = Math.ceil(total / limit);
+    // const hasNextPage = page < totalPages;
+    // return NextResponse.json(
+    //   {
+    //     message: "Users fetched successfully",
+    //     users,
+    //     totalPages,
+    //     hasNextPage,
+    //   },
+    //   { status: 200 },
+    // );
+
+    return await filterPrisma(
+      prisma.user,
+      page,
+      limit,
+      params,
+      url,
+      "user",
+      {},
+      { name: true, id: true, username: true, clientCount: true ,leadSource: true, email: true},
+    )
   } catch (error) {
     console.error("Get users error:", error);
     return NextResponse.json(

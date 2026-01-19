@@ -14,7 +14,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DarkToggle } from "./dark_mode";
 import { AuthContext } from "../../_utils/context/auth";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { logout } from "../../_services/auth";
 import {
   showLoadingError,
@@ -134,14 +134,14 @@ export default function Navbar() {
 
                 <MenuItems
                   transition
-                  className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 outline -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                  className="absolute right-0 z-10 mt-2 w-24 origin-top-right rounded-md bg-gray-800 py-1 outline -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                 >
                   <MenuItem>
                     <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
+                      // href="#"
+                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden cursor-text"
                     >
-                      Your profile
+                      {type === "ADMIN" ? "Admin" : "Broker"}
                     </a>
                   </MenuItem>
                   {/* <MenuItem>
@@ -195,7 +195,7 @@ export default function Navbar() {
                 className={classNames(
                   isActive
                     ? "bg-gray-950/50 text-white"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white",
+                    : "text-gray-900 hover:bg-gray-200 hover:text-gray-900 dark:text-white dark:hover:bg-white/5 dark:hover:text-white",
                   "block rounded-md px-3 py-2 text-base font-medium",
                 )}
               >

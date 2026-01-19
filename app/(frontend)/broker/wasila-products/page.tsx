@@ -7,13 +7,13 @@ export default function BrokerProduct() {
       title: "Individual Medical",
       icon: Heart,
       href: "/broker/wasila-products/individual_medical",
-      gradient: "from-gray-900 to-blue-900"
+      gradient: "from-gray-400 dark:from-gray-900 to-blue-900"
     },
     {
       title: "SME Medical",
       icon: Briefcase,
       href: "/broker/wasila-products/sme",
-      gradient: "from-gray-900 to-blue-900"
+      gradient: "from-gray-400 dark:from-gray-900 to-blue-900"
     },
     {
       title: "Motor Insurance",
@@ -24,8 +24,8 @@ export default function BrokerProduct() {
   ];
 
   return (
-    <div className="flex flex-col min-h-[90vh] justify-center items-center bg-black px-4 py-12">
-      <h1 className="text-white text-3xl font-semibold mb-12">Wasila Products</h1>
+    <div className="flex flex-col min-h-[90vh] justify-center items-center bg-gray-200 dark:bg-black px-4 py-12">
+      <h1 className="text-gray-900 dark:text-white text-3xl font-semibold mb-12">Wasila Products</h1>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl mb-16">
         {products.map((product) => {

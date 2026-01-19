@@ -8,6 +8,7 @@ import { filterablePolicyColumns } from "../../../_dto/general";
 import Table from "../../table/table";
 import { useState } from "react";
 import DynamicFilter from "../../fliter/filter_bar";
+import LoadingPage from "@/app/(frontend)/_utils/promise_handler/loading/loading";
 
 export default function InsurerDetailPage() {
   const params = useParams();
@@ -41,15 +42,13 @@ export default function InsurerDetailPage() {
 
   if (isLoadingCompany) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
-      </div>
+      <LoadingPage />
     );
   }
 
   const company = companyData?.data;
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-200 dark:bg-black py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">

@@ -1,5 +1,5 @@
 "use client";
-import { getRecord, updateRecord } from "@/app/(frontend)/_services/record";
+import { deleteRecord, getRecord, updateRecord } from "@/app/(frontend)/_services/record";
 import { useQuery } from "@tanstack/react-query";
 import {
   FileText,
@@ -15,21 +15,35 @@ import {
 import { queryInvalidator } from "../../../_utils/query/query";
 import LoadingPage from "../../../_utils/promise_handler/loading/loading";
 import { RecordData } from "@/app/(frontend)/_dto/record";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "@/app/(frontend)/_utils/context/auth";
-
+import {
+  showErrorToast,
+  showLoadingError,
+  showLoadingSuccess,
+  showLoadingToast,
+  showSuccessToast,
+} from "@/app/(frontend)/_utils/toaster/toaster";
+import DeleteButton from "../../table/parts/delete";
+import { useRouter } from "next/navigation";
 export default function SingleQouteView({ id }: { id: string }) {
+  const [isUpdating, setIsUpdating] = useState(false);
   let { isLoading, isError, data, error } = useQuery({
     queryKey: ["qoute", id],
     queryFn: () => getRecord(Number(id)),
   });
-  const {type:authType, id:authId, isLoading:isLoadingAuth} = useContext(AuthContext);
+  const {
+    type: authType,
+    id: authId,
+    isLoading: isLoadingAuth,
+  } = useContext(AuthContext);
   const record = (data?.data as RecordData) || null;
   const isDisabeled = useMemo(
-    () =>
-      authType !== "BROKER" && record?.brokerId !== authId,
-    [authType, authId, record?.brokerId]
+    () => authType !== "BROKER" && record?.brokerId !== authId,
+    [authType, authId, record?.brokerId],
   );
+
+  const router = useRouter();
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("en-GB", {
@@ -37,6 +51,16 @@ export default function SingleQouteView({ id }: { id: string }) {
       month: "long",
       day: "2-digit",
     }).format(new Date(dateString));
+  };
+  const formatDateTime = (date: string) => {
+    return new Date(date).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const formatCurrency = (amount: string | number) => {
@@ -69,21 +93,31 @@ export default function SingleQouteView({ id }: { id: string }) {
   };
 
   async function handleUpdateRecord(newRecord: any) {
+    let toastId = showLoadingToast("Updating...");
     try {
-      isLoading = true;
+      setIsUpdating(true);
       await updateRecord(record?.id as number, newRecord);
-      isLoading = false;
+      setIsUpdating(false);
+      showLoadingSuccess(toastId, "Updated Successfully");
       queryInvalidator("adminRecord");
     } catch (err) {
       isLoading = false;
       record.state = data?.data?.state;
       console.log(err);
+      showLoadingError(toastId, "Failed to update");
     }
   }
 
-  if (isLoading || !record) return <LoadingPage />;
+  useEffect(() => {
+  if (!isLoading && !record) {
+    router.push(`/${authType.toLowerCase()}/crm`);
+  }
+}, [isLoading, record, router, authType]);
+
+  if (isLoading) return <LoadingPage />;
+  if (!isLoading && !record) return null;
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 sm:p-8 p-1">
+    <div className="min-h-screen bg-gray-200 dark:bg-black sm:p-8 p-1">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 mb-6 min-w-fit">
@@ -93,8 +127,8 @@ export default function SingleQouteView({ id }: { id: string }) {
                 <FileText className="w-6 h-6 text-blue-600 dark:text-blue-500" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-                  {record.type} Qoute
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  {record?.type} Qoute {isDisabeled ? "" : <DeleteButton id={Number(id)} fun={deleteRecord} name="qoute" query='qoute' brokerId={record?.brokerId} />}
                 </h1>
                 <a
                   className="text-gray-600 mt-1 dark:text-gray-300 underline"
@@ -104,15 +138,15 @@ export default function SingleQouteView({ id }: { id: string }) {
                   Get Pdf
                 </a>
                 <p className="text-gray-600 mt-1 dark:text-gray-300">
-                  Created {formatDate(record.createdAt)}
+                  Created {formatDate(record?.createdAt)}
                 </p>
               </div>
             </div>
             <select
               className={`px-3 py-2 rounded-lg border-2 font-semibold ${getStateColor(
-                record.state
-              )} cursor-pointer bg-white dark:bg-gray-700`}
-              value={record.state}
+                record?.state,
+              )} bg-white dark:bg-gray-700 ${(isDisabeled || isUpdating) ? "cursor-not-allowed" : 'cursor-pointer'}`}
+              value={record?.state}
               disabled={isDisabeled}
               onChange={(e) => {
                 handleUpdateRecord({
@@ -146,7 +180,7 @@ export default function SingleQouteView({ id }: { id: string }) {
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-300">Name:</span>
                 <span className="font-semibold text-gray-800 dark:text-white">
-                  {record.client.name}
+                  {record?.client.name}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -154,7 +188,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                   Client ID:
                 </span>
                 <span className="font-semibold text-gray-800 dark:text-white">
-                  #{record.client.id}
+                  #{record?.client.id}
                 </span>
               </div>
             </div>
@@ -173,7 +207,7 @@ export default function SingleQouteView({ id }: { id: string }) {
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-300">Name:</span>
                 <span className="font-semibold text-gray-800 dark:text-white">
-                  {record.broker.name}
+                  {record?.broker.name}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -181,7 +215,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                   Broker ID:
                 </span>
                 <span className="font-semibold text-gray-800 dark:text-white">
-                  #{record.broker.id}
+                  #{record?.broker.id}
                 </span>
               </div>
             </div>
@@ -207,7 +241,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                 </span>
               </div>
               <div className="text-lg font-bold text-blue-600 dark:text-blue-500">
-                {formatDate(record.issueDate)}
+                {formatDate(record?.issueDate)}
               </div>
             </div>
             <div className="p-4 bg-green-50 dark:bg-gray-800 rounded-lg">
@@ -218,7 +252,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                 </span>
               </div>
               <div className="text-lg font-bold text-green-600 dark:text-green-500">
-                {formatDate(record.createdAt)}
+                {formatDateTime(record?.createdAt)}
               </div>
             </div>
             <div className="p-4 bg-purple-50 dark:bg-gray-800 rounded-lg">
@@ -229,7 +263,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                 </span>
               </div>
               <div className="text-lg font-bold text-purple-600 dark:text-purple-500">
-                {formatDate(record.updatedAt)}
+                {formatDateTime(record?.updatedAt)}
               </div>
             </div>
           </div>
@@ -242,12 +276,12 @@ export default function SingleQouteView({ id }: { id: string }) {
               <Building2 className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-              Policies ({record.policies.length})
+              Policies ({record?.policies.length})
             </h2>
           </div>
 
           <div className="space-y-4">
-            {record.policies.map((policy, index) => (
+            {record?.policies.map((policy, index) => (
               <div
                 key={policy.policyId}
                 className="border-2 border-gray-200 dark:border-gray-500 rounded-lg p-6 hover:border-blue-300 transition"

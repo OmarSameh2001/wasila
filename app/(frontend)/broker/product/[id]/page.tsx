@@ -15,7 +15,7 @@ export default function AdminSinglePolicy() {
     return <ProductsByType type={id?.toString() || ""} />;
 
   return (
-    <div className="flex flex-col min-h-[70vh] justify-center items-center">
+    <div className="flex flex-col min-h-[70vh] justify-center items-center bg-gray-200 dark:bg-black">
       <SingleProductEditable policy={data?.data} isLoading={isLoading} />
     </div>
   );

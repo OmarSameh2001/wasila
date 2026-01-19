@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { id, type } = await authMiddleware(req, "ADMIN");
+    const { id, type } = await authMiddleware(req, "ALL");
     const records = await getRecords(req, Number(id), type);
     return records;
   } catch (error) {

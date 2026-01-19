@@ -103,16 +103,18 @@ export default function SingleProductEditable({
     }
   }, [editedPolicy?.type]);
 
+  const isAbleToEdit = (userType === "BROKER" && policy?.brokerId === userId) ||
+                (userType === "ADMIN" && policy?.brokerId === null);
   if (isLoading) return <LoadingPage />;
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gray-200 dark:bg-black py-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl min-w-[80vw]">
         <div className="mb-8">
           <h1 className="text-balance text-4xl font-bold text-foreground mb-2">
-            {isCreate ? "Create New Plan" : "Edit Plan"}
+            {isCreate ? "Create New Plan" : "Insurance Plan Details"}
           </h1>
           <p className="text-muted-foreground">
-            Manage medical insurance plan details
+            Medical insurance plan.
           </p>
         </div>
 
@@ -163,8 +165,7 @@ export default function SingleProductEditable({
                   <FilePlus className="h-4 w-4" />
                   Create
                 </span>
-              ) : (userType === "BROKER" && policy?.brokerId === userId) ||
-                (userType === "ADMIN" && policy?.brokerId === null) ? (
+              ) : isAbleToEdit ? (
                 <span
                   className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors font-medium text-sm"
                   onClick={() => setIsEditing(true)}

@@ -121,23 +121,28 @@ interface ConfirmToastOptions {
 
 function destructHandler(table: string) {
   switch (table.toLowerCase()) {
-    case "companies":
+    case "insurers":
       return (
         <p className="text-sm text-red-500 opacity-90 mt-1">
-          Deleting this company will also delete all policies and records
-          associated with it.
+          Deleting this insurer will also delete its products, and may cause issues to qoutes that depend on this products.
         </p>
       );
-    case "policies":
+    case "products":
       return (
         <p className="text-sm text-red-500 opacity-90 mt-1">
-          Deleting this policy will also delete all records associated with it.
+          Deleting this product will also delete all qoutes associated with it.
         </p>
       );
-    case "records":
+    case "qoutes":
       return (
         <p className="text-sm text-red-500 opacity-90 mt-1">
-          Deleting this record will also delete all data associated with it.
+          Deleting this qoute will also delete all claculations associated with it.
+        </p>
+    )
+    case "clients":
+      return (
+        <p className="text-sm text-red-500 opacity-90 mt-1">
+          Deleting this client will also delete all qoutes associated with him.
         </p>
     )
     default:
