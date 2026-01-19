@@ -544,7 +544,7 @@ export default function QuoteCreate() {
               <DynamicSearchField
                 field={{
                   key: "clientId",
-                  label: "User",
+                  label: authType === "ADMIN"?"User":"Client",
                   type: "search",
                   required: true,
                   prev: "name",
