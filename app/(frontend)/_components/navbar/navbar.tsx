@@ -4,24 +4,33 @@ import {
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
 } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DarkToggle } from "./dark_mode";
+import { AuthContext } from "../../_utils/context/auth";
+import { useContext } from "react";
+import { logout } from "../../_services/auth";
+import {
+  showLoadingError,
+  showLoadingSuccess,
+  showLoadingToast,
+} from "../../_utils/toaster/toaster";
 // import { useActiveNav } from "@/hooks/useActiveNav";
-export function useActiveNav(href: string) {
-  const pathname = usePathname();
-
+export function useActiveNav(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
 
   return pathname === href || pathname.startsWith(href + "/");
 }
 const navigation = {
-  main: [
-    { name: "Broker", href: "/broker" },
-    { name: "Admin", href: "/admin" },
-    { name: "Auth", href: "/login" },
+  guest: [
+    { name: "Become Broker", href: "/register" },
+    { name: "Login", href: "/login" },
   ],
   broker: [
     { name: "My Clients", href: "/broker/client" },
@@ -38,10 +47,6 @@ const navigation = {
     { name: "Insurers", href: "/admin/insurer" },
     { name: "CRM", href: "/admin/crm" },
   ],
-  auth: [
-    { name: "Login", href: "/login" },
-    { name: "Register", href: "/register" },
-  ],
 };
 
 function classNames(...classes: string[]) {
@@ -49,15 +54,16 @@ function classNames(...classes: string[]) {
 }
 
 export default function Navbar() {
+  const { type, isLoading, refetchAuth } = useContext(AuthContext);
   const pathname = usePathname();
 
-  const nav = pathname.startsWith("/admin")
-    ? navigation.admin
-    : pathname.startsWith("/broker")
-      ? navigation.broker
-      : pathname.startsWith("/login") || pathname.startsWith("/register")
-        ? navigation.auth
-        : navigation.main;
+  const nav = isLoading
+    ? []
+    : type === "ADMIN"
+      ? navigation.admin
+      : type === "BROKER"
+        ? navigation.broker
+        : navigation.guest;
 
   return (
     <Disclosure
@@ -80,15 +86,19 @@ export default function Navbar() {
               {/* <div className="w-11 h-11 bg-blue-500 rounded flex items-center justify-center">
                 <div className="rounded-full text-2xl font-bold">W</div>
               </div> */}
-              <img src="/wasila_logo.png" alt="logo" className="w-11 h-9" />
+              <img
+                src="/logo.svg"
+                alt="logo"
+                className="w-11 h-10 dark:invert"
+              />
               <span className="text-xl font-bold hidden xs:block">Wasila</span>
             </Link>
             {/* <DarkToggle /> */}
 
             <div className="hidden sm:ml-6 sm:block">
               <div className="flex md:space-x-4">
-                {nav.map((item) => {
-                  const isActive = useActiveNav(item.href);
+                {nav?.map((item) => {
+                  const isActive = useActiveNav(item.href, pathname);
 
                   return (
                     <Link
@@ -109,14 +119,73 @@ export default function Navbar() {
               </div>
             </div>
           </div>
+          {!isLoading && type && (
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+              <Menu as="div" className="relative ml-3">
+                <MenuButton className="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                  <span className="absolute -inset-1.5" />
+                  <span className="sr-only">Open user menu</span>
+                  <img
+                    alt=""
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                    className="size-8 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10"
+                  />
+                </MenuButton>
+
+                <MenuItems
+                  transition
+                  className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 outline -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                >
+                  <MenuItem>
+                    <a
+                      href="#"
+                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
+                    >
+                      Your profile
+                    </a>
+                  </MenuItem>
+                  {/* <MenuItem>
+                    <a
+                      href="#"
+                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
+                    >
+                      Settings
+                    </a>
+                  </MenuItem> */}
+                  <MenuItem>
+                    <span
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to sign out?"))
+                          return;
+                        let toastId = showLoadingToast("Signing Out...");
+                        try {
+                          await logout();
+                          await refetchAuth();
+                          showLoadingSuccess(
+                            toastId,
+                            "Signed Out Successfully",
+                          );
+                        } catch (e) {
+                          showLoadingError(toastId, "Something went wrong");
+                        }
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden cursor-pointer"
+                    >
+                      Sign out
+                    </span>
+                  </MenuItem>
+                </MenuItems>
+              </Menu>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Mobile Menu */}
       <DisclosurePanel className="sm:hidden">
         <div className="space-y-1 px-2 pt-2 pb-3">
-          {nav.map((item) => {
-            const isActive = useActiveNav(item.href);
+          {nav?.map((item) => {
+            const isActive = useActiveNav(item.href, pathname);
 
             return (
               <Link

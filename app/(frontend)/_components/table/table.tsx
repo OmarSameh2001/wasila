@@ -24,11 +24,20 @@ function Table({
   addNew,
   buttonName,
   pagination,
+  base,
 }: TableProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const customPath = pathname
+    .split("/")
+    .filter((path) => !["sme", "individual_medical", 'car'].includes(path) &&
+      isNaN(Number(path)) &&
+      path !== "")
+    .fill(base, 1, 2)
+    .join("/");
+  console.log(customPath);
   return (
-    <div className="col-span-full xl:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl border border-gray-400 dark:border-gray-200">
+    <div className="col-span-full xl:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl border border-gray-400 dark:border-gray-200 overflow-hidden">
       <header className="px-4 xs:px-7 py-5 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
         <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-100">
           {name || "Table"}
@@ -69,7 +78,7 @@ function Table({
                       <td
                         key={column.key}
                         className="p-2 whitespace-nowrap cursor-pointer"
-                        onClick={() => router.push(`${pathname}/${row.id}`)}
+                        onClick={() => router.push(`/${customPath}/${row.id}`)}
                       >
                         {column.key !== "id" ? (
                           <TableColumn

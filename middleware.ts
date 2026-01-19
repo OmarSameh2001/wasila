@@ -7,63 +7,57 @@ import { AuthPayload } from "./app/(backend)/_lib/dto";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+async function handleRefresh(refreshToken: string) {
+  const user = await UserHelper.token.returnRefreshedUser(refreshToken);
+
+  if (user && user.id && user.type) {
+    const newAccessToken = UserHelper.token.generateAccessToken(user);
+    const response = NextResponse.next();
+
+    response.cookies.set("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/api",
+      maxAge: 60 * 60, // 1 hour
+    });
+
+    return response;
+  }
+}
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get("accessToken")?.value;
-
-  if (!token) {
-    return NextResponse.json(
-      { message: "Unauthorized access" },
-      { status: 401 }
-    );
-  }
+  const refreshToken = req.cookies.get("refreshToken")?.value;
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET!) as unknown as AuthPayload;
-    if (decoded.id && decoded.type) {
-      const response = NextResponse.next();
-      response.headers.set("x-user-id", decoded.id);
-      response.headers.set("x-user-type", decoded.type);
-      return response;
-    }
-
-    return NextResponse.json(
-      { message: "Unauthorized access" },
-      { status: 401 }
-    );
-
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      const refreshToken = req.cookies.get("refreshToken")?.value;
-
-      if (refreshToken) {
-        try {
-          const user = await UserHelper.token.returnRefreshedUser(refreshToken);
-
-          if (user && user.id && user.type) {
-            const newAccessToken = UserHelper.token.generateAccessToken(user);
-            const response = NextResponse.next();
-
-            response.cookies.set("accessToken", newAccessToken, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "strict",
-              path: "/api",
-              maxAge: 60 * 60, // 1 hour
-            });
-
-            return response;
-          }
-        } catch (refreshError) {
-          return NextResponse.json(
-            { message: "Please log in again" },
-            { status: 401 }
-          );
-        }
+    if (token) {
+      const decoded = jwt.verify(token, JWT_SECRET!) as unknown as AuthPayload;
+      if (decoded.id && decoded.type) {
+        const response = NextResponse.next();
+        response.headers.set("x-user-id", decoded.id);
+        response.headers.set("x-user-type", decoded.type);
+        return response;
       }
+
+      return NextResponse.json(
+        { message: "Unauthorized access" },
+        { status: 401 },
+      );
+    } else if (refreshToken) {
+      return handleRefresh(refreshToken);
+    } else {
+      return NextResponse.json(
+        { message: "Unauthorized access" },
+        { status: 401 },
+      );
+    }
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError && refreshToken) {
+      return handleRefresh(refreshToken);
     }
     return NextResponse.json(
       { message: "Unauthorized access" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 }

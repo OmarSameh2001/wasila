@@ -31,7 +31,8 @@ export default function AdminQoutes() {
         />
         <Table
           name="Qoutes"
-          columns={recordsColumns}
+          base="crm"
+          columns={recordsColumns.filter((col) => col.key !== "broker")}
           data={data?.data?.data ?? []}
           actions={[{name: "PDF"}]}
           addNew={handleAddNew}

@@ -1,6 +1,6 @@
 import { authMiddleware } from "@/app/(backend)/_middelware/authorize";
 import { NextRequest, NextResponse } from "next/server";
-import { getAllBrokers, getAllUsers } from "../controller";
+import { getAllUsers } from "../controller";
 import { authError } from "@/app/(backend)/_lib/errors";
 
 export async function GET(req: NextRequest) {

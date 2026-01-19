@@ -61,6 +61,7 @@ export default function AdminInsurers() {
         />
         <Table
           name="Insurers"
+          base="insurer"
           buttonName="Add Insurer"
           columns={companiesColumns}
           data={data?.data?.data}

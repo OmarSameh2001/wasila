@@ -96,5 +96,5 @@ export type AuthContextType = {
   isLoading: boolean;
   id: number;
   type: UserType;
-  refetch: () => Promise<void>;
+  refetchAuth: () => Promise<void>;
 };

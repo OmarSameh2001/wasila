@@ -33,6 +33,7 @@ export default function AdminInsurers() {
         />
         <Table
           name="Insurers"
+          base="insurer"
           columns={companiesColumns}
           data={data?.data?.data}
           actions={[

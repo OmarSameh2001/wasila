@@ -22,7 +22,7 @@ function createProtectedRoute(allowedType?: UserType) {
     if (isLoading) return <LoadingPage />;
 
     // Not authenticated
-    if (!id || !type) return <Redirect to={"/login"} />;
+    if (!id || !type) return <Redirect to={"/"} />;
 
     if (allowedType && type !== allowedType) return <Redirect to={"/"} />;
 

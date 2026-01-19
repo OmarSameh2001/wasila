@@ -18,7 +18,7 @@ export const policyColumns: TableColumn[] = [
     type: "text",
   },
   {
-    name: "Company",
+    name: "Insurer",
     key: "company",
     type: "logo",
   },

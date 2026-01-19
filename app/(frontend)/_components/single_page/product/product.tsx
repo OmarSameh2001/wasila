@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { FilePlus, Pencil, Save, X } from "lucide-react";
 import type { HealthPolicy } from "@/app/(frontend)/_dto/policy";
 import { createPolicy, updatePolicy } from "@/app/(frontend)/_services/policy";
@@ -15,6 +15,7 @@ import {
   showLoadingSuccess,
   showLoadingToast,
 } from "../../../_utils/toaster/toaster";
+import { AuthContext } from "@/app/(frontend)/_utils/context/auth";
 
 export default function SingleProductEditable({
   policy,
@@ -27,6 +28,7 @@ export default function SingleProductEditable({
   const [isEditing, setIsEditing] = useState<boolean>(id === "create");
   const [editedPolicy, setEditedPolicy] = useState<HealthPolicy>(policy || {});
   const [isCompanySearch, setIsCompanySearch] = useState<boolean>(false);
+  const { id: userId, type: userType } = useContext(AuthContext);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -161,7 +163,8 @@ export default function SingleProductEditable({
                   <FilePlus className="h-4 w-4" />
                   Create
                 </span>
-              ) : (
+              ) : (userType === "BROKER" && policy?.brokerId === userId) ||
+                (userType === "ADMIN" && policy?.brokerId === null) ? (
                 <span
                   className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors font-medium text-sm"
                   onClick={() => setIsEditing(true)}
@@ -169,7 +172,7 @@ export default function SingleProductEditable({
                   <Pencil className="h-4 w-4" />
                   Edit
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -182,7 +185,7 @@ export default function SingleProductEditable({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Company Name
+                    Insurer Name
                   </label>
                   {isEditing &&
                   (!editedPolicy?.company?.name || isCompanySearch) ? (
@@ -270,8 +273,8 @@ export default function SingleProductEditable({
                       {policy?.type === "CAR"
                         ? "Car Policy"
                         : policy?.type === "Individual_Medical"
-                        ? "Individual Medical"
-                        : policy?.type === "SME" && "SME Medical"}
+                          ? "Individual Medical"
+                          : policy?.type === "SME" && "SME Medical"}
                     </p>
                   )}
                 </div>

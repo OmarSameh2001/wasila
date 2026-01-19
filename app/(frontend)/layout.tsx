@@ -22,14 +22,11 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "Wasila",
   description: "Wasila for insurance brokers",
-  icons: {
-    icon: [
-      { url: "/icon/wasila_icon_32.png", sizes: "32x32", type: "image/png" },
-      { url: "/icon/wasila_icon_192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon/wasila_icon_512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: "/icon/wasila_icon_180.png",
-  },
+  icons: [
+    {
+      url: "/wasila_logo.png",
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -38,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased`}>
+    <html lang="en" suppressHydrationWarning className="h-full">
+      <body className={`antialiased h-full`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -51,9 +48,18 @@ export default function RootLayout({
           <AuthProvider>
             <PopupProvider>
               <QueryProvider>
-                <Navbar />
-                <PopupComponent />
-                {children}
+                <div className="flex min-h-screen flex-col">
+                  <Navbar />
+                  <main className="flex-1 flex flex-col">
+                    <PopupComponent />
+                    {children}
+                  </main>
+                  <div className="border-t border-gray-800 py-8 text-center text-gray-900 dark:text-gray-300 text-sm">
+                    <p>
+                      &copy; 2026 Wasila. All rights reserved. | From the Brokers, For the Brokers
+                    </p>
+                  </div>
+                </div>
               </QueryProvider>
             </PopupProvider>
           </AuthProvider>

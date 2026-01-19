@@ -25,6 +25,7 @@ export default function AdminBrokers() {
         />
         <Table
           name="Brokers"
+          base="broker"
           columns={brokersColumns}
           data={data?.data.users ?? []}
           actions={[]}

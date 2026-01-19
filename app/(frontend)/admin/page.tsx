@@ -1,7 +1,7 @@
 import { Building2, ChartLine, Heart, ScrollText, Users, Users2 } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminPage() {
+export default function AdminHomePage() {
   const links = [
     { href: "/admin/broker", title: "Brokers", Icon: Users2 },
     { href: "/admin/client", title: "Clients", Icon: Users },
@@ -10,7 +10,7 @@ export default function AdminPage() {
     { href: "/admin/crm", title: "CRM", Icon: ChartLine },
   ];
   return (
-    <div className="flex flex-col min-h-[70vh] justify-center items-center">
+    <div className="flex flex-col min-h-screen h-full justify-center items-center">
       <h1 className="text-2xl font-bold">Welcome Admin</h1>
       <div className="flex gap-10 mt-5 sm:flex-row flex-col">
         {links.map((link) => (

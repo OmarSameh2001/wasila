@@ -70,7 +70,7 @@ export const registerUser = async (req: NextRequest) => {
     if (!email || !password || !name) {
       return NextResponse.json(
         { error: "Please provide all required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -78,7 +78,7 @@ export const registerUser = async (req: NextRequest) => {
     if (!validateEmail.success) {
       return NextResponse.json(
         { error: validateEmail.message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,7 +86,7 @@ export const registerUser = async (req: NextRequest) => {
     if (!validatePassword.success) {
       return NextResponse.json(
         { error: validatePassword.message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -99,7 +99,7 @@ export const registerUser = async (req: NextRequest) => {
     if (existingUsers?.length > 0) {
       return NextResponse.json(
         { error: "Email or username already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
     // if (type !== "USER" && type !== "BROKER") {
@@ -129,7 +129,7 @@ export const registerUser = async (req: NextRequest) => {
         <a href="${frontendUrl}/verify-email?token=${verificationToken}&email=${email}">Verify Email</a>
         <p>This link will expire in 24 hours.</p>
         <p>Dont share this link with anyone.</p>
-      `
+      `,
     );
 
     const createdUser = await prisma.user.create({
@@ -155,13 +155,13 @@ export const registerUser = async (req: NextRequest) => {
           type: createdUser.type,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(
       { error: "Error registering user, please try again or contact support" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -174,7 +174,7 @@ export const loginUser = async (req: NextRequest) => {
     if (!email || !password) {
       return NextResponse.json(
         { error: "Please provide email and password" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -186,7 +186,7 @@ export const loginUser = async (req: NextRequest) => {
     if (!user) {
       return NextResponse.json(
         { error: "Invalid credentials" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -197,19 +197,19 @@ export const loginUser = async (req: NextRequest) => {
           error:
             "Please verify your email before logging in. Check your inbox for the verification link.",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // Compare passwords
     const isPasswordMatch = await UserHelper.comparePassword(
       password,
-      user.password
+      user.password,
     );
     if (!isPasswordMatch) {
       return NextResponse.json(
         { error: "Invalid credentials" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -242,19 +242,19 @@ export const loginUser = async (req: NextRequest) => {
           type: user.type,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
 
     // Set refresh token as httpOnly cookie ✅
-    if (remember) {
-      res.cookies.set("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/api/user/refresh",
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-      });
-    }
+    // if (remember) {
+    res.cookies.set("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/api",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+    // }
 
     res.cookies.set("accessToken", accessToken, {
       httpOnly: true,
@@ -269,7 +269,7 @@ export const loginUser = async (req: NextRequest) => {
     console.error("Login error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -288,13 +288,13 @@ export const getAllUsers = async (req: NextRequest) => {
         message: "Users fetched successfully",
         users,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Get users error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -323,13 +323,13 @@ export const updateUser = async (req: NextRequest, userId: number) => {
         message: "User updated successfully",
         user,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Update user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -351,13 +351,13 @@ export const deleteUser = async (req: NextRequest, userId: number) => {
       {
         message: "User deleted successfully",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Delete user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -380,7 +380,7 @@ export const getCurrentUser = async (id: number) => {
         createdAt: true,
         managedCount: true,
         clientCount: true,
-      }
+      },
     });
 
     if (!user) {
@@ -392,13 +392,13 @@ export const getCurrentUser = async (id: number) => {
         message: "Current user fetched successfully",
         user,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Get current user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -410,7 +410,7 @@ export const verifyEmail = async (req: NextRequest) => {
     if (!token) {
       return NextResponse.json(
         { error: "Verification token is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -432,7 +432,7 @@ export const verifyEmail = async (req: NextRequest) => {
     if (!user) {
       return NextResponse.json(
         { error: "Invalid or expired verification token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -451,13 +451,13 @@ export const verifyEmail = async (req: NextRequest) => {
         message: "Email verified successfully! You can now log in.",
         success: true,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Verify email error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -479,12 +479,12 @@ export const resendVerification = async (req: NextRequest) => {
     if (!user) {
       return NextResponse.json({ error: "Email not found" }, { status: 400 });
     }
-    
+
     if (user) {
       if (user.emailVerified) {
         return NextResponse.json(
           { error: "Email is already verified" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       if (
@@ -493,7 +493,7 @@ export const resendVerification = async (req: NextRequest) => {
       ) {
         return NextResponse.json(
           { error: "Verification email has already been sent." },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -512,7 +512,7 @@ export const resendVerification = async (req: NextRequest) => {
         <a href="${frontendUrl}/verify-email?token=${verificationToken}">Verify Email</a>
         <p>This link will expire in 24 hours.</p>
         <p>Dont share this link with anyone.</p>
-      `
+      `,
     );
 
     await prisma.user.update({
@@ -525,13 +525,13 @@ export const resendVerification = async (req: NextRequest) => {
 
     return NextResponse.json(
       { message: "Verification email has been sent." },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Resend verification error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -553,7 +553,7 @@ export const forgotPassword = async (req: NextRequest) => {
         emailVerified: true,
         passwordResetExpiry: true,
         name: true,
-      }
+      },
     });
 
     if (!user) {
@@ -561,7 +561,7 @@ export const forgotPassword = async (req: NextRequest) => {
         {
           error: "Email not found",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -569,7 +569,7 @@ export const forgotPassword = async (req: NextRequest) => {
       if (user.emailVerified === false) {
         return NextResponse.json(
           { error: "Email is not verified yet" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       if (
@@ -578,7 +578,7 @@ export const forgotPassword = async (req: NextRequest) => {
       ) {
         return NextResponse.json(
           { error: "Password reset key is resent every 10 minutes." },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -598,7 +598,7 @@ export const forgotPassword = async (req: NextRequest) => {
         <a href="${frontendUrl}/reset_password?token=${resetToken}&email=${email}">Reset Password</a>
         <p>This link will expire in 1 hour.</p>
         <p>Dont share this link with anyone.</p>
-      `
+      `,
     );
 
     await prisma.user.update({
@@ -613,13 +613,13 @@ export const forgotPassword = async (req: NextRequest) => {
 
     return NextResponse.json(
       { message: "If the email exists, a password reset link has been sent." },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Forgot password error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -632,7 +632,7 @@ export const resetPassword = async (req: NextRequest) => {
     if (!token || !newPassword || !email) {
       return NextResponse.json(
         { error: "Token and new password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -641,7 +641,7 @@ export const resetPassword = async (req: NextRequest) => {
     if (!validatePassword.success) {
       return NextResponse.json(
         { error: validatePassword.message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -662,7 +662,7 @@ export const resetPassword = async (req: NextRequest) => {
     if (!user) {
       return NextResponse.json(
         { error: "Invalid or expired reset token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -687,13 +687,13 @@ export const resetPassword = async (req: NextRequest) => {
           "Password reset successful. You can now log in with your new password.",
         success: true,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Reset password error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -722,8 +722,16 @@ export const logoutUser = async (req: NextRequest) => {
   }
 
   const res = NextResponse.json({ message: "Logged out successfully" });
-  res.cookies.delete("accessToken");
-  res.cookies.delete("refreshToken");
+  const cookieOptions = {
+    httpOnly: true,
+    path: "/api",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+    expires: new Date(0),
+  };
+
+  res.cookies.set("accessToken", "", cookieOptions);
+  res.cookies.set("refreshToken", "", cookieOptions);
   return res;
 };
 

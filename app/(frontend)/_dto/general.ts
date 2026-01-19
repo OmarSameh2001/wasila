@@ -44,6 +44,7 @@ export interface TableProps {
   addNew?: () => void;
   buttonName?: string;
   pagination: PaginationProps;
+  base: string;
 }
 
 
@@ -93,7 +94,7 @@ export const filterablePolicyColumns: FilterableField[] = [
     type: "id",
     searchType: "search",
     searchLabel: "Broker",
-    adminOnly: true,
+    // adminOnly: true,
   },
 ];
 
@@ -125,11 +126,11 @@ export const filterableRecordColumns: FilterableField[] = [
     label: "Issue Date",
     type: "date",
   },
-  // {
-  //   key: "createdAt",
-  //   label: "Created At",
-  //   type: "date",
-  // },
+  {
+    key: "createdAt",
+    label: "Created At",
+    type: "date",
+  },
   // {
   //   key: "updatedAt",
   //   label: "Updated At",

@@ -15,13 +15,21 @@ import {
 import { queryInvalidator } from "../../../_utils/query/query";
 import LoadingPage from "../../../_utils/promise_handler/loading/loading";
 import { RecordData } from "@/app/(frontend)/_dto/record";
+import { useContext, useMemo } from "react";
+import { AuthContext } from "@/app/(frontend)/_utils/context/auth";
 
 export default function SingleQouteView({ id }: { id: string }) {
   let { isLoading, isError, data, error } = useQuery({
     queryKey: ["qoute", id],
     queryFn: () => getRecord(Number(id)),
   });
+  const {type:authType, id:authId, isLoading:isLoadingAuth} = useContext(AuthContext);
   const record = (data?.data as RecordData) || null;
+  const isDisabeled = useMemo(
+    () =>
+      authType !== "BROKER" && record?.brokerId !== authId,
+    [authType, authId, record?.brokerId]
+  );
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("en-GB", {
@@ -105,6 +113,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                 record.state
               )} cursor-pointer bg-white dark:bg-gray-700`}
               value={record.state}
+              disabled={isDisabeled}
               onChange={(e) => {
                 handleUpdateRecord({
                   state: e.target.value,

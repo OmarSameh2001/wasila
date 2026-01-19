@@ -16,7 +16,7 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { refetch } = useContext(AuthContext);
+  const { refetchAuth } = useContext(AuthContext);
   const router = useRouter();
 
   const validateForm = () => {
@@ -39,7 +39,7 @@ export default function LoginPage() {
 
       toastId = showLoadingToast("Signing In...");
       await login({ email, password });
-      await refetch();
+      await refetchAuth();
       showLoadingSuccess(toastId, "Signed In Successfully");
       setLoading(false);
       router.push("/");

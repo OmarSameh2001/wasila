@@ -32,3 +32,7 @@ export const verifyEmail = async (data: any) => {
 export const resendVerification = async (data: any) => {
   return await axiosAuth.post("/user/verify/resend_email", data);
 }
+
+export const logout = async () => {
+  return await axiosAuth.post("/user/logout");
+}

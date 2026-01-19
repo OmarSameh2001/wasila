@@ -26,6 +26,7 @@ export default function AdminClients() {
 
         <Table
           name="Clients"
+          base="client"
           columns={clientsColumns}
           data={data?.data.users ?? []}
           actions={[]}

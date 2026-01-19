@@ -22,11 +22,14 @@ export default function LoadingPage({
         <div className="absolute inset-0 animate-spin rounded-full border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
 
         {/* Static inner logo */}
-        <img src="/wasila_logo.png" alt="logo" className="w-13 h-9 mt-2" />
+        <img src="/logo.svg" alt="logo" className="w-13 h-50 mt-2  dark:invert" />
+        
+        {/* <img src="/wasila_logo.png" alt="logo" className="w-13 h-9 mt-2" /> */}
       </div>
       <span className="text-2xl font-bold text-gray-900 dark:text-white mt-4">
         Wasila
       </span>
+      
     </div>
   );
 }

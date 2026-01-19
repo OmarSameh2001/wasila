@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import LoadingPage from "../_utils/promise_handler/loading/loading";
-import { NonProtectedRoute } from "../_utils/protected/protected";
+import { ProtectedAdminRoute } from "../_utils/protected/protected";
 
 export default function AuthLayout({
   children,
@@ -9,7 +9,7 @@ export default function AuthLayout({
 }) {
   return (
     <Suspense fallback={<LoadingPage />}>
-      <NonProtectedRoute>{children}</NonProtectedRoute>
+      <ProtectedAdminRoute>{children}</ProtectedAdminRoute>
     </Suspense>
   );
 }

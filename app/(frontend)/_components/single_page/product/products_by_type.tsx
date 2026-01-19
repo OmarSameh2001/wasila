@@ -55,6 +55,7 @@ export default function ProductsByType({ type }: { type: string }) {
 
         <Table
           name="Products"
+          base="product"
           buttonName="Add New Product"
           columns={policyColumns}
           data={data?.data?.data}

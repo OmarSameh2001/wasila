@@ -13,7 +13,7 @@ export const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   id: 0,
   type: "",
-  refetch: async () => {},
+  refetchAuth: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         id,
         type,
-        refetch: fetchSession,
+        refetchAuth: fetchSession,
       }}
     >
       {children}

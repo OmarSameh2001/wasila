@@ -31,6 +31,7 @@ export default function AdminQoutes() {
         />
         <Table
           name="Qoutes"
+          base="crm"
           columns={recordsColumns}
           data={data?.data?.data ?? []}
           actions={[{name: "PDF"}]}
