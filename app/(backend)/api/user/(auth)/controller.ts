@@ -1,12 +1,10 @@
+import 'server-only'
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import { prisma } from "../../../_lib/prisma";
 import UserHelper from "../../../_lib/user";
 import { filterPrisma } from "../../../_lib/filtering";
-import crypto from "crypto";
 import sendEmail from "../../../_lib/mailer";
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const frontendUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export interface JWTPayload {

@@ -1,3 +1,4 @@
+import 'server-only'
 import { filterPrisma, handleUrl } from "@/app/(backend)/_lib/filtering";
 import { prisma } from "@/app/(backend)/_lib/prisma";
 import { NextResponse, NextRequest } from "next/server";

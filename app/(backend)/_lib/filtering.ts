@@ -64,7 +64,7 @@ export const filterPrisma = async <T, TWhereInput, TInclude, TSelect, TOrderBy>(
     if (sortField && modelName && modelFields[modelName]?.[sortField]) {
       newOrderBy = { [sortField]: sortOrder === "desc" ? "desc" : "asc" };
     }
-    console.log("newOrderBy", newOrderBy, "sortField", sortField, "sortOrder", sortOrder);
+    
     if (url && modelName) {
       params = { ...params, ...handleUrl(url, modelName) } as TWhereInput;
     }
