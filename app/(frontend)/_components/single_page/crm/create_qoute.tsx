@@ -40,7 +40,7 @@ import { AuthContext } from "../../../_utils/context/auth";
 import Link from "next/link";
 
 export default function QuoteCreate() {
-  const [step, setStep] = useState(5);
+  const [step, setStep] = useState(1);
   const [csvText, setCsvText] = useState("");
   const [people, setPeople] = useState<InsuredPersonData[]>([]);
   const [calculatedRecords, setCalculatedRecords] = useState<
