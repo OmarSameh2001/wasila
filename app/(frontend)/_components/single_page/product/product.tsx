@@ -28,6 +28,7 @@ export default function SingleProductEditable({
   const [isEditing, setIsEditing] = useState<boolean>(id === "create");
   const [editedPolicy, setEditedPolicy] = useState<HealthPolicy>(policy || {});
   const [isCompanySearch, setIsCompanySearch] = useState<boolean>(false);
+  const [isLoadingPage, setIsLoadingPage] = useState<boolean>(false);
   const { id: userId, type: userType } = useContext(AuthContext);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -45,26 +46,34 @@ export default function SingleProductEditable({
   };
 
   const handleSave = async (e: any) => {
+    setIsLoadingPage(true);
     let toastId;
     try {
       e.preventDefault();
-      if (!editedPolicy.companyId) window.alert("Please select a company");
+      if (!editedPolicy.companyId) {
+        setIsLoadingPage(false);
+        window.alert("Please select a company");
+      }
+      let created = null
       if (isCreate) {
-        toastId = showLoadingToast("Creating Policy...");
-        await createPolicy(editedPolicy);
-        showLoadingSuccess(toastId, "Policy Created Successfully");
+        toastId = showLoadingToast("Creating Plan...");
+        created = await createPolicy(editedPolicy);
+        showLoadingSuccess(toastId, "Plan Created Successfully");
       } else {
         toastId = showLoadingToast("Updating Policy...");
         await updatePolicy(editedPolicy.id, editedPolicy);
-        showLoadingSuccess(toastId, "Policy Updated Successfully");
+        showLoadingSuccess(toastId, "Plan Updated Successfully");
       }
-
+      created = created?.data?.id || null
       queryClient.invalidateQueries(["products"] as InvalidateQueryFilters<
         readonly unknown[]
       >);
-      // router.push("/admin/policy");
+      console.log(created);
+      setIsLoadingPage(false);
+      if (created) router.push(`/${userType.toLowerCase()}/product/${created}`);
     } catch (e) {
       if (toastId) showLoadingError(toastId, "Something went wrong");
+      setIsLoadingPage(false);
       console.log(e);
     }
   };
@@ -103,8 +112,9 @@ export default function SingleProductEditable({
     }
   }, [editedPolicy?.type]);
 
-  const isAbleToEdit = (userType === "BROKER" && policy?.brokerId === userId) ||
-                (userType === "ADMIN" && policy?.brokerId === null);
+  const isAbleToEdit =
+    (userType === "BROKER" && Number(policy?.brokerId || 0) === Number(userId)) ||
+    (userType === "ADMIN" && policy?.brokerId === null);
   if (isLoading) return <LoadingPage />;
   return (
     <main className="min-h-screen bg-gray-200 dark:bg-black py-12 px-4 sm:px-6 lg:px-8">
@@ -113,9 +123,7 @@ export default function SingleProductEditable({
           <h1 className="text-balance text-4xl font-bold text-foreground mb-2">
             {isCreate ? "Create New Plan" : "Insurance Plan Details"}
           </h1>
-          <p className="text-muted-foreground">
-            Medical insurance plan.
-          </p>
+          <p className="text-muted-foreground">Medical insurance plan.</p>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
@@ -133,7 +141,7 @@ export default function SingleProductEditable({
                   {policy?.company?.name || "Select a company"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Policy information
+                  Plan information
                 </p>
               </div>
             </div>
@@ -141,16 +149,17 @@ export default function SingleProductEditable({
               {isEditing ? (
                 <>
                   <button
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium text-sm disabled:cursor-not-allowed disabled:opacity-50"
                     type="submit"
+                    disabled={isLoadingPage}
                   >
                     <Save className="h-4 w-4" />
                     Save
                   </button>
                   {!isCreate && (
                     <span
-                      className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground rounded-md hover:bg-muted transition-colors font-medium text-sm"
-                      onClick={handleCancel}
+                      className={`inline-flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground rounded-md hover:bg-muted transition-colors font-medium text-sm ${isLoadingPage ? "cursor-not-allowed opacity-50" : ""}`}
+                      onClick={isLoadingPage ? () => {} : handleCancel}
                     >
                       <X className="h-4 w-4" />
                       Cancel
@@ -223,7 +232,7 @@ export default function SingleProductEditable({
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Policy Name
+                    Plan Name
                   </label>
                   {isEditing ? (
                     <input
@@ -233,7 +242,7 @@ export default function SingleProductEditable({
                       onChange={(e) =>
                         updatePolicyField("name", e.target.value)
                       }
-                      placeholder="Enter policy name"
+                      placeholder="Enter paln name"
                     />
                   ) : (
                     <p className="text-lg text-foreground p-3 bg-muted rounded-md">

@@ -1,4 +1,4 @@
-import 'server-only'
+import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../_lib/prisma";
 import { filterPrisma } from "../../_lib/filtering";
@@ -6,7 +6,7 @@ import { filterPrisma } from "../../_lib/filtering";
 export async function getRecords(
   req: NextRequest,
   userId: number,
-  type: string
+  type: string,
 ) {
   try {
     const url = new URL(req.url);
@@ -38,13 +38,13 @@ export async function getRecords(
           },
         },
         policies: true,
-      }
+      },
     );
   } catch (error) {
     console.error("Error fetching records:", error);
     return NextResponse.json(
       { error: "Error fetching records" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -53,7 +53,7 @@ export async function getRecord(
   req: NextRequest,
   userId: number,
   type: string,
-  recordId: number
+  recordId: number,
 ) {
   try {
     const record = await prisma.record.findUnique({
@@ -122,7 +122,7 @@ export async function getRecord(
     console.error("Error fetching record:", error);
     return NextResponse.json(
       { error: "Error fetching record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -223,7 +223,7 @@ export async function createRecord(req: NextRequest) {
     console.error("Error creating record:", error);
     return NextResponse.json(
       { error: "Error creating record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -232,7 +232,7 @@ export async function updateRecord(
   req: NextRequest,
   userId: number,
   type: string,
-  id: number
+  id: number,
 ) {
   try {
     const {
@@ -257,7 +257,7 @@ export async function updateRecord(
     console.error("Error updating record:", error);
     return NextResponse.json(
       { error: "Error updating record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -266,7 +266,7 @@ export async function deleteRecord(
   req: NextRequest,
   userId: number,
   type: string,
-  recorId: number
+  recorId: number,
 ) {
   try {
     const record = await prisma.record.delete({
@@ -283,7 +283,7 @@ export async function deleteRecord(
     console.error("Error deleting record:", error);
     return NextResponse.json(
       { error: "Error deleting record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -331,7 +331,7 @@ function calculateAge(birthDate: string, issueDate: string): number {
 function findPriceForAge(
   healthPricings: any,
   age: number,
-  isDependent: boolean
+  isDependent: boolean,
 ): { price: number | null; reason?: string } {
   // Find exact age match
   const pricing = healthPricings[age.toString()];
@@ -360,8 +360,18 @@ function findPriceForAge(
 
   return { price: Number(priceField) };
 }
+function hasKeys(obj: any): boolean {
+        for (const key in obj) {
+          return true;
+        }
+        return false;
+      }
 
-export async function calculateSmePolicyRecords(req: NextRequest, userId: number, userType: string) {
+export async function calculateSmePolicyRecords(
+  req: NextRequest,
+  userId: number,
+  userType: string,
+) {
   try {
     const { people, policyIds, issueDate } = (await req.json()) as {
       people: PersonData[];
@@ -372,7 +382,7 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
     if (!people || !Array.isArray(people) || people.length === 0) {
       return NextResponse.json(
         { error: "People array is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -383,7 +393,7 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
         ...(policyIds && policyIds.length > 0 && { id: { in: policyIds } }),
         ...(userType === "BROKER" && {
           OR: [{ brokerId: Number(userId) }, { brokerId: null }],
-        })
+        }),
       },
       include: {
         company: {
@@ -399,7 +409,7 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
     if (policies.length === 0) {
       return NextResponse.json(
         { error: "No health policies found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -410,6 +420,12 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
       if (!policy.healthPolicy) continue;
 
       const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
+
+      
+      if (!healthPricingsObject || !hasKeys(healthPricingsObject)) {
+        continue;
+      }
+      
       const insuredPeople: CalculatedSmePolicyRecord["insuredPeople"] = [];
 
       let totalAmount = 0;
@@ -428,7 +444,7 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
         const { price, reason } = findPriceForAge(
           healthPricingsObject,
           age,
-          isDependent
+          isDependent,
         );
 
         if (price !== null) {
@@ -466,7 +482,7 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
 
       const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${people.length} - Avg age: ${averageAge}`;
       const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy;
-
+      if(numberOfInsureds === 0) continue
       calculatedRecords.push({
         policyId: policy.id,
         policyName: policy.name,
@@ -487,23 +503,31 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
     // Sort by total amount (best value first)
     calculatedRecords.sort((a, b) => a.totalAmount - b.totalAmount);
 
-    return NextResponse.json(
-      {
-        calculatedRecords,
-        summary: {
-          totalPeople: people.length,
-          totalEmployees: people.filter((p) => p.type === "Employee").length,
-          totalDependents: people.filter((p) => p.type === "Dependent").length,
-          policiesCalculated: calculatedRecords.length,
+    if (calculatedRecords.length > 0) {
+      return NextResponse.json(
+        {
+          calculatedRecords,
+          summary: {
+            totalPeople: people.length,
+            totalEmployees: people.filter((p) => p.type === "Employee").length,
+            totalDependents: people.filter((p) => p.type === "Dependent")
+              .length,
+            policiesCalculated: calculatedRecords.length,
+          },
         },
-      },
-      { status: 200 }
-    );
+        { status: 200 },
+      );
+    } else {
+      return NextResponse.json(
+        { error: "No plans found matching your criteria" },
+        { status: 404 },
+      );
+    }
   } catch (error) {
     console.error("Error calculating policy records:", error);
     return NextResponse.json(
       { error: "Error calculating policy records" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -512,7 +536,7 @@ export async function calculateSmePolicyRecords(req: NextRequest, userId: number
 export async function createBulkRecord(
   req: NextRequest,
   userId: number,
-  type: string
+  type: string,
 ) {
   try {
     const {
@@ -530,14 +554,14 @@ export async function createBulkRecord(
     ) {
       return NextResponse.json(
         { error: "Select between 1 and 6 policies" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!issueDate || !clientId) {
       return NextResponse.json(
         { error: "Issue date and client is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -546,7 +570,7 @@ export async function createBulkRecord(
     if (isNaN(issueDateParsed.getTime())) {
       return NextResponse.json(
         { error: "Invalid issue date" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -626,7 +650,7 @@ export async function createBulkRecord(
     console.error("Error creating bulk record:", error);
     return NextResponse.json(
       { error: "Error creating bulk record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -661,7 +685,7 @@ interface CalculatedIndividualPolicyRecord {
 
 function calculateAgeFromDateInput(
   dateInput: string,
-  issueDate: string
+  issueDate: string,
 ): number {
   const birth = new Date(dateInput);
   const today = new Date(issueDate);
@@ -678,7 +702,7 @@ function calculateAgeFromDateInput(
 function findPriceForFamilyMember(
   healthPricings: any,
   age: number,
-  isMain: boolean
+  isMain: boolean,
 ): { price: number | null; reason?: string } {
   const pricing = healthPricings[age.toString()];
 
@@ -706,7 +730,11 @@ function findPriceForFamilyMember(
   return { price: Number(priceField) };
 }
 
-export async function calculateIndividualPolicyRecords(req: NextRequest, userId: number, userType: string) {
+export async function calculateIndividualPolicyRecords(
+  req: NextRequest,
+  userId: number,
+  userType: string,
+) {
   try {
     const { family, policyIds, issueDate } = (await req.json()) as {
       family: FamilyData;
@@ -717,7 +745,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
     if (!family || !family.main) {
       return NextResponse.json(
         { error: "Main individual is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -728,7 +756,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
         ...(policyIds && policyIds.length > 0 && { id: { in: policyIds } }),
         ...(userType === "BROKER" && {
           OR: [{ brokerId: Number(userId) }, { brokerId: null }],
-        })
+        }),
       },
       include: {
         company: {
@@ -744,7 +772,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
     if (policies.length === 0) {
       return NextResponse.json(
         { error: "No Individual Medical policies found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -755,6 +783,10 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
       if (!policy.healthPolicy) continue;
 
       const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
+
+      if (!healthPricingsObject || !hasKeys(healthPricingsObject)) {
+        continue;
+      }
       const insuredFamily: CalculatedIndividualPolicyRecord["insuredPeople"] =
         [];
 
@@ -768,7 +800,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
       const mainPricing = findPriceForFamilyMember(
         healthPricingsObject,
         mainAge,
-        true
+        true,
       );
 
       // Skip this policy if main is not insured
@@ -796,7 +828,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
         const { price, reason } = findPriceForFamilyMember(
           healthPricingsObject,
           spouseAge,
-          false
+          false,
         );
 
         if (price !== null) {
@@ -823,7 +855,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
         const { price, reason } = findPriceForFamilyMember(
           healthPricingsObject,
           childAge,
-          false
+          false,
         );
 
         if (price !== null) {
@@ -874,25 +906,32 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
 
     // Sort by total amount (best value first)
     calculatedRecords.sort((a, b) => a.totalAmount - b.totalAmount);
-
-    return NextResponse.json(
-      {
-        calculatedRecords,
-        summary: {
-          totalFamilyMembers: 1 + family.spouse.length + family.children.length,
-          mainInsured: true,
-          spouseCount: family.spouse.length,
-          childrenCount: family.children.length,
-          policiesCalculated: calculatedRecords.length,
+    if (calculatedRecords.length > 0) {
+      return NextResponse.json(
+        {
+          calculatedRecords,
+          summary: {
+            totalFamilyMembers:
+              1 + family.spouse.length + family.children.length,
+            mainInsured: true,
+            spouseCount: family.spouse.length,
+            childrenCount: family.children.length,
+            policiesCalculated: calculatedRecords.length,
+          },
         },
-      },
-      { status: 200 }
-    );
+        { status: 200 },
+      );
+    } else {
+      return NextResponse.json(
+        { error: "No plans found matching your criteria" },
+        { status: 404 },
+      );
+    }
   } catch (error) {
     console.error("Error calculating individual policy records:", error);
     return NextResponse.json(
       { error: "Error calculating individual policy records" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -900,7 +939,7 @@ export async function calculateIndividualPolicyRecords(req: NextRequest, userId:
 export async function createBulkIndividualRecord(
   req: NextRequest,
   userId: number,
-  type: string
+  type: string,
 ) {
   try {
     const {
@@ -918,14 +957,14 @@ export async function createBulkIndividualRecord(
     ) {
       return NextResponse.json(
         { error: "Select between 1 and 6 policies" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!issueDate || !clientId) {
       return NextResponse.json(
         { error: "Issue date and client is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -934,7 +973,7 @@ export async function createBulkIndividualRecord(
     if (isNaN(issueDateParsed.getTime())) {
       return NextResponse.json(
         { error: "Invalid issue date" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -977,7 +1016,7 @@ export async function createBulkIndividualRecord(
               numberOfPersons: p.numberOfPersons,
               averageAge: p.averageAge,
               avgPricePerPerson: p.avgPricePerPerson,
-            })
+            }),
           ),
         },
       },
@@ -1017,7 +1056,7 @@ export async function createBulkIndividualRecord(
     console.error("Error creating bulk individual record:", error);
     return NextResponse.json(
       { error: "Error creating bulk individual record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

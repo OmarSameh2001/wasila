@@ -38,6 +38,7 @@ import { createClient } from "@/app/(frontend)/_services/user";
 import { editableClientColumns } from "@/app/(frontend)/_dto/user";
 import { AuthContext } from "../../../_utils/context/auth";
 import Link from "next/link";
+import { axiosInstance } from "@/app/(frontend)/_services/axios";
 
 export default function QuoteCreate() {
   const [step, setStep] = useState(1);
@@ -47,7 +48,7 @@ export default function QuoteCreate() {
     CalculatedPolicyRecord[]
   >([]);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [clientId, setClientId] = useState("");
   const [client, setClient] = useState("");
@@ -74,7 +75,12 @@ export default function QuoteCreate() {
     spouse: string[];
     children: string[];
   }>({ main: "", spouse: [], children: [] });
-  const {isLoading: isLoadingAuth, type: authType, id: authId} = useContext(AuthContext);
+  const [qouteId, setQouteId] = useState("");
+  const {
+    isLoading: isLoadingAuth,
+    type: authType,
+    id: authId,
+  } = useContext(AuthContext);
 
   const { setComponent } = useContext(PopupContext);
 
@@ -102,20 +108,20 @@ export default function QuoteCreate() {
 
       if (parsed.length === 0) {
         setError(
-          "No valid data found. Format: DATE\\tEmployee or DATE\\tDependent"
+          "No valid data found. Format: DATE\\tEmployee or DATE\\tDependent",
         );
         return;
       }
       if (parsed.length > 250) {
         setError(
-          "Maximum 250 people allowed. Please reduce the number of people."
+          "Maximum 250 people allowed. Please reduce the number of people.",
         );
         return;
       }
 
       setPeople(parsed);
       setStep(3);
-    } catch (err) {
+    } catch (err: any) {
       setError("Error parsing CSV. Please check format.");
     }
   };
@@ -178,11 +184,11 @@ export default function QuoteCreate() {
         console.log(
           childDates.some((d) => d > mainDOB),
           mainDOB,
-          childDates[0]
+          childDates[0],
         );
         if (childDates.some((d) => getAge(mainDOB, d) < 16)) {
           setError(
-            "The child should be at least 16 years younger than the main member."
+            "The child should be at least 16 years younger than the main member.",
           );
           return;
         }
@@ -200,15 +206,26 @@ export default function QuoteCreate() {
       setCalculatedRecords(data.calculatedRecords);
       if (toastId) showLoadingSuccess(toastId, "Family plans calculated.");
       setStep(4);
-    } catch (err) {
-      if (toastId) showLoadingError(toastId, "Error calculating family plans.");
-      setError("Error parsing Family. Please check date format.");
+    } catch (err: any) {
+      console.log(err.response.data.error);
+      if (toastId)
+        showLoadingError(
+          toastId,
+          err.response.data.error || "Error calculating family plans.",
+        );
+      setError(
+        err.response.data.error ||
+          "Error parsing Family. Please check date format.",
+      );
     }
   };
 
   const calculatePolicies = async (e: React.FormEvent) => {
+    let toastId;
     try {
       e.preventDefault();
+
+      toastId = showLoadingToast("Calculating SME plans...");
 
       setLoading(true);
       setError("");
@@ -220,9 +237,19 @@ export default function QuoteCreate() {
 
       const data = (await response).data;
       setCalculatedRecords(data.calculatedRecords);
+
+      if (toastId) showLoadingSuccess(toastId, "SME plans calculated.");
       setStep(4);
-    } catch (err) {
-      setError("Error calculating policies. Please try again.");
+    } catch (err: any) {
+      setError(
+        err.response.data.error ||
+          "Error calculating policies. Please try again.",
+      );
+      if (toastId)
+        showLoadingError(
+          toastId,
+          err.response.data.error || "Error calculating policies.",
+        );
     } finally {
       setLoading(false);
     }
@@ -244,43 +271,51 @@ export default function QuoteCreate() {
   };
 
   const createRecord = async () => {
+    setLoading(true);
     try {
       if (!clientId) {
         setError("Please choose client");
+        setLoading(false);
         return;
       }
 
       if (selectedPolicies.size === 0) {
         setError("Please select at least one policy");
+        setLoading(false);
         return;
       }
 
-      setLoading(true);
+      // setLoading(true);
       setError("");
 
       const selected = calculatedRecords.filter((r) =>
-        selectedPolicies.has(r.policyId)
+        selectedPolicies.has(r.policyId),
       );
 
-      const effectiveBrokerId = isLoadingAuth && authType === "BROKER" ? authId : null;
-      const response = await fetch(type === "Individual_Medical" ? "/api/record/create-bulk/individual" : "/api/record/create-bulk/sme", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: clientId,//parseInt(clientId)
+      const effectiveBrokerId =
+        isLoadingAuth && authType === "BROKER" ? authId : null;
+      const response = await axiosInstance.post(
+        type === "Individual_Medical"
+          ? "/record/create-bulk/individual"
+          : "/record/create-bulk/sme",
+        {
+          clientId: clientId,
           brokerId: effectiveBrokerId,
           state: "DRAFT",
           selectedPolicies: selected,
           issueDate: issueDate || new Date().toISOString(),
-        }),
-      });
+        },
+      );
 
-      if (!response.ok) throw new Error("Failed to create record");
-
-      const record = await response.json();
+      if (!response) throw new Error("Failed to create record");
+      console.log(response.data);
+      setQouteId(response?.data?.id);
+      setLoading(false);
       setStep(5);
     } catch (err) {
       setError("Error creating record. Please try again.");
+
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -408,7 +443,7 @@ export default function QuoteCreate() {
       setCsvText((prev) => prev + "\n" + lines.join("\n"));
       showLoadingSuccess(
         toastId,
-        `Excel file parsed successfully.\n${lines.length} records added.`
+        `Excel file parsed successfully.\n${lines.length} records added.`,
       );
       return lines.length;
     } catch (err) {
@@ -442,12 +477,12 @@ export default function QuoteCreate() {
       const monthAhead = new Date(
         cdate.getFullYear(),
         cdate.getMonth() + 1,
-        cdate.getDate()
+        cdate.getDate(),
       );
       if (
         idate > monthAhead &&
         !window.confirm(
-          "Are you sure you want to create a record after more than a month?"
+          "Are you sure you want to create a record after more than a month?",
         )
       ) {
         return;
@@ -459,7 +494,7 @@ export default function QuoteCreate() {
     }
   };
   const selectedRecords = calculatedRecords.filter((r) =>
-    selectedPolicies.has(r.policyId)
+    selectedPolicies.has(r.policyId),
   );
 
   return (
@@ -544,7 +579,7 @@ export default function QuoteCreate() {
               <DynamicSearchField
                 field={{
                   key: "clientId",
-                  label: authType === "ADMIN"?"User":"Client",
+                  label: authType === "ADMIN" ? "User" : "Client",
                   type: "search",
                   required: true,
                   prev: "name",
@@ -564,7 +599,7 @@ export default function QuoteCreate() {
                       title="Add New Client"
                       type="create"
                       onSubmit={createClient}
-                    />
+                    />,
                   );
                 }}
               >
@@ -597,18 +632,18 @@ export default function QuoteCreate() {
                       new Date().toDateString()
                         ? "hidden"
                         : new Date(issueDate) > new Date()
-                        ? "text-green-600"
-                        : new Date(issueDate) < new Date()
-                        ? "text-red-600"
-                        : "hidden"
+                          ? "text-green-600"
+                          : new Date(issueDate) < new Date()
+                            ? "text-red-600"
+                            : "hidden"
                     }`}
                     style={{ fontSize: "0.75rem" }}
                   >
                     {Math.abs(
                       Math.round(
                         (new Date(issueDate).getTime() - new Date().getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      )
+                          (1000 * 60 * 60 * 24),
+                      ),
                     ) + 1}{" "}
                     days
                   </span>
@@ -692,7 +727,10 @@ export default function QuoteCreate() {
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-              <form className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8" onSubmit={(e) => parseFamily(e)}>
+              <form
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8"
+                onSubmit={(e) => parseFamily(e)}
+              >
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <Upload className="w-6 h-6 hidden sm:block" />
                   Upload Individual & Family
@@ -764,7 +802,7 @@ export default function QuoteCreate() {
                             setFamily({
                               ...family,
                               spouse: family.spouse.filter(
-                                (_, i) => i !== index
+                                (_, i) => i !== index,
                               ),
                             })
                           }
@@ -821,7 +859,7 @@ export default function QuoteCreate() {
                             setFamily({
                               ...family,
                               children: family.children.filter(
-                                (_, i) => i !== index
+                                (_, i) => i !== index,
                               ),
                             })
                           }
@@ -1211,7 +1249,7 @@ export default function QuoteCreate() {
                         <button
                           onClick={() =>
                             setExpandedPolicy(
-                              isExpanded ? null : record.policyId
+                              isExpanded ? null : record.policyId,
                             )
                           }
                           className="p-1 sm:px-4 sm:py-2 text-sm border rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
@@ -1240,7 +1278,7 @@ export default function QuoteCreate() {
                                           (key) =>
                                             record.policy[
                                               key as keyof typeof record.policy
-                                            ] !== undefined
+                                            ] !== undefined,
                                         )
                                         .map((key) => {
                                           const value =
@@ -1255,7 +1293,7 @@ export default function QuoteCreate() {
                                           const label = key
                                             .replace(/([A-Z])/g, " $1")
                                             .replace(/^./, (str) =>
-                                              str.toUpperCase()
+                                              str.toUpperCase(),
                                             )
                                             .trim();
 
@@ -1293,7 +1331,7 @@ export default function QuoteCreate() {
                                         })}
                                     </div>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           </div>
@@ -1360,12 +1398,14 @@ export default function QuoteCreate() {
               <div className="mt-6 flex sm:flex-row flex-col gap-4">
                 <button
                   onClick={() => {
-                    if (filteredRecords.length <= 0 ||
+                    if (
+                      filteredRecords.length <= 0 ||
                       window.confirm(
-                        "Are you sure you want to go back it will delete the calculated records?"
+                        "Are you sure you want to go back it will delete the calculated records?",
                       )
                     )
-                      if(type === "SME") setStep(3); else setStep(2);
+                      if (type === "SME") setStep(3);
+                      else setStep(2);
                   }}
                   className="px-2 py-1 sm:px-6 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                 >
@@ -1394,37 +1434,46 @@ export default function QuoteCreate() {
             <h2 className="text-3xl font-bold mb-2">
               Qoute Created Successfully!
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Your products qoute with {selectedPolicies.size} products (plans) has been
-              created.
-            </p>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              View it in the CRM page
+              Your products qoute with {selectedPolicies.size} products (plans)
+              has been created.
             </p>
             <div className="flex justify-center gap-4 flex-wrap">
-            <button
-              onClick={() => {
-                setStep(1);
-                setCsvText("");
-                setPeople([]);
-                setCalculatedRecords([]);
-                setSelectedPolicies(new Set());
-                setClientId("");
-                setBrokerId("");
-                setClient("");
-                setType("");
-                setIssueDate("");
-              }}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Create Another Qoute
-            </button>
-            <Link
-              href={'/broker/crm'}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              View My Qoutes
-            </Link>
+              <button
+                onClick={() => {
+                  setStep(1);
+                  setCsvText("");
+                  setPeople([]);
+                  setCalculatedRecords([]);
+                  setSelectedPolicies(new Set());
+                  setClientId("");
+                  setBrokerId("");
+                  setClient("");
+                  setType("");
+                  setIssueDate("");
+                }}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create Another Qoute
+              </button>
+              {qouteId ? (
+                <>
+                  <Link
+                    href={`/broker/crm/${qouteId}`}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    View Created Qoute
+                  </Link>
+                  <Link
+                    href={`/broker/crm/${qouteId}/pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Download PDF
+                  </Link>
+                </>
+              ) : null}
             </div>
           </div>
         )}

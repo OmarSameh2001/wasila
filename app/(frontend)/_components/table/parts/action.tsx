@@ -45,7 +45,7 @@ export function TableActionIcon({
     });
   }
 
-  switch (action.name.toLowerCase()) {
+  switch (action?.name?.toLowerCase()) {
     case "delete":
       return (
         <div

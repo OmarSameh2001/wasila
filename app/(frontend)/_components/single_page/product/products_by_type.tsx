@@ -52,7 +52,7 @@ export default function ProductsByType({ type }: { type: string }) {
   });
 
   function handleAddNew() {
-    router.push("/admin/product/create");
+    router.push(`/${authType.toLowerCase()}/product/create`);
   }
   const deleteAction: any =
     isBrokerProduct || authType === "ADMIN"
@@ -78,7 +78,7 @@ export default function ProductsByType({ type }: { type: string }) {
           actions={[deleteAction]}
           loading={isLoading}
           addNew={
-            !isLoadingAuth && authType === "ADMIN" ? handleAddNew : undefined
+            !isLoadingAuth && (authType === "ADMIN" || isBrokerProduct) ? handleAddNew : undefined
           }
           query="products"
           pagination={{
