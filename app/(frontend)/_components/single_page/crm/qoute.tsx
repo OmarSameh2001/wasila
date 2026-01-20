@@ -132,7 +132,7 @@ export default function SingleQouteView({ id }: { id: string }) {
                 </h1>
                 <a
                   className="text-gray-600 mt-1 dark:text-gray-300 underline"
-                  href={`/admin/crm/${id}/pdf`}
+                  href={`/${authType.toLowerCase()}/crm/${id}/pdf`}
                   target="_blank"
                 >
                   Get Pdf
