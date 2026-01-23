@@ -103,8 +103,8 @@ const returnRefreshedUser = async (
 
   return user as UserBackend;
 };
-const generateVerificationToken = () => {
-  return crypto.randomBytes(32).toString("hex");
+const generateVerificationToken = (num:number = 32) => {
+  return crypto.randomBytes(num).toString("hex");
 };
 const hashToken = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");

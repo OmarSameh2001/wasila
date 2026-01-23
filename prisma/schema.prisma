@@ -28,11 +28,14 @@ model User {
   passwordResetToken      String?   @unique
   leadSource              String?
   refreshTokens           String[]  @default([])
+  socialMedia             Json?
+  publicToken             String?
   managedPolicies         Policy[]
   managedRecords          Record[]  @relation("BrokerRelation")
   records                 Record[]  @relation("ClientRelation")
   broker                  User?     @relation("CreatorBrokerRelation", fields: [brokerId], references: [id], onDelete: Cascade)
   clients                 User[]    @relation("CreatorBrokerRelation")
+  companies               UserCompany[]
 
   @@map("users")
 }
@@ -43,8 +46,19 @@ model Company {
   address  String?
   logo     String?
   policies Policy[]
+  users    UserCompany[]
 
   @@map("companies")
+}
+
+model UserCompany {
+  userId    Int
+  companyId Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, companyId])
+  @@map("user_companies")
 }
 
 model Record {

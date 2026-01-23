@@ -361,11 +361,11 @@ function findPriceForAge(
   return { price: Number(priceField) };
 }
 function hasKeys(obj: any): boolean {
-        for (const key in obj) {
-          return true;
-        }
-        return false;
-      }
+  for (const key in obj) {
+    return true;
+  }
+  return false;
+}
 
 export async function calculateSmePolicyRecords(
   req: NextRequest,
@@ -385,6 +385,17 @@ export async function calculateSmePolicyRecords(
         { status: 400 },
       );
     }
+    let companies: Number[] = [];
+
+    if (userType === "BROKER") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companies: { select: { companyId: true } } },
+      });
+      if (user) {
+        companies = user.companies.map((company: any) => company.companyId);
+      }
+    }
 
     // Fetch all health policies (or filtered by policyIds)
     const policies = await prisma.policy.findMany({
@@ -394,6 +405,7 @@ export async function calculateSmePolicyRecords(
         ...(userType === "BROKER" && {
           OR: [{ brokerId: Number(userId) }, { brokerId: null }],
         }),
+        ...(companies.length > 0 && { companyId: { in: companies as number[] } }),
       },
       include: {
         company: {
@@ -421,11 +433,10 @@ export async function calculateSmePolicyRecords(
 
       const healthPricingsObject = policy.healthPolicy.healthPricings as any[];
 
-      
       if (!healthPricingsObject || !hasKeys(healthPricingsObject)) {
         continue;
       }
-      
+
       const insuredPeople: CalculatedSmePolicyRecord["insuredPeople"] = [];
 
       let totalAmount = 0;
@@ -482,7 +493,7 @@ export async function calculateSmePolicyRecords(
 
       const policyDescription = `${policy.company.name} ${policy.name} - ${numberOfInsureds} insured from ${people.length} - Avg age: ${averageAge}`;
       const { healthPricings, ...healthWithoutPricing } = policy.healthPolicy;
-      if(numberOfInsureds === 0) continue
+      if (numberOfInsureds === 0) continue;
       calculatedRecords.push({
         policyId: policy.id,
         policyName: policy.name,
@@ -748,6 +759,18 @@ export async function calculateIndividualPolicyRecords(
         { status: 400 },
       );
     }
+    
+    let companies: Number[] = [];
+
+    if (userType === "BROKER") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companies: { select: { companyId: true } } },
+      });
+      if (user) {
+        companies = user.companies.map((company: any) => company.companyId);
+      }
+    }
 
     // Fetch all Individual Medical policies
     const policies = await prisma.policy.findMany({
@@ -757,6 +780,7 @@ export async function calculateIndividualPolicyRecords(
         ...(userType === "BROKER" && {
           OR: [{ brokerId: Number(userId) }, { brokerId: null }],
         }),
+        ...(companies.length > 0 && { companyId: { in: companies as number[] } }),
       },
       include: {
         company: {

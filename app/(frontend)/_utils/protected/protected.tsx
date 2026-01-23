@@ -40,7 +40,7 @@ export function NonProtectedRoute({ children }: { children: React.ReactNode }) {
   const { id, type, isLoading } = useContext(AuthContext);
 
   if (isLoading) return <LoadingPage />;
-  if (id && type) return <Redirect to={"/"} />;
+  if (id && type) return <Redirect to={"/" + type.toLowerCase()} />;
 
   return children;
 }

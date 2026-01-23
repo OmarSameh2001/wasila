@@ -64,3 +64,11 @@ export const deleteClient = async (id: number) => {
 export const searchClient = async (search: string) => {
   return await axiosInstance.get(`/user/client/search?${search}`);
 };
+
+export const getProfile = async () => {
+  return await axiosInstance.get("/user/profile");
+};
+
+export const updateProfile = async (data: any) => {
+  return await axiosInstance.put("/user/profile", data);
+};

@@ -1,4 +1,4 @@
-import 'server-only'
+import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../_lib/prisma";
 import UserHelper from "../../../_lib/user";
@@ -130,6 +130,8 @@ export const registerUser = async (req: NextRequest) => {
       `,
     );
 
+    const publicToken = UserHelper.token.generateVerificationToken(6);
+
     const createdUser = await prisma.user.create({
       data: {
         email,
@@ -139,6 +141,7 @@ export const registerUser = async (req: NextRequest) => {
         type: "BROKER", // for now all users are brokers
         emailVerificationToken: hashedToken,
         emailVerificationExpiry: tokenExpiry,
+        publicToken,
       },
     });
 
@@ -300,15 +303,39 @@ export const getAllUsers = async (req: NextRequest) => {
 // Update User
 export const updateUser = async (req: NextRequest, userId: number) => {
   try {
-    const { name, email } = await req.json();
+    const { name, username, companies, socialMedia, contactInfo } =
+      await req.json();
 
+    if (username) {
+      const existingUser = await prisma.user.findUnique({
+        where: { username },
+      });
+      if (existingUser && existingUser.id !== userId) {
+        return NextResponse.json(
+          { error: "Username already exists" },
+          { status: 400 },
+        );
+      }
+    }
     const user = await prisma.user.update({
       where: {
         id: userId,
       },
       data: {
         name,
-        email,
+        username,
+        socialMedia,
+        contactInfo,
+        ...(companies && {
+          companies: {
+            deleteMany: {},
+            create: companies.map((companyId: number) => ({
+              company: {
+                connect: { id: companyId },
+              },
+            })),
+          },
+        }),
       },
     });
 
@@ -319,7 +346,7 @@ export const updateUser = async (req: NextRequest, userId: number) => {
     return NextResponse.json(
       {
         message: "User updated successfully",
-        user,
+        // user,
       },
       { status: 200 },
     );
@@ -361,7 +388,7 @@ export const deleteUser = async (req: NextRequest, userId: number) => {
 };
 
 // Get Current User
-export const getCurrentUser = async (id: number) => {
+export const getCurrentUser = async (id: number, type: string) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -374,10 +401,20 @@ export const getCurrentUser = async (id: number) => {
         name: true,
         username: true,
         contactInfo: true,
-        dob: true,
+        // dob: true,
         createdAt: true,
-        managedCount: true,
-        clientCount: true,
+        // clientCount: true,
+        ...(type === "BROKER" && {
+          companies: {
+            select: {
+              companyId: true,
+              company: { select: { name: true, logo: true } },
+            },
+          },
+          managedCount: true,
+          publicToken: true
+        }),
+        socialMedia: true,
       },
     });
 

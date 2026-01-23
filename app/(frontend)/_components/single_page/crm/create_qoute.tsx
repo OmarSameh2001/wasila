@@ -394,7 +394,7 @@ export default function QuoteCreate() {
             Download template
           </a>
         </div>
-      </div>
+      </div>,
     );
   };
 
@@ -670,6 +670,20 @@ export default function QuoteCreate() {
                   SME
                 </option>
               </select>
+            </div>
+            <div className="flex gap-4 ml-2 flex-col sm:flex-row items-center">
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-200">
+                *Note - only the plans of the insurers you select in{" "}
+                <Link
+                  href="/broker/profile"
+                  className="underline text-blue-600 dark:text-blue-400"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  profile
+                </Link>{" "}
+                will appear in the qoute calculations
+              </label>
             </div>
             <button
               type="submit"
