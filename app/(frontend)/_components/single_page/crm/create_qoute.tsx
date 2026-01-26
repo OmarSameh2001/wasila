@@ -387,8 +387,7 @@ export default function QuoteCreate() {
             If you don't have the template, download and fill it:
           </p>
           <a
-            target="_blank"
-            href="https://docs.google.com/spreadsheets/d/1UrHqf1Sd3TQGPF7pHKkKDWgbeVwPfCc3/edit?usp=sharing&ouid=108291203033422402688&rtpof=true&sd=true"
+            href="https://docs.google.com/spreadsheets/d/1UrHqf1Sd3TQGPF7pHKkKDWgbeVwPfCc3/export?format=xlsx"
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
           >
             Download template
