@@ -80,7 +80,7 @@ export default function HealthPricing({
   const handleUpdatePrice = (
     age: number,
     field: "mainPrice" | "dependentPrice",
-    value: number | null
+    value: number | null,
   ) => {
     onPricingsChange({
       ...pricings,
@@ -129,7 +129,7 @@ export default function HealthPricing({
 
         const loopLength = Math.min(
           Math.max(mainLines.length, dependentLines.length),
-          100
+          100,
         );
 
         const parsePrice = (line: string) => {
@@ -155,7 +155,7 @@ export default function HealthPricing({
 
         if (mainPrices.size === 0 && dependentPrices.size === 0) {
           setImportError(
-            "No valid pricing data found. Please check the format."
+            "No valid pricing data found. Please check the format.",
           );
           return;
         }
@@ -192,19 +192,26 @@ export default function HealthPricing({
     setComponent(
       <div className="flex flex-col items-center justify-center gap-5">
         <h1 className="text-xl font-bold underline">Excel of pricings</h1>
+        <h2 className="text-md font-bold">Upload your filled template</h2>
         <input
           type="file"
           accept=".xlsx"
           onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         />
-        <a
-          className="underline"
-          target="_blank"
-          href="https://docs.google.com/spreadsheets/d/1cZGCLmRkT8CLfBPNuiTUIOlxuV7QOVNs/edit?usp=drive_link&ouid=108291203033422402688&rtpof=true&sd=true"
+        
+        <div className="mt-4 p-4 bg-gray-100 rounded dark:bg-gray-800 flex flex-col items-center">
+          <p className="text-sm mb-2">
+            If you don't have the template, download and fill it:
+          </p>
+          <a
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          href="https://docs.google.com/spreadsheets/d/1cZGCLmRkT8CLfBPNuiTUIOlxuV7QOVNs/export?format=xlsx"
         >
-          Fill this template then upload it
+          Download Template
         </a>
+        </div>
+
         {Object.keys(pricings ?? {}).length > 0 ? (
           <span className="text-red-700 font-bold">
             This will remove old pricings*
@@ -217,7 +224,7 @@ export default function HealthPricing({
         >
           Upload
         </button>
-      </div>
+      </div>,
     );
   };
 
@@ -277,7 +284,7 @@ export default function HealthPricing({
         toastId,
         `File parsed successfully: ${
           Object.keys(newPricings).length
-        } records added.`
+        } records added.`,
       );
       setComponent(null); // close popup
     } catch (err) {
@@ -421,7 +428,7 @@ export default function HealthPricing({
                       handleUpdatePrice(
                         pricing.age,
                         "mainPrice",
-                        e.target.value ? Number(e.target.value) : null
+                        e.target.value ? Number(e.target.value) : null,
                       )
                     }
                   />
@@ -440,7 +447,7 @@ export default function HealthPricing({
                       handleUpdatePrice(
                         pricing.age,
                         "dependentPrice",
-                        e.target.value ? Number(e.target.value) : null
+                        e.target.value ? Number(e.target.value) : null,
                       )
                     }
                   />

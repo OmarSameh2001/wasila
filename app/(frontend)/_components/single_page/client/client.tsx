@@ -103,14 +103,14 @@ export default function ClientDetailPage() {
               </p>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Email
               </label>
               <p className="text-lg text-gray-900 dark:text-gray-100">
                 {client?.email || "N/A"}
               </p>
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">

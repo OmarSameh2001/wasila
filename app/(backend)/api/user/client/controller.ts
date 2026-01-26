@@ -1,4 +1,4 @@
-import 'server-only'
+import "server-only";
 import { handlePrismaError } from "@/app/(backend)/_lib/errors";
 import { filterPrisma, handleUrl } from "@/app/(backend)/_lib/filtering";
 import { prisma } from "@/app/(backend)/_lib/prisma";
@@ -11,27 +11,17 @@ export const addNewClient = async (
   userType: string,
 ) => {
   try {
-    const { name, email, username, leadSource, contactInfo } = await req.json();
+    const { name, leadSource, contactInfo } = await req.json();
 
-    if (!name || !username) {
+    if (!name) {
       return NextResponse.json(
-        { error: "Please provide name and username" },
+        { error: "Please provide name" },
         { status: 400 },
       );
     }
 
-    const repeatedClient = await prisma.user.findFirst({
-      where: {
-        OR: [{ username }, { email }],
-      },
-    });
-
-    if (repeatedClient) {
-      return NextResponse.json(
-        { error: "Username or email already exists" },
-        { status: 400 },
-      );
-    }
+    const { email, username } =
+      await UserHelper.randomiser.generateUsernameEmail(name);
 
     // placeholder because client cannot login without forgeting password to updated to user
     const hashedPassword = (await UserHelper.hashPassword("12345678@Wa"))
@@ -80,6 +70,20 @@ export const changeClient = async (
       contactInfo,
     } = await req.json();
 
+    if (username) {
+      const repeatedClient = await prisma.user.findFirst({
+        where: {
+          username,
+        },
+      });
+
+      if (repeatedClient && repeatedClient.id !== clientId) {
+        return NextResponse.json(
+          { error: "Username already exists" },
+          { status: 400 },
+        );
+      }
+    }
     const user = await prisma.user.update({
       where: {
         id: clientId,
@@ -259,8 +263,15 @@ export const getAllClients = async (
       url,
       "user",
       {},
-      { name: true, id: true, username: true, clientCount: true ,leadSource: true, email: true},
-    )
+      {
+        name: true,
+        id: true,
+        username: true,
+        clientCount: true,
+        leadSource: true,
+        email: true,
+      },
+    );
   } catch (error) {
     console.error("Get users error:", error);
     return NextResponse.json(

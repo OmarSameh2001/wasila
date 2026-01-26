@@ -368,6 +368,7 @@ export default function QuoteCreate() {
       <div className="flex flex-col gap-4">
         <DynamicForm
           fields={fields}
+          type="create"
           title="Upload Excel of Employees and Dependents"
           isToast={false}
           onSubmit={async (data: any) => {

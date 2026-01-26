@@ -9,7 +9,7 @@ import { UserBackend } from "./dto";
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const hashPassword = async (
-  password: string
+  password: string,
 ): Promise<{ success: boolean; hashedPassword: string }> => {
   try {
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -22,7 +22,7 @@ const hashPassword = async (
 
 const comparePassword = async (
   password: string,
-  hashedPassword: string
+  hashedPassword: string,
 ): Promise<boolean> => {
   try {
     const isPasswordMatch = await bcryptjs.compare(password, hashedPassword);
@@ -34,7 +34,7 @@ const comparePassword = async (
 };
 
 const validateEmail = (
-  email: string
+  email: string,
 ): { success: boolean; value?: string; message?: string } => {
   const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
   if (emailRegex.test(email)) {
@@ -44,7 +44,7 @@ const validateEmail = (
 };
 
 const validatePassword = (
-  password: string
+  password: string,
 ): { success: boolean; value?: string; message?: string } => {
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%\^&*])[A-Za-z\d!@#$%\^&*]{8,20}$/;
@@ -61,7 +61,7 @@ const validatePassword = (
 const isTimePassed = (
   date: Date,
   addedTime: number,
-  minTime: number
+  minTime: number,
 ): boolean => {
   const addedTimeMs = addedTime * 60 * 1000;
   const minTimeMs = minTime * 60 * 1000;
@@ -72,7 +72,7 @@ const isTimePassed = (
 
 const verifyRefreshToken = (refreshToken: string) => {
   if (!refreshToken) return null;
-  
+
   try {
     return jwt.verify(refreshToken, JWT_SECRET!) as unknown as { id: string };
   } catch (error) {
@@ -82,7 +82,7 @@ const verifyRefreshToken = (refreshToken: string) => {
 };
 
 const returnRefreshedUser = async (
-  refreshToken: string
+  refreshToken: string,
 ): Promise<UserBackend | null> => {
   const decoded = verifyRefreshToken(refreshToken);
   if (!decoded) return null;
@@ -103,7 +103,7 @@ const returnRefreshedUser = async (
 
   return user as UserBackend;
 };
-const generateVerificationToken = (num:number = 32) => {
+const generateVerificationToken = (num: number = 32) => {
   return crypto.randomBytes(num).toString("hex");
 };
 const hashToken = (token: string) => {
@@ -122,9 +122,40 @@ const generateAccessToken = (user: UserBackend): string => {
       type: user.type,
     },
     JWT_SECRET!,
-    { expiresIn: "1d" }
+    { expiresIn: "1d" },
   );
 };
+const generateUsernameEmail = async (name: string) => {
+  const normalizedName =
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9 ]/g, "")
+      .replace(/\s+/g, "")
+      .slice(0, 12) || "client";
+
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+  let counter = 0;
+
+  while (true) {
+    const username = `${normalizedName}_${date}${counter ? `_${counter}` : ""}`;
+    const email = `${normalizedName}.${date}${counter ? `.${counter}` : ""}@wasila.local`;
+
+    const exists = await prisma.user.findFirst({
+      where: {
+        OR: [{ username }, { email }],
+      },
+    });
+
+    if (!exists) {
+      return { username, email };
+    }
+
+    counter++;
+  }
+};
+
 const UserHelper = {
   hashPassword,
   comparePassword,
@@ -138,6 +169,9 @@ const UserHelper = {
     generateRefreshToken,
     generateAccessToken,
     returnRefreshedUser,
+  },
+  randomiser: {
+    generateUsernameEmail,
   },
 };
 

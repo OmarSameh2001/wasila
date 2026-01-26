@@ -28,6 +28,7 @@ export type DynamicFormField<T = any> = {
   limit?: number;
   accept?: string;
   adminOnly?: boolean;
+  updateOnly?: boolean;
   type?:
     | "text"
     | "email"
@@ -38,13 +39,14 @@ export type DynamicFormField<T = any> = {
     | "file"
     | "select"
     | "search"
-    | "image"| "contact";
+    | "image"
+    | "contact";
 };
 
 type DynamicFormProps = {
   fields: DynamicFormField[];
   title?: string | "Add New Record";
-  type?: "create" | "update";
+  type: "create" | "update";
   id?: number;
   query?: string;
   isToast?: boolean;
@@ -69,7 +71,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 }) => {
   const initialState: Record<string, any> = {};
   fields.forEach((field) => {
-    initialState[field.key] = field.value ?? (field.type === "checkbox" ? false : field.type === "contact" ? [] : "");
+    initialState[field.key] =
+      field.value ??
+      (field.type === "checkbox" ? false : field.type === "contact" ? [] : "");
   });
 
   const [formState, setFormState] = useState<Record<string, any>>(initialState);
@@ -108,7 +112,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           if (isToast && toastId)
             showLoadingSuccess(
               toastId,
-              successMessage || "Created Successfully"
+              successMessage || "Created Successfully",
             );
         } else if (type === "update") {
           if (isToast) toastId = showLoadingToast(title || "Updating...");
@@ -116,7 +120,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           if (isToast && toastId)
             showLoadingSuccess(
               toastId,
-              successMessage || "Updated Successfully"
+              successMessage || "Updated Successfully",
             );
         }
       }
@@ -126,48 +130,53 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     } catch (e: any) {
       console.log(e);
       if (toastId && isToast)
-        showLoadingError(toastId, errorMessage || e.response.data.error || "Something went wrong");
+        showLoadingError(
+          toastId,
+          errorMessage || e.response.data.error || "Something went wrong",
+        );
       setDisabled(false);
     }
   };
 
   const isChanged = fields.some(
-    (field) => formState[field.key] !== field.value
+    (field) => formState[field.key] !== field.value,
   );
-console.log('Form state in DynamicForm:', formState);
+
   return (
     <form
       onSubmit={handleSubmit}
       className="flex flex-col items-center justify-center relative"
     >
       <h1 className="text-2xl font-bold mb-5 underline">{title}</h1>
-      {fields.map((field) => (
-        <div
-          key={field.key}
-          // style={{ marginBottom: "1rem", alignSelf: "start" }}
-          className="flex flex-col justify-center mb-3"
-        >
-          <label>
-            {field.required && <span style={{ color: "red" }}>*</span>}
-            {`${field.label}: ${field.prev ?? ""}`}
-            <DynamicInputField
-              field={field}
-              formState={formState}
-              handleChange={handleChange}
-              setFormState={setFormState}
-            />
-          </label>
-          {errors[field.key] && (
-            <span style={{ color: "red" }}>{errors[field.key]}</span>
-          )}
-          {disabled ? (
-            <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/3"></div>
-          ) : null}
-        </div>
-      ))}
+      {fields.map((field) =>
+        type === "create" && field.updateOnly ? null : (
+          <div
+            key={field.key}
+            // style={{ marginBottom: "1rem", alignSelf: "start" }}
+            className={`flex flex-col justify-center mb-3`}
+          >
+            <label>
+              {field.required && <span style={{ color: "red" }}>*</span>}
+              {`${field.label}: ${field.prev ?? ""}`}
+              <DynamicInputField
+                field={field}
+                formState={formState}
+                handleChange={handleChange}
+                setFormState={setFormState}
+              />
+            </label>
+            {errors[field.key] && (
+              <span style={{ color: "red" }}>{errors[field.key]}</span>
+            )}
+            {disabled ? (
+              <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/3"></div>
+            ) : null}
+          </div>
+        ),
+      )}
       <button
         type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
         disabled={disabled || !isChanged}
         title={!isChanged ? "No changes made" : ""}
       >
