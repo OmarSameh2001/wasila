@@ -12,6 +12,7 @@ import {
   showLoadingToast,
 } from "../../../_utils/toaster/toaster";
 import { PopupContext } from "../../../_utils/context/popup_provider";
+import DynamicForm, { DynamicFormField } from "../../form/dynamic_form";
 
 // interface HealthPricingData {
 //   mainPrice?: number | null;
@@ -189,16 +190,40 @@ export default function HealthPricing({
   };
 
   const handleFileUpload = () => {
+    const fields: DynamicFormField[] = [
+          {
+            label: "Upload Excel File",
+            key: "excelFile",
+            type: "file",
+            required: true,
+            accept: ".xlsx,.xls",
+            limit: 1,
+          },
+        ];
     setComponent(
       <div className="flex flex-col items-center justify-center gap-5">
-        <h1 className="text-xl font-bold underline">Excel of pricings</h1>
-        <h2 className="text-md font-bold">Upload your filled template</h2>
-        <input
-          type="file"
-          accept=".xlsx"
-          onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        <DynamicForm
+          fields={fields}
+          type="create"
+          title="Upload Excel of Pricings"
+          isToast={false}
+          onSubmit={async (data: any) => {
+            const file = data.excelFile;
+            if (!file) throw new Error("No file selected");
+
+            // Parse the file immediately
+            await handleExcel(file);
+
+            return { data: { success: true } };
+          }}
         />
+        
+
+        {Object.keys(pricings ?? {}).length > 0 ? (
+          <span className="text-red-700 font-bold">
+            This will remove old pricings*
+          </span>
+        ) : null}
         
         <div className="mt-4 p-4 bg-gray-100 rounded dark:bg-gray-800 flex flex-col items-center">
           <p className="text-sm mb-2">
@@ -211,29 +236,16 @@ export default function HealthPricing({
           Download Template
         </a>
         </div>
-
-        {Object.keys(pricings ?? {}).length > 0 ? (
-          <span className="text-red-700 font-bold">
-            This will remove old pricings*
-          </span>
-        ) : null}
-        <button
-          onClick={handleExcel}
-          disabled={!excelFile}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer disabled:cursor-not-allowed"
-        >
-          Upload
-        </button>
       </div>,
     );
   };
 
-  const handleExcel = async () => {
-    if (!excelFile) return;
+  const handleExcel = async (file: File) => {
+    if (!file) return;
     setComponent(null);
     let toastId = showLoadingToast("Parsing uploaded file...");
     try {
-      const arrayBuffer = await excelFile.arrayBuffer();
+      const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
       // Use the first sheet
@@ -274,7 +286,7 @@ export default function HealthPricing({
       }
 
       if (Object.keys(newPricings).length === 0) {
-        showErrorToast("No valid rows found in Excel file.");
+        showLoadingError(toastId,"No valid rows found in Excel file.");
         return;
       }
 

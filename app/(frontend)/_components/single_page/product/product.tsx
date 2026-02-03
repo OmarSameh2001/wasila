@@ -537,9 +537,9 @@ export default function SingleProductEditable({
               />
             </div>
           </div>
-          {editedPolicy?.healthPolicy && (
+          {(editedPolicy?.healthPolicy || ["Individual_Medical", "SME"].includes(editedPolicy?.type)) && (
             <HealthPricing
-              pricings={editedPolicy.healthPolicy.healthPricings || {}}
+              pricings={editedPolicy?.healthPolicy?.healthPricings || {}}
               isEditing={isEditing}
               onPricingsChange={(newPricings) => {
                 setEditedPolicy((prev) => {
